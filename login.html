@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Login · Pencairan Dapur</title>
+
+    <link rel="icon" type="image/png" href="./assets/favicon.png" />
+
+    <link rel="stylesheet" href="./css/login.css" />
+  </head>
+
+  <body>
+    <div class="login-background"></div>
+
+    <div class="login-card">
+      <div class="login-logo">PD</div>
+
+      <h1>Pencairan Dapur</h1>
+
+      <p>Sistem Operasional Internal</p>
+
+      <div class="pin-wrapper">
+        <input
+          type="password"
+          id="pinInput"
+          maxlength="6"
+          inputmode="numeric"
+          autocomplete="off"
+          autofocus
+        />
+
+        <div class="pin-dots">
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+          <span class="dot"></span>
+        </div>
+      </div>
+
+      <small id="errorText"></small>
+    </div>
+
+    <script
+      defer
+      src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
+    ></script>
+
+    <script defer src="supabase.js"></script>
+
+    <script defer src="login.js"></script>
+  </body>
+</html>

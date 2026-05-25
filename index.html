@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <link rel="icon" type="image/png" href="./assets/favicon.png" />
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Pencairan Dapur</title>
+
+    <link rel="stylesheet" href="./css/style.css" />
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <div class="navbar-left">
+        <div class="logo">PD</div>
+
+        <div class="navbar-brand">
+          <h2>Pencairan Dapur</h2>
+
+          <small> Sistem Operasional </small>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <div id="viewerBadge"></div>
+        <a href="index.html" class="nav-link active"> Dashboard </a>
+
+        <a href="report.html" class="nav-link"> Laporan </a>
+
+        <button id="logoutButton" class="logout-button">Logout</button>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="dashboard">
+        <div class="dashboard-card">
+          <div class="dashboard-card-top">
+            <div>
+              <small> Total Belanja BGN </small>
+
+              <h2 id="surplusAmount">Rp 0</h2>
+            </div>
+
+            <div class="dashboard-icon">
+              <i data-lucide="wallet"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-card-top">
+            <div>
+              <small> Total Belanja Koperasi </small>
+
+              <h2 id="totalExpense">Rp 0</h2>
+            </div>
+
+            <div class="dashboard-icon">
+              <i data-lucide="receipt"></i>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-card">
+          <div class="dashboard-card-top">
+            <div>
+              <small> Total Belanja Gas </small>
+
+              <h2 id="totalGas">Rp 0</h2>
+            </div>
+
+            <div class="dashboard-icon">
+              <i data-lucide="flame"></i>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dashboard-filters">
+        <input type="date" id="dashboardStartDate" />
+
+        <input type="date" id="dashboardEndDate" />
+
+        <button id="applyDashboardFilter">Terapkan</button>
+      </div>
+
+      <div id="viewerSummary"></div>
+
+      <div id="dailyViewerSummary"></div>
+
+      <div id="adminTransactionsSection">
+        <div class="transactions-section">
+          <div class="transactions-header">
+            <h3 class="section-title">Riwayat Transaksi</h3>
+          </div>
+        </div>
+
+        <div class="filters">
+          <select id="filterKitchen">
+            <option value="">Semua Dapur</option>
+          </select>
+
+          <select id="filterFlow">
+            <option value="">Semua Jenis</option>
+
+            <option value="income">Pemasukan</option>
+
+            <option value="expense">Pengeluaran</option>
+
+            <option value="neutral">GAS</option>
+          </select>
+
+          <input type="date" id="filterDate" />
+
+          <select id="sortTransactions">
+            <option value="" disabled selected hidden>Urutkan Transaksi</option>
+
+            <option value="newest">Terbaru</option>
+
+            <option value="oldest">Terlama</option>
+
+            <option value="highest">Terbesar</option>
+
+            <option value="lowest">Terkecil</option>
+          </select>
+
+          <button type="button" id="resetFilters">Reset Filter</button>
+        </div>
+
+        <div id="transactions" class="transactions-list"></div>
+
+        <div class="load-more-wrapper">
+          <button type="button" id="loadMoreButton">Load More</button>
+        </div>
+      </div>
+    </div>
+
+    <button id="openTransactionModal" class="fab-button">
+      ＋ Input Transaksi
+    </button>
+
+    <div id="transactionModal" class="modal-overlay">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Input Transaksi</h3>
+
+          <button id="closeTransactionModal" class="close-modal">×</button>
+        </div>
+
+        <form id="transactionForm">
+          <input type="date" id="transactionDate" required />
+
+          <select id="kitchenSelect"></select>
+
+          <select id="flowType" disabled>
+            <option value="" selected>Pilih Transaksi</option>
+          </select>
+
+          <select id="accountSelect"></select>
+
+          <select id="supplierSelect"></select>
+
+          <input type="text" id="amount" placeholder="Nominal" required />
+
+          <button type="submit">Simpan</button>
+        </form>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="supabase.js"></script>
+
+    <script src="js/date-picker.js"></script>
+
+    <div id="deleteModal" class="modal-overlay">
+      <div class="delete-modal-content">
+        <h3>Hapus transaksi?</h3>
+
+        <p>Data tidak dapat dikembalikan</p>
+
+        <div class="delete-actions">
+          <button id="cancelDelete" class="secondary-button">Batal</button>
+
+          <button id="confirmDelete" class="danger-button">Hapus</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="toast"></div>
+
+    <script defer src="js/constants.js"></script>
+    <script defer src="js/helpers.js"></script>
+    <script defer src="js/loaders.js"></script>
+    <script defer src="js/modal.js"></script>
+    <script defer src="js/delete.js"></script>
+    <script defer src="js/dashboard.js"></script>
+    <script defer src="js/transactions.js"></script>
+    <script defer src="js/filters.js"></script>
+    <script defer src="js/form.js"></script>
+    <script defer src="js/events.js"></script>
+    <script defer src="js/auth.js"></script>
+
+    <script defer src="https://unpkg.com/lucide@latest"></script>
+
+    <script defer src="js/app.js"></script>
+  </body>
+</html>

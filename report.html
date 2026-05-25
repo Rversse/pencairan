@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <link rel="icon" type="image/png" href="./assets/favicon.png" />
+
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <title>Laporan Pencairan</title>
+
+    <link rel="stylesheet" href="./css/report.css" />
+  </head>
+
+  <body>
+    <nav class="navbar">
+      <div class="navbar-left">
+        <div class="logo">PD</div>
+
+        <div class="navbar-brand">
+          <h2>Pencairan Dapur</h2>
+
+          <small> Sistem Operasional </small>
+        </div>
+      </div>
+
+      <div class="navbar-right">
+        <a href="index.html" class="nav-link"> Dashboard </a>
+
+        <a href="report.html" class="nav-link active"> Laporan </a>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="topbar">
+        <div>
+          <h1>Laporan Rangkuman Transaksi Dapur</h1>
+
+          <p id="reportPeriod">-</p>
+        </div>
+
+        <button id="printButton">Print / Save PDF</button>
+      </div>
+
+      <div class="filters">
+        <input type="date" id="startDate" />
+
+        <input type="date" id="endDate" />
+
+        <button id="generateButton">Generate</button>
+      </div>
+
+      <div class="summary-grid">
+        <div class="summary-card">
+          <small> BELANJA BGN </small>
+
+          <h2 id="totalIncome">Rp. 0</h2>
+        </div>
+
+        <div class="summary-card">
+          <small> KOPERASI </small>
+
+          <h2 id="totalExpense">Rp. 0</h2>
+        </div>
+
+        <div class="summary-card">
+          <small> GAS </small>
+
+          <h2 id="totalGas">Rp. 0</h2>
+        </div>
+
+        <div class="summary-card">
+          <small> TOTAL (Belanja BGN - Koperasi)</small>
+
+          <h2 id="totalRemaining">Rp. 0</h2>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>SPPG</th>
+
+            <th>TOTAL PM</th>
+
+            <th>BELANJA BGN</th>
+
+            <th>KOPERASI</th>
+
+            <th>GAS</th>
+
+            <th>TOTAL</th>
+          </tr>
+        </thead>
+
+        <tbody id="reportTableBody"></tbody>
+      </table>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script src="supabase.js"></script>
+
+    <script src="js/date-picker.js"></script>
+
+    <script src="js/auth.js"></script>
+
+    <script src="report.js"></script>
+  </body>
+</html>
