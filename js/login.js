@@ -1,106 +1,105 @@
 async function initLogin() {
-const existingSession = await supabaseClient.auth.getSession()
+  const existingSession = await supabaseClient.auth.getSession()
 
-if (existingSession.data.session) {
-window.location.href = 'index.html'
+  if (existingSession.data.session) {
+    window.location.href = 'index.html'
 
-return
-}
+    return
+  }
 
-const credentials = {
-555999: {
-email: 'admin@internal.local',
+  const credentials = {
+    555999: {
+      email: 'admin@internal.local',
 
-password: '555999',
-},
+      password: '555999',
+    },
 
-123456: {
-email: 'viewer@internal.local',
+    123456: {
+      email: 'viewer@internal.local',
 
-password: '123456',
-},
-}
+      password: '123456',
+    },
+  }
 
-const pinInput = document.getElementById('pinInput')
+  const pinInput = document.getElementById('pinInput')
 
-const dots = document.querySelectorAll('.dot')
+  const dots = document.querySelectorAll('.dot')
 
-const errorText = document.getElementById('errorText')
+  const errorText = document.getElementById('errorText')
 
-const loginCard = document.querySelector('.login-card')
+  const loginCard = document.querySelector('.login-card')
 
-window.addEventListener('click', () => {
-pinInput.focus()
-})
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      pinInput.focus()
+    }, 100)
+  })
 
-pinInput.addEventListener(
-'input',
+  window.addEventListener('click', () => {
+    pinInput.focus()
+  })
 
-() => {
-pinInput.value =
-pinInput.value
-.replace(/\D/g, '')
-.slice(0, 6)
+  pinInput.addEventListener(
+    'input',
 
-updateDots()
+    () => {
+      pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 6)
 
-if (
-pinInput.value.length === 6
-) {
-validatePin()
-}
-}
-)
+      updateDots()
 
+      if (pinInput.value.length === 6) {
+        validatePin()
+      }
+    }
+  )
 
-function updateDots() {
-dots.forEach((dot, index) => {
-dot.classList.toggle('active', index < pinInput.value.length)
-})
-}
+  function updateDots() {
+    dots.forEach((dot, index) => {
+      dot.classList.toggle('active', index < pinInput.value.length)
+    })
+  }
 
-async function validatePin() {
-errorText.textContent = ''
+  async function validatePin() {
+    errorText.textContent = ''
 
-const pin = pinInput.value.trim()
+    const pin = pinInput.value.trim()
 
-const userData = credentials[pin]
+    const userData = credentials[pin]
 
-if (!userData) {
-invalidPin()
+    if (!userData) {
+      invalidPin()
 
-return
-}
+      return
+    }
 
-const { error } = await supabaseClient.auth.signInWithPassword({
-email: userData.email,
+    const { error } = await supabaseClient.auth.signInWithPassword({
+      email: userData.email,
 
-password: userData.password,
-})
+      password: userData.password,
+    })
 
-if (error) {
-invalidPin()
+    if (error) {
+      invalidPin()
 
-return
-}
+      return
+    }
 
-window.location.href = 'index.html'
-}
+    window.location.href = 'index.html'
+  }
 
-function invalidPin() {
-loginCard.classList.add('shake')
+  function invalidPin() {
+    loginCard.classList.add('shake')
 
-errorText.textContent = 'PIN salah'
+    errorText.textContent = 'PIN salah'
 
-pinInput.value = ''
+    pinInput.value = ''
 
-updateDots()
+    updateDots()
 
-setTimeout(() => {
-loginCard.classList.remove('shake')
-}, 300)
-}
+    setTimeout(() => {
+      loginCard.classList.remove('shake')
+    }, 300)
+  }
 }
 
 initLogin()
-
