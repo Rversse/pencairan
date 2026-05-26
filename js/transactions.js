@@ -30,36 +30,13 @@ async function loadTransactions() {
     query = query.eq('transaction_date', filterDate.value)
   }
 
-  const sortValue = sortTransactions?.value || 'newest'
-
-  let orderColumn = 'transaction_date'
-
-  let ascending = false
-
-  if (sortValue === 'oldest') {
-    ascending = true
-  }
-
-  if (sortValue === 'highest') {
-    orderColumn = 'amount'
-
-    ascending = false
-  }
-
-  if (sortValue === 'lowest') {
-    orderColumn = 'amount'
-
-    ascending = true
-  }
-
   const { data, error } = await query
-    .order(orderColumn, {
-      ascending,
-    })
     .order('created_at', {
       ascending: false,
     })
     .limit(transactionLimit)
+
+  const latestTransaction = data?.[0]
 
   if (error) {
     console.error(error)
@@ -77,10 +54,10 @@ async function loadTransactions() {
 
   if (!data.length) {
     transactionsContainer.innerHTML = `
-      <div class="transaction-card">
-        Tidak ada transaksi
-        untuk filter ini
-      </div>
+<div class="empty-state">
+  Tidak ada transaksi
+  untuk filter ini
+</div>
       `
 
     loadMoreButton.style.display = 'none'
@@ -108,19 +85,25 @@ async function loadTransactions() {
     if (transaction.flow_type === 'neutral') {
       badgeClass = 'badge-gas'
 
-      label = 'GAS'
+      label = 'Gas'
     }
 
     const target = transaction.accounts
       ? `${transaction.accounts.name} (${transaction.accounts.bank})`
       : transaction.suppliers?.name || '-'
 
-    const canManage = currentUser.role === 'admin'
+    const isLocked = isTransactionLocked(transaction.transaction_date)
+
+    const canManage = currentUser.role === 'admin' && !isLocked
 
     transactionsContainer.innerHTML += `
-      <div class="transaction-card">
+  <div class="transaction-card">
 
-        <div class="transaction-top">
+    <div class="transaction-layout">
+
+      <div class="transaction-left">
+
+        <div class="transaction-header">
 
           <strong>
             ${transaction.kitchens.name}
@@ -132,68 +115,82 @@ async function loadTransactions() {
 
         </div>
 
-        <div>
+        <div class="transaction-target">
           ${target}
         </div>
+
+        <small class="transaction-date">
+          Diinput pada:
+          ${new Date(transaction.transaction_date)
+            .toLocaleDateString('id-ID', {
+              day: '2-digit',
+              month: '2-digit',
+              year: 'numeric',
+            })
+            .replace(/\//g, '-')}
+        </small>
+
+      </div>
+
+      <div class="transaction-right">
 
         <div class="amount">
           ${formatRupiah(transaction.amount)}
         </div>
 
-        <div
-          style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-          "
-        >
+        ${
+          canManage
+            ? `
+            <div class="transaction-actions">
 
-          <small>
-            ${new Date(transaction.transaction_date)
-              .toLocaleDateString('id-ID', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-              })
-              .replace(/\//g, '-')}
-          </small>
-
-          ${
-            canManage
-              ? `
-              <div
-                style="
-                  display:flex;
-                  gap:8px;
-                "
+              <button
+                onclick='editTransaction(${JSON.stringify(transaction)})'
               >
+                ✏️
+              </button>
 
-                <button
-                  onclick='editTransaction(${JSON.stringify(transaction)})'
-                >
-                  ✏️ Edit
-                </button>
+              <button
+                onclick="openDeleteModal('${transaction.id}')"
+              >
+                🗑
+              </button>
 
-                <button
-                  onclick="openDeleteModal('${transaction.id}')"
-                >
-                  🗑 Hapus
-                </button>
-
-              </div>
-              `
-              : ''
-          }
-
-        </div>
+            </div>
+            `
+            : ''
+        }
 
       </div>
-    `
+
+    </div>
+
+  </div>
+`
   })
 }
 
-loadMoreButton.addEventListener('click', async () => {
-  transactionLimit += 5
+loadMoreButton.addEventListener(
+  'click',
 
-  await loadTransactions()
-})
+  async () => {
+    if (loadMoreButton.disabled) {
+      return
+    }
+
+    loadMoreButton.disabled = true
+
+    const originalText = loadMoreButton.textContent
+
+    loadMoreButton.textContent = 'Memuat...'
+
+    try {
+      transactionLimit += 5
+
+      await loadTransactions()
+    } finally {
+      loadMoreButton.disabled = false
+
+      loadMoreButton.textContent = originalText
+    }
+  }
+)

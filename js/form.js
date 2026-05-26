@@ -215,6 +215,12 @@ function lockTransactionFields(isEditing) {
 }
 
 async function editTransaction(transaction) {
+  if (isTransactionLocked(transaction.transaction_date)) {
+    showToast('Transaksi sudah dikunci')
+
+    return
+  }
+
   editingTransactionId = transaction.id
 
   transactionDate.value = transaction.transaction_date
@@ -268,6 +274,10 @@ async function editTransaction(transaction) {
 
 transactionForm.addEventListener('submit', async (event) => {
   event.preventDefault()
+
+  if (submitButton.disabled) {
+    return
+  }
 
   const flow = flowType.value
 
@@ -339,39 +349,64 @@ transactionForm.addEventListener('submit', async (event) => {
 
   submitButton.disabled = true
 
+  const originalText = submitButton.textContent
+
   submitButton.textContent = 'Menyimpan...'
 
-  let query = supabaseClient.from('transactions')
+  try {
+    const duplicateCheck = await supabaseClient
+      .from('transactions')
+      .select('id')
+      .eq('transaction_date', payload.transaction_date)
+      .eq('kitchen_id', payload.kitchen_id)
+      .eq('flow_type', payload.flow_type)
+      .eq('amount', payload.amount)
+      .limit(1)
 
-  if (editingTransactionId) {
-    query = query.update(payload).eq('id', editingTransactionId)
-  } else {
-    query = query.insert(payload)
-  }
+    if (duplicateCheck.data?.length && !editingTransactionId) {
+      const proceed = confirm('Kemungkinan transaksi duplikat. Tetap simpan?')
 
-  const { error } = await query
+      if (!proceed) {
+        return
+      }
+    }
 
-  if (error) {
+    let query = supabaseClient.from('transactions')
+
+    if (editingTransactionId) {
+      query = query.update(payload).eq('id', editingTransactionId)
+    } else {
+      query = query.insert(payload)
+    }
+
+    const { error } = await query
+
+    if (error) {
+      console.error(error)
+
+      showToast('Gagal simpan transaksi')
+
+      return
+    }
+
+    showToast('Transaksi berhasil disimpan')
+
+    closeModal()
+
+    resetFormState()
+
+    await loadTransactions()
+
+    await loadDashboard()
+  } catch (error) {
     console.error(error)
 
-    showToast('Gagal simpan transaksi')
-
+    showToast('Terjadi kesalahan')
+  } finally {
     submitButton.disabled = false
 
-    submitButton.textContent = 'Simpan'
-
-    return
+    submitButton.textContent = originalText
   }
-
-  showToast('Transaksi berhasil disimpan')
-
-  closeModal()
-
-  resetFormState()
-
-  await loadTransactions()
-
-  await loadDashboard()
 })
 
 transactionForm.addEventListener('keydown', async (event) => {

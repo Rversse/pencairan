@@ -20,7 +20,7 @@
         <div class="navbar-brand">
           <h2>Pencairan Dapur</h2>
 
-          <small> Sistem Operasional </small>
+          <small class="transaction-date"> Sistem Operasional </small>
         </div>
       </div>
 
@@ -39,7 +39,7 @@
         <div class="dashboard-card">
           <div class="dashboard-card-top">
             <div>
-              <small> Total Belanja BGN </small>
+              <small class="transaction-date"> Total Belanja BGN </small>
 
               <h2 id="surplusAmount">Rp 0</h2>
             </div>
@@ -53,7 +53,7 @@
         <div class="dashboard-card">
           <div class="dashboard-card-top">
             <div>
-              <small> Total Belanja Koperasi </small>
+              <small class="transaction-date"> Total Belanja Koperasi </small>
 
               <h2 id="totalExpense">Rp 0</h2>
             </div>
@@ -67,7 +67,7 @@
         <div class="dashboard-card">
           <div class="dashboard-card-top">
             <div>
-              <small> Total Belanja Gas </small>
+              <small class="transaction-date"> Total Belanja Gas </small>
 
               <h2 id="totalGas">Rp 0</h2>
             </div>
@@ -84,7 +84,7 @@
 
         <input type="date" id="dashboardEndDate" />
 
-        <button id="applyDashboardFilter">Terapkan</button>
+        <button id="applyDashboardFilter">Apply</button>
       </div>
 
       <div id="viewerSummary"></div>
@@ -115,18 +115,6 @@
 
           <input type="date" id="filterDate" />
 
-          <select id="sortTransactions">
-            <option value="" disabled selected hidden>Urutkan Transaksi</option>
-
-            <option value="newest">Terbaru</option>
-
-            <option value="oldest">Terlama</option>
-
-            <option value="highest">Terbesar</option>
-
-            <option value="lowest">Terkecil</option>
-          </select>
-
           <button type="button" id="resetFilters">Reset Filter</button>
         </div>
 
@@ -139,7 +127,7 @@
     </div>
 
     <button id="openTransactionModal" class="fab-button">
-      ＋ Input Transaksi
+      <i data-lucide="plus"></i>
     </button>
 
     <div id="transactionModal" class="modal-overlay">

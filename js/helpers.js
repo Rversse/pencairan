@@ -41,3 +41,31 @@ function showToast(message) {
     toast.classList.remove('show')
   }, 2200)
 }
+
+function isTransactionLocked(date) {
+  const transactionDate = new Date(date)
+
+  const today = new Date()
+
+  const diffMonths =
+    (today.getFullYear() - transactionDate.getFullYear()) * 12 +
+    (today.getMonth() - transactionDate.getMonth())
+
+  return diffMonths >= 2
+}
+
+let inactivityTimer
+
+function resetInactivityTimer() {
+  clearTimeout(inactivityTimer)
+
+  inactivityTimer = setTimeout(
+    async () => {
+      await supabaseClient.auth.signOut()
+
+      window.location.href = 'login.html'
+    },
+
+    30 * 60 * 1000
+  )
+}

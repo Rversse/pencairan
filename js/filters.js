@@ -1,45 +1,53 @@
-filterKitchen.addEventListener('change', async () => {
-  transactionLimit = 5
+filterKitchen.addEventListener(
+  'change',
 
-  await loadTransactions()
+  async () => {
+    transactionLimit = 5
 
-  await loadDashboard()
-})
+    await loadTransactions()
 
-filterFlow.addEventListener('change', async () => {
-  transactionLimit = 5
+    await loadDashboard()
+  }
+)
 
-  await loadTransactions()
+filterFlow.addEventListener(
+  'change',
 
-  await loadDashboard()
-})
+  async () => {
+    transactionLimit = 5
 
-filterDate.addEventListener('change', async () => {
-  transactionLimit = 5
+    await loadTransactions()
 
-  await loadTransactions()
+    await loadDashboard()
+  }
+)
 
-  await loadDashboard()
-})
+filterDate.addEventListener(
+  'change',
 
-sortTransactions.addEventListener('change', async () => {
-  transactionLimit = 5
+  async () => {
+    transactionLimit = 5
 
-  await loadTransactions()
-})
+    await loadTransactions()
 
-resetFilters.addEventListener('click', async () => {
-  filterKitchen.value = ''
+    await loadDashboard()
+  }
+)
 
-  filterFlow.value = ''
+resetFilters.addEventListener(
+  'click',
 
-  filterDate.value = ''
+  async () => {
+    filterKitchen.value = ''
 
-  sortTransactions.value = ''
+    filterFlow.value = ''
 
-  transactionLimit = 5
+    filterDate.value = ''
 
-  await loadTransactions()
+    transactionLimit = 5
 
-  await loadDashboard()
-})
+    await loadTransactions()
+
+    await loadDashboard()
+  }
+)

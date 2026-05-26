@@ -43,6 +43,7 @@ html {
 
 body {
   margin: 0;
+
   padding: 18px 22px;
 
   min-height: 100vh;
@@ -54,17 +55,19 @@ body {
   background:
     radial-gradient(
       circle at top left,
-      rgba(251, 191, 36, 0.08),
-      transparent 22%
+      rgba(251, 191, 36, 0.05),
+      transparent 20%
     ),
     radial-gradient(
       circle at top right,
-      rgba(59, 130, 246, 0.08),
-      transparent 22%
+      rgba(59, 130, 246, 0.05),
+      transparent 20%
     ),
-    linear-gradient(180deg, #020617, #0f172a);
+    linear-gradient(180deg, #020617, #081225 48%, #0f172a);
 
   background-attachment: fixed;
+
+  visibility: hidden;
 }
 
 .daily-summary-group {
@@ -331,6 +334,12 @@ button:hover {
   background: linear-gradient(135deg, #334155, #475569);
 }
 
+button:disabled {
+  opacity: 0.6;
+
+  cursor: not-allowed;
+}
+
 /* ======================
    MODAL
 ====================== */
@@ -454,21 +463,25 @@ button:hover {
 
 .dashboard-card {
   position: relative;
+
   overflow: hidden;
 
-  padding: 26px;
+  padding: 18px 20px;
 
-  color: white;
+  border-radius: 24px;
 
   border: 1px solid rgba(255, 255, 255, 0.05);
 
-  border-radius: 28px;
-
   backdrop-filter: blur(14px);
 
-  box-shadow: 0 18px 34px rgba(0, 0, 0, 0.18);
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 
-  transition: var(--transition);
+  transition:
+    transform 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .dashboard-card:nth-child(1) {
@@ -517,23 +530,33 @@ button:hover {
 .dashboard-card:hover {
   transform: translateY(-3px);
 
-  box-shadow: 0 24px 42px rgba(0, 0, 0, 0.22);
+  border-color: rgba(255, 255, 255, 0.08);
+
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.24);
 }
 
 .dashboard-card small {
-  font-size: 13px;
+  font-size: 12px;
 
-  color: rgba(255, 255, 255, 0.78);
+  font-weight: 500;
 
-  letter-spacing: 0.4px;
+  color: #dbe4f0;
+
+  opacity: 0.9;
 }
 
 .dashboard-card h2 {
-  margin: 14px 0 0;
+  margin-top: 8px;
 
-  font-size: 30px;
-  font-weight: 700;
-  line-height: 1.2;
+  font-size: 22px;
+
+  font-weight: 800;
+
+  line-height: 1.1;
+
+  letter-spacing: -0.03em;
+
+  color: #f8fafc;
 }
 
 ::-webkit-scrollbar {
@@ -564,7 +587,7 @@ button:hover {
 .viewer-summary {
   margin-top: 24px;
 
-  padding: 24px;
+  padding: 20px;
 
   border-radius: 24px;
 
@@ -586,7 +609,7 @@ button:hover {
 .viewer-summary-top h3 {
   margin: 0;
 
-  font-size: 20px;
+  font-size: 18px;
 
   letter-spacing: 0.2px;
 
@@ -622,11 +645,11 @@ button:hover {
 
   font-weight: 700;
 
-  color: rgba(255, 255, 255, 0.72);
+  color: #dbeafe;
 
-  background: rgba(255, 255, 255, 0.07);
+  background: rgba(59, 130, 246, 0.08);
 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.01);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 .summary-table tbody td {
@@ -640,7 +663,7 @@ button:hover {
 
   font-weight: 500;
 
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .summary-table th,
@@ -658,17 +681,17 @@ button:hover {
 }
 
 .summary-total-row {
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(251, 191, 36, 0.06);
 }
 
 .summary-total-row td {
-  padding-top: 22px;
+  color: #fde68a;
 
-  padding-bottom: 22px;
+  font-size: 13px;
 
   font-weight: 700;
 
-  border-top: 2px solid rgba(255, 255, 255, 0.08);
+  border-top: 1px solid rgba(251, 255, 255, 0.06);
 }
 
 #dailyViewerSummary {
@@ -676,36 +699,22 @@ button:hover {
 }
 
 .dashboard-filters {
-  padding: 18px;
-
-  border-radius: 20px;
-
-  background: rgba(255, 255, 255, 0.03);
-
-  border: 1px solid rgba(255, 255, 255, 0.05);
-
   display: flex;
 
-  gap: 12px;
+  gap: 10px;
 
-  margin-top: 24px;
-
-  margin-bottom: 24px;
+  margin: 14px 0 20px;
 }
 
 .dashboard-filters input,
 .dashboard-filters button {
-  height: 48px;
+  height: 44px;
 
-  padding: 0 16px;
+  padding: 0 14px;
 
   border-radius: 14px;
 
-  border: 1px solid rgba(255, 255, 255, 0.06);
-
-  background: rgba(255, 255, 255, 0.04);
-
-  color: white;
+  font-size: 14px;
 }
 
 .dashboard-filters button {
@@ -717,22 +726,23 @@ button:hover {
 }
 
 .dashboard-icon {
+  width: 46px;
+
+  height: 46px;
+
+  border-radius: 14px;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
-  width: 52px;
-  height: 52px;
-
-  border-radius: 16px;
-
-  background: rgba(255, 255, 255, 0.08);
-
-  color: rgba(255, 255, 255, 0.9);
-
-  backdrop-filter: blur(10px);
-
-  flex-shrink: 0;
+  color: #f8fafc;
 }
 
 .dashboard-icon svg {
@@ -745,30 +755,25 @@ button:hover {
 ====================== */
 
 .filters {
-  position: sticky;
-  top: 92px;
-  z-index: 50;
-
   display: grid;
 
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
 
-  gap: 14px;
+  gap: 10px;
 
-  margin-bottom: 22px;
-  padding: 16px;
+  margin-bottom: 18px;
+}
 
-  background: rgba(15, 23, 42, 0.42);
+.filters select,
+.filters input,
+.filters button {
+  height: 46px;
 
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  padding: 0 14px;
 
-  border-radius: 22px;
+  font-size: 14px;
 
-  backdrop-filter: blur(12px);
-
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.18);
-
-  transition: var(--transition);
+  border-radius: 14px;
 }
 
 /* ======================
@@ -777,30 +782,39 @@ button:hover {
 
 .transactions-list {
   display: grid;
+
   gap: 14px;
 }
 
 .transaction-card {
   position: relative;
+
   overflow: hidden;
 
   display: flex;
   flex-direction: column;
-  gap: 12px;
 
-  min-height: 138px;
+  gap: 14px;
 
-  padding: 20px 22px;
+  min-height: 132px;
 
-  background: rgba(15, 23, 42, 0.52);
+  padding: 22px;
 
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: linear-gradient(
+    180deg,
+    rgba(15, 23, 42, 0.82),
+    rgba(15, 23, 42, 0.72)
+  );
 
-  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
 
-  backdrop-filter: blur(12px);
+  border-radius: 24px;
 
-  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(14px);
+
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
 
   transition:
     transform 0.2s ease,
@@ -812,58 +826,155 @@ button:hover {
   content: '';
 
   position: absolute;
+
   inset: 0;
 
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.025), transparent);
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.03),
+    transparent 32%
+  );
 
   pointer-events: none;
 }
 
 .transaction-card:hover {
-  transform: translateY(-3px);
+  transform: translateY(-4px);
 
-  border-color: rgba(251, 191, 36, 0.14);
+  border-color: rgba(251, 191, 36, 0.16);
 
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.22);
-}
-
-.transaction-top {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(251, 191, 36, 0.05);
 }
 
 .transaction-card small {
-  font-size: 12px;
-  color: #64748b;
+  color: #cbd5e1;
+
+  font-size: 13px;
+
+  opacity: 0.92;
+}
+
+.transaction-date {
+  font-size: 13px;
 }
 
 .amount {
-  font-size: 20px;
-  font-weight: 700;
+  text-align: right;
+
+  white-space: nowrap;
+
+  font-size: 26px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.03em;
+
+  color: #f8fafc;
 }
 
 .transaction-actions {
   display: flex;
-  gap: 8px;
+
+  gap: 10px;
 
   margin-top: auto;
 }
 
 .transaction-card button {
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
-  width: auto;
-  min-width: 48px;
-  height: 42px;
+  width: 34px;
 
-  padding: 10px 14px;
+  height: 34px;
 
-  font-size: 13px;
+  padding: 0;
 
-  border-radius: 14px;
+  font-size: 14px;
+
+  border-radius: 12px;
+
+  background: rgba(255, 255, 255, 0.04);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
+  color: #cbd5e1;
+
+  box-shadow: none;
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.transaction-card button:hover {
+  transform: translateY(-1px);
+
+  background: rgba(255, 255, 255, 0.08);
+
+  border-color: rgba(255, 255, 255, 0.08);
+
+  color: white;
+}
+
+.transaction-layout {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+.transaction-left {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  flex: 1;
+
+  min-width: 0;
+}
+
+.transaction-right {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-end;
+
+  justify-content: center;
+
+  gap: 14px;
+}
+
+.transaction-header {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+}
+
+.transaction-target {
+  color: #dbe4f0;
+
+  font-size: 14px;
+
+  font-weight: 500;
+
+  line-height: 1.45;
 }
 
 /* ======================
@@ -873,27 +984,34 @@ button:hover {
 .badge {
   width: fit-content;
 
-  padding: 4px 10px;
+  padding: 5px 10px;
 
-  font-size: 13px;
+  font-size: 10px;
   font-weight: 600;
 
   border-radius: 999px;
 }
 
 .badge-income {
-  color: #166534;
-  background: #dcfce7;
+  color: #86efac;
+
+  background: rgba(34, 197, 94, 0.12);
+
+  border-color: rgba(134, 239, 172, 0.14);
 }
 
 .badge-expense {
-  color: #991b1b;
-  background: #fee2e2;
+  color: #fca5a5;
+
+  background: rgba(239, 68, 68, 0.12);
+
+  border-color: rgba(248, 113, 113, 0.14);
 }
 
 .badge-gas {
-  color: #1d4ed8;
-  background: #dbeafe;
+  color: #f59e0b;
+
+  background: rgba(251, 191, 36, 0.14);
 }
 
 /* ======================
@@ -908,10 +1026,11 @@ button:hover {
 }
 
 #loadMoreButton {
-  width: auto;
-  min-width: 220px;
+  height: 42px;
 
-  border-radius: 999px;
+  padding: 0 22px;
+
+  font-size: 13px;
 }
 
 /* ======================
@@ -920,16 +1039,22 @@ button:hover {
 
 .fab-button {
   position: fixed;
-  right: 24px;
-  bottom: 24px;
+
+  right: 20px;
+  bottom: 20px;
+
   z-index: 9999;
 
-  width: auto;
-  height: 62px;
+  width: 52px;
+  height: 52px;
 
-  padding: 0 26px;
+  padding: 0;
 
-  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 24px;
   font-weight: 700;
 
   color: #111827;
@@ -938,17 +1063,17 @@ button:hover {
 
   border: 1px solid rgba(255, 255, 255, 0.16);
 
-  border-radius: 999px;
+  border-radius: 50%;
 
-  box-shadow: 0 20px 40px rgba(251, 191, 36, 0.22);
+  box-shadow: 0 10px 24px rgba(251, 191, 36, 0.16);
 
   transition: var(--transition);
 }
 
 .fab-button:hover {
-  transform: translateY(-4px) scale(1.02);
+  transform: translateY(-3px) scale(1.03);
 
-  box-shadow: 0 30px 60px rgba(251, 191, 36, 0.18);
+  box-shadow: 0 24px 50px rgba(251, 191, 36, 0.2);
 }
 
 /* ======================
@@ -1080,26 +1205,56 @@ button:hover {
   color: white;
 }
 
+.viewer-badge {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  height: 42px;
+
+  padding: 0 14px;
+
+  border-radius: 10px;
+
+  background: rgba(59, 130, 246, 0.12);
+
+  border: 1px solid rgba(59, 130, 246, 0.18);
+
+  color: #93c5fd;
+
+  font-size: 11px;
+
+  font-weight: 600;
+
+  letter-spacing: 0.3px;
+
+  white-space: nowrap;
+
+  backdrop-filter: blur(10px);
+}
+
+.summary-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.025);
+}
+
 /* ======================
    EMPTY STATE
 ====================== */
 
 .empty-state {
-  padding: 32px;
+  padding: 32px 20px;
 
   text-align: center;
 
-  border-radius: 18px;
+  color: rgba(255, 255, 255, 0.6);
+
+  border: 1px dashed rgba(255, 255, 255, 0.08);
+
+  border-radius: 16px;
 
   background: rgba(255, 255, 255, 0.03);
-
-  color: rgba(255, 255, 255, 0.58);
-
-  font-size: 14px;
-}
-
-.summary-table tbody tr:hover {
-  background: rgba(255, 255, 255, 0.025);
 }
 
 /* ======================
@@ -1260,46 +1415,47 @@ button:hover {
 
     bottom: 16px;
 
-    height: 56px;
+    width: 50px;
+    height: 50px;
 
-    padding: 0 20px;
+    padding: 0;
 
-    font-size: 14px;
+    font-size: 22px;
   }
 
   #logoutButton {
     width: 100%;
   }
-}
 
-.viewer-badge {
-  display: flex;
+  .transaction-layout {
+    flex-direction: column;
 
-  align-items: center;
+    align-items: flex-start;
 
-  justify-content: center;
+    gap: 16px;
+  }
 
-  height: 42px;
+  .transaction-right {
+    width: 100%;
 
-  padding: 0 14px;
+    align-items: flex-start;
+  }
 
-  border-radius: 10px;
+  .amount {
+    text-align: left;
 
-  background: rgba(59, 130, 246, 0.12);
+    font-size: 24px;
+  }
 
-  border: 1px solid rgba(59, 130, 246, 0.18);
+  .transaction-actions {
+    width: 100%;
 
-  color: #93c5fd;
+    flex-wrap: wrap;
+  }
 
-  font-size: 11px;
-
-  font-weight: 600;
-
-  letter-spacing: 0.3px;
-
-  white-space: nowrap;
-
-  backdrop-filter: blur(10px);
+  .transaction-card button {
+    flex: 1;
+  }
 }
 
 #logoutButton {

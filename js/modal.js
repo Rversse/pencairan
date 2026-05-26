@@ -5,16 +5,23 @@ const openTransactionModal = document.getElementById('openTransactionModal')
 const closeTransactionModal = document.getElementById('closeTransactionModal')
 
 function openModal() {
+  if (transactionModal.classList.contains('show')) {
+    return
+  }
+
   transactionModal.classList.add('show')
+
+  document.body.style.overflow = 'hidden'
 
   updateFormFlow()
 }
 
 function closeModal() {
   transactionModal.classList.remove('show')
-  if (editingTransactionId) {
-    resetFormState()
-  }
+
+  document.body.style.overflow = ''
+
+  resetFormState()
 }
 
 openTransactionModal.addEventListener('click', openModal)
@@ -27,8 +34,14 @@ transactionModal.addEventListener('click', (event) => {
   }
 })
 
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') {
-    closeModal()
+window.addEventListener(
+  'keydown',
+
+  (event) => {
+    if (event.key === 'Escape') {
+      closeModal()
+
+      closeDeleteModal?.()
+    }
   }
-})
+)

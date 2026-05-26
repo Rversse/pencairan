@@ -7,11 +7,19 @@ async function init() {
 }
 
 async function startApp() {
+  document.body.style.visibility = 'hidden'
+
   const authenticated = await initAuth()
 
   if (!authenticated) {
     return
   }
+
+  ;['click', 'keydown', 'mousemove', 'touchstart'].forEach((event) => {
+    window.addEventListener(event, resetInactivityTimer)
+  })
+
+  resetInactivityTimer()
 
   applyRoleAccess()
 
@@ -25,13 +33,9 @@ async function startApp() {
 
   toggleFields()
 
-  if (window.currentUser?.role !== 'viewer') {
-    if (filterFlow.value) {
-      summaryQuery = summaryQuery.eq('flow_type', filterFlow.value)
-    }
-  }
-
   lucide.createIcons()
+
+  document.body.style.visibility = 'visible'
 }
 
 function applyRoleAccess() {

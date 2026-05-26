@@ -1,4 +1,14 @@
 async function loadDashboard() {
+  if (currentUser.role === 'viewer') {
+    viewerSummary.innerHTML = `
+    <div class="empty-state">
+      Memuat data...
+    </div>
+  `
+
+    dailyViewerSummary.innerHTML = ''
+  }
+
   let summaryQuery = supabaseClient.from('transactions').select(`
         *,
         kitchens (
@@ -81,6 +91,8 @@ async function loadDashboard() {
 }
 
 async function renderViewerSummary(data, gas) {
+  const latestTransaction = data?.[0]
+
   const viewerSummary = document.getElementById('viewerSummary')
 
   if (!viewerSummary) {
@@ -216,18 +228,35 @@ async function renderViewerSummary(data, gas) {
       <div class="viewer-summary-top">
 
         <h3>
-          Ringkasan Pengeluaran
+          Catatan Belanja Koperasi
         </h3>
 
         <span id="lastUpdated">
 
-          Update terakhir:
+${
+  latestTransaction
+    ? `
+      Update Data Terakhir :
+      ${new Date(latestTransaction.transaction_date)
+        .toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric',
+        })
+        .replace(/\//g, '-')}
 
-          ${new Date().toLocaleTimeString('id-ID', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-          })}
+•
+
+${new Date(latestTransaction.created_at)
+  .toLocaleTimeString('id-ID', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: 'Asia/Jakarta',
+  })
+  .replace(/\./g, ':')}
+    `
+    : 'Belum ada data'
+}
 
         </span>
 
@@ -239,19 +268,19 @@ async function renderViewerSummary(data, gas) {
 
           <tr>
 
-            <th>Dapur</th>
+            <th>DAPUR</th>
 
-            <th>Arutala</th>
+            <th>ARUTALA</th>
 
-            <th>Sukalarang</th>
+            <th>SUKALARANG</th>
 
-            <th>Aris</th>
+            <th>ARIS</th>
 
-            <th>Babinsa</th>
+            <th>BABINSA</th>
 
-            <th>Gas</th>
+            <th>GAS</th>
 
-            <th>Total</th>
+            <th>TOTAL</th>
 
           </tr>
 

@@ -6,30 +6,84 @@ amountInput.addEventListener('input', (event) => {
 
 flowType.addEventListener('change', toggleFields)
 
-applyDashboardFilter?.addEventListener('click', async () => {
-  await loadDashboard()
-})
+applyDashboardFilter?.addEventListener(
+  'click',
+
+  async () => {
+    if (applyDashboardFilter.disabled) {
+      return
+    }
+
+    applyDashboardFilter.disabled = true
+
+    const originalText = applyDashboardFilter.textContent
+
+    applyDashboardFilter.textContent = 'Loading...'
+
+    try {
+      await loadDashboard()
+    } finally {
+      applyDashboardFilter.disabled = false
+
+      applyDashboardFilter.textContent = originalText
+    }
+  }
+)
 
 const logoutButton = document.getElementById('logoutButton')
 
-logoutButton?.addEventListener('click', async () => {
-  const { error } = await supabaseClient.auth.signOut()
+logoutButton?.addEventListener(
+  'click',
 
-  if (error) {
-    console.error(error)
+  async () => {
+    if (logoutButton.disabled) {
+      return
+    }
 
-    return
+    logoutButton.disabled = true
+
+    const originalText = logoutButton.textContent
+
+    logoutButton.textContent = 'Logout...'
+
+    try {
+      const { error } = await supabaseClient.auth.signOut()
+
+      if (error) {
+        console.error(error)
+
+        logoutButton.disabled = false
+
+        logoutButton.textContent = originalText
+
+        return
+      }
+
+      window.location.replace('login.html')
+    } catch (error) {
+      console.error(error)
+
+      logoutButton.disabled = false
+
+      logoutButton.textContent = originalText
+    }
   }
+)
 
-  window.location.replace('login.html')
-})
+dashboardStartDate?.addEventListener(
+  'change',
 
-dashboardStartDate?.addEventListener('change', () => {
-  if (!dashboardEndDate.dataset.modified) {
-    dashboardEndDate.value = dashboardStartDate.value
+  () => {
+    if (!dashboardEndDate.dataset.modified) {
+      dashboardEndDate.value = dashboardStartDate.value
+    }
   }
-})
+)
 
-dashboardEndDate?.addEventListener('change', () => {
-  dashboardEndDate.dataset.modified = 'true'
-})
+dashboardEndDate?.addEventListener(
+  'change',
+
+  () => {
+    dashboardEndDate.dataset.modified = 'true'
+  }
+)
