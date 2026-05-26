@@ -108,6 +108,8 @@ async function loadAccountsFiltered(flow) {
     .eq('kitchen_id', kitchenId)
     .eq('flow_type', dbFlow)
 
+  console.log(flow, dbFlow, data)
+
   if (error) {
     console.error(error)
 
@@ -140,15 +142,21 @@ async function loadAccountsFiltered(flow) {
   data.forEach((item) => {
     const account = item.accounts
 
+    if (!account) {
+      return
+    }
+
     accountSelect.innerHTML += `
-      <option value="${account.id}">
-        ${account.name} (${account.bank})
-      </option>
-    `
+    <option value="${account.id}">
+      ${account.name} (${account.bank})
+    </option>
+  `
   })
 
-  if (data.length === 1) {
-    accountSelect.value = data[0].accounts.id
+  const validAccounts = data.filter((item) => item.accounts)
+
+  if (validAccounts.length === 1) {
+    accountSelect.value = validAccounts[0].accounts.id
 
     accountSelect.disabled = true
   } else {

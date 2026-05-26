@@ -132,6 +132,14 @@ async function toggleFields() {
 
     await loadAccountsFiltered(flow)
 
+    const gasAccount = Array.from(accountSelect.options).find(
+      (option) => option.value && option.text.includes('BNI')
+    )
+
+    if (gasAccount) {
+      accountSelect.value = gasAccount.value
+    }
+
     updateFormFlow()
 
     return
@@ -172,6 +180,8 @@ function resetFormState() {
   submitButton.textContent = 'Simpan'
 
   transactionForm.reset()
+
+  transactionDate.value = new Date().toISOString().split('T')[0]
 
   kitchenSelect.value = currentKitchen
 

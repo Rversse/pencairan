@@ -28,6 +28,16 @@ startDate.value = today
 
 endDate.value = today
 
+startDate.addEventListener('change', () => {
+  endDate.value = startDate.value
+})
+
+endDate.addEventListener('change', () => {
+  if (endDate.value < startDate.value) {
+    startDate.value = endDate.value
+  }
+})
+
 // ======================
 // HELPERS
 // ======================
