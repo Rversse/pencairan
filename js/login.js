@@ -1,115 +1,106 @@
 async function initLogin() {
-  const existingSession = await supabaseClient.auth.getSession()
+const existingSession = await supabaseClient.auth.getSession()
 
-  if (existingSession.data.session) {
-    window.location.href = 'index.html'
+if (existingSession.data.session) {
+window.location.href = 'index.html'
 
-    return
-  }
+return
+}
 
-  const credentials = {
-    555999: {
-      email: 'admin@internal.local',
+const credentials = {
+555999: {
+email: 'admin@internal.local',
 
-      password: '555999',
-    },
+password: '555999',
+},
 
-    123456: {
-      email: 'viewer@internal.local',
+123456: {
+email: 'viewer@internal.local',
 
-      password: '123456',
-    },
-  }
+password: '123456',
+},
+}
 
-  const pinInput = document.getElementById('pinInput')
+const pinInput = document.getElementById('pinInput')
 
-  const dots = document.querySelectorAll('.dot')
+const dots = document.querySelectorAll('.dot')
 
-  const errorText = document.getElementById('errorText')
+const errorText = document.getElementById('errorText')
 
-  const loginCard = document.querySelector('.login-card')
+const loginCard = document.querySelector('.login-card')
 
-  window.addEventListener('click', () => {
-    pinInput.focus()
-  })
+window.addEventListener('click', () => {
+pinInput.focus()
+})
 
-  window.addEventListener('keydown', (event) => {
-    const allowedKeys = ['Backspace', 'Tab', 'F5']
+pinInput.addEventListener(
+'input',
 
-    const isNumber = /^[0-9]$/.test(event.key)
+() => {
+pinInput.value =
+pinInput.value
+.replace(/\D/g, '')
+.slice(0, 6)
 
-    if (!isNumber && !allowedKeys.includes(event.key)) {
-      return
-    }
+updateDots()
 
-    if (isNumber || event.key === 'Backspace') {
-      event.preventDefault()
-    }
+if (
+pinInput.value.length === 6
+) {
+validatePin()
+}
+}
+)
 
-    if (event.key === 'Backspace') {
-      pinInput.value = pinInput.value.slice(0, -1)
-    } else if (isNumber) {
-      if (pinInput.value.length >= 6) {
-        return
-      }
 
-      pinInput.value += event.key
-    }
+function updateDots() {
+dots.forEach((dot, index) => {
+dot.classList.toggle('active', index < pinInput.value.length)
+})
+}
 
-    updateDots()
+async function validatePin() {
+errorText.textContent = ''
 
-    if (pinInput.value.length === 6) {
-      validatePin()
-    }
-  })
+const pin = pinInput.value.trim()
 
-  function updateDots() {
-    dots.forEach((dot, index) => {
-      dot.classList.toggle('active', index < pinInput.value.length)
-    })
-  }
+const userData = credentials[pin]
 
-  async function validatePin() {
-    errorText.textContent = ''
+if (!userData) {
+invalidPin()
 
-    const pin = pinInput.value.trim()
+return
+}
 
-    const userData = credentials[pin]
+const { error } = await supabaseClient.auth.signInWithPassword({
+email: userData.email,
 
-    if (!userData) {
-      invalidPin()
+password: userData.password,
+})
 
-      return
-    }
+if (error) {
+invalidPin()
 
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: userData.email,
+return
+}
 
-      password: userData.password,
-    })
+window.location.href = 'index.html'
+}
 
-    if (error) {
-      invalidPin()
+function invalidPin() {
+loginCard.classList.add('shake')
 
-      return
-    }
+errorText.textContent = 'PIN salah'
 
-    window.location.href = 'index.html'
-  }
+pinInput.value = ''
 
-  function invalidPin() {
-    loginCard.classList.add('shake')
+updateDots()
 
-    errorText.textContent = 'PIN salah'
-
-    pinInput.value = ''
-
-    updateDots()
-
-    setTimeout(() => {
-      loginCard.classList.remove('shake')
-    }, 300)
-  }
+setTimeout(() => {
+loginCard.classList.remove('shake')
+}, 300)
+}
 }
 
 initLogin()
+
