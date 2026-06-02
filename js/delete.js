@@ -1,4 +1,7 @@
 function openDeleteModal(id) {
+  if (window.currentUser?.role !== 'admin') {
+    return
+  }
   deleteTransactionId = id
 
   deleteModal.classList.add('show')
@@ -22,6 +25,11 @@ confirmDeleteButton.addEventListener(
   'click',
 
   async () => {
+    if (window.currentUser?.role !== 'admin') {
+      showToast('Akses ditolak')
+      return
+    }
+
     if (!deleteTransactionId) {
       return
     }

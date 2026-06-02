@@ -1,67 +1,68 @@
-const startDate = document.getElementById('startDate')
+;(() => {
+  const startDate = document.getElementById('startDate')
 
-const endDate = document.getElementById('endDate')
+  const endDate = document.getElementById('endDate')
 
-const generateButton = document.getElementById('generateButton')
+  const generateButton = document.getElementById('generateButton')
 
-const printButton = document.getElementById('printButton')
+  const printButton = document.getElementById('printButton')
 
-const reportPeriod = document.getElementById('reportPeriod')
+  const reportPeriod = document.getElementById('reportPeriod')
 
-const reportTableBody = document.getElementById('reportTableBody')
+  const reportTableBody = document.getElementById('reportTableBody')
 
-const totalIncome = document.getElementById('totalIncome')
+  const reportTotalIncome = document.getElementById('reportTotalIncome')
 
-const totalExpense = document.getElementById('totalExpense')
+  const reportTotalExpense = document.getElementById('reportTotalExpense')
 
-const totalGas = document.getElementById('totalGas')
+  const reportTotalGas = document.getElementById('reportTotalGas')
 
-const totalRemaining = document.getElementById('totalRemaining')
+  const reportTotalRemaining = document.getElementById('reportTotalRemaining')
 
-// ======================
-// DEFAULT DATE
-// ======================
+  // ======================
+  // DEFAULT DATE
+  // ======================
 
-const today = new Date().toISOString().split('T')[0]
+  const today = new Date().toISOString().split('T')[0]
 
-startDate.value = today
+  startDate.value = today
 
-endDate.value = today
+  endDate.value = today
 
-startDate.addEventListener('change', () => {
-  endDate.value = startDate.value
-})
-
-endDate.addEventListener('change', () => {
-  if (endDate.value < startDate.value) {
-    startDate.value = endDate.value
-  }
-})
-
-// ======================
-// HELPERS
-// ======================
-
-function formatRupiah(number) {
-  return `Rp. ${Number(number || 0).toLocaleString('id-ID')}`
-}
-
-function formatDate(date) {
-  return new Date(date).toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+  startDate.addEventListener('change', () => {
+    endDate.value = startDate.value
   })
-}
 
-// ======================
-// PRINT
-// ======================
+  endDate.addEventListener('change', () => {
+    if (endDate.value < startDate.value) {
+      startDate.value = endDate.value
+    }
+  })
 
-function printReport() {
-  const printContent = document.querySelector('.container').innerHTML
+  // ======================
+  // HELPERS
+  // ======================
 
-  const html = `
+  function formatRupiah(number) {
+    return `Rp. ${Number(number || 0).toLocaleString('id-ID')}`
+  }
+
+  function formatDate(date) {
+    return new Date(date).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    })
+  }
+
+  // ======================
+  // PRINT
+  // ======================
+
+  function printReport() {
+    const printContent = document.getElementById('reportSection').innerHTML
+
+    const html = `
   <!DOCTYPE html>
 
   <html lang="id">
@@ -317,9 +318,9 @@ ${new Date()
   </html>
   `
 
-  const iframe = document.createElement('iframe')
+    const iframe = document.createElement('iframe')
 
-  iframe.style.cssText = `
+    iframe.style.cssText = `
       position: fixed;
       top: 0;
       left: 0;
@@ -330,52 +331,52 @@ ${new Date()
       background: white;
     `
 
-  document.body.appendChild(iframe)
+    document.body.appendChild(iframe)
 
-  iframe.contentDocument.open()
+    iframe.contentDocument.open()
 
-  iframe.contentDocument.write(html)
+    iframe.contentDocument.write(html)
 
-  iframe.contentDocument.close()
+    iframe.contentDocument.close()
 
-  iframe.contentWindow.onafterprint = () => {
-    document.body.removeChild(iframe)
+    iframe.contentWindow.onafterprint = () => {
+      document.body.removeChild(iframe)
+    }
+
+    setTimeout(() => {
+      iframe.contentWindow.focus()
+
+      iframe.contentWindow.print()
+    }, 400)
   }
 
-  setTimeout(() => {
-    iframe.contentWindow.focus()
+  printButton.addEventListener('click', printReport)
 
-    iframe.contentWindow.print()
-  }, 400)
-}
+  // ======================
+  // GENERATE REPORT
+  // ======================
 
-printButton.addEventListener('click', printReport)
+  generateButton.addEventListener('click', async () => {
+    if (!startDate.value || !endDate.value) {
+      alert('Pilih tanggal')
 
-// ======================
-// GENERATE REPORT
-// ======================
+      return
+    }
 
-generateButton.addEventListener('click', async () => {
-  if (!startDate.value || !endDate.value) {
-    alert('Pilih tanggal')
+    const sameDate = startDate.value === endDate.value
 
-    return
-  }
-
-  const sameDate = startDate.value === endDate.value
-
-  reportPeriod.textContent = sameDate
-    ? formatDate(startDate.value)
-    : `
+    reportPeriod.textContent = sameDate
+      ? formatDate(startDate.value)
+      : `
           ${formatDate(startDate.value)}
           —
           ${formatDate(endDate.value)}
         `
 
-  let query = supabaseClient
-    .from('transactions')
-    .select(
-      `
+    let query = supabaseClient
+      .from('transactions')
+      .select(
+        `
           *,
           kitchens (
             id,
@@ -383,136 +384,134 @@ generateButton.addEventListener('click', async () => {
             total_pm
           )
         `
-    )
-    .gte('transaction_date', startDate.value)
-    .lte('transaction_date', endDate.value)
+      )
+      .gte('transaction_date', startDate.value)
+      .lte('transaction_date', endDate.value)
 
-  if (window.currentUser?.role === 'viewer') {
-    query = query
-      .eq('flow_type', 'expense')
-      .eq('supplier_id', '3e80a99f-a5af-499e-bad5-32cce54c7361')
-  }
-
-  const { data, error } = await query
-
-  if (error) {
-    console.error(error)
-
-    alert('Gagal generate laporan')
-
-    return
-  }
-
-  // lanjut bawahnya tetap 😭
-
-  const { data: kitchens, error: kitchensError } = await supabaseClient
-    .from('kitchens')
-    .select('*')
-    .order('name')
-
-  if (kitchensError) {
-    console.error(kitchensError)
-
-    return
-  }
-
-  const grouped = {}
-
-  // ======================
-  // PREFILL ALL KITCHENS
-  // ======================
-
-  kitchens.forEach((kitchen) => {
-    grouped[kitchen.id] = {
-      kitchen_name: kitchen.name,
-
-      total_pm: kitchen.total_pm || 0,
-
-      income: 0,
-
-      expense: 0,
-
-      gas: 0,
+    if (window.currentUser?.role === 'viewer') {
+      query = query.eq('flow_type', 'expense')
     }
-  })
 
-  // ======================
-  // INJECT TRANSACTIONS
-  // ======================
+    const { data, error } = await query
 
-  data.forEach((transaction) => {
-    const kitchen = transaction.kitchens
+    if (error) {
+      console.error(error)
 
-    if (!kitchen) {
+      alert('Gagal generate laporan')
+
       return
     }
 
-    if (transaction.flow_type === 'income') {
-      grouped[kitchen.id].income += Number(transaction.amount)
+    // lanjut bawahnya tetap 😭
+
+    const { data: kitchens, error: kitchensError } = await supabaseClient
+      .from('kitchens')
+      .select('*')
+      .order('name')
+
+    if (kitchensError) {
+      console.error(kitchensError)
+
+      return
     }
 
-    if (transaction.flow_type === 'expense') {
-      grouped[kitchen.id].expense += Number(transaction.amount)
-    }
+    const grouped = {}
 
-    if (transaction.flow_type === 'neutral') {
-      grouped[kitchen.id].gas += Number(transaction.amount)
-    }
-  })
+    // ======================
+    // PREFILL ALL KITCHENS
+    // ======================
 
-  reportTableBody.innerHTML = ''
+    kitchens.forEach((kitchen) => {
+      grouped[kitchen.id] = {
+        kitchen_name: kitchen.name,
 
-  let grandIncome = 0
+        total_pm: kitchen.total_pm || 0,
 
-  let grandExpense = 0
+        income: 0,
 
-  let grandGas = 0
+        expense: 0,
 
-  let grandRemaining = 0
-
-  let grandPM = 0
-
-  Object.values(grouped)
-    .sort((a, b) => {
-      const activeA = a.income > 0 || a.expense > 0
-
-      const activeB = b.income > 0 || b.expense > 0
-
-      // ======================
-      // YANG TIDAK ADA
-      // BELANJA/KOPERASI
-      // KE BAWAH
-      // ======================
-
-      if (!activeA && activeB) {
-        return 1
+        gas: 0,
       }
-
-      if (!activeB && activeA) {
-        return -1
-      }
-
-      const remainingA = a.income - a.expense
-
-      const remainingB = b.income - b.expense
-
-      return remainingA - remainingB
     })
 
-    .forEach((item) => {
-      const remaining = item.income - item.expense
+    // ======================
+    // INJECT TRANSACTIONS
+    // ======================
 
-      grandIncome += item.income
+    data.forEach((transaction) => {
+      const kitchen = transaction.kitchens
 
-      grandExpense += item.expense
+      if (!kitchen) {
+        return
+      }
 
-      grandGas += item.gas
+      if (transaction.flow_type === 'income') {
+        grouped[kitchen.id].income += Number(transaction.amount)
+      }
 
-      grandRemaining += remaining
+      if (transaction.flow_type === 'expense') {
+        grouped[kitchen.id].expense += Number(transaction.amount)
+      }
 
-      grandPM += item.total_pm
+      if (transaction.flow_type === 'neutral') {
+        grouped[kitchen.id].gas += Number(transaction.amount)
+      }
+    })
 
-      reportTableBody.innerHTML += `
+    reportTableBody.innerHTML = ''
+
+    let grandIncome = 0
+
+    let grandExpense = 0
+
+    let grandGas = 0
+
+    let grandRemaining = 0
+
+    let grandPM = 0
+
+    Object.values(grouped)
+      .sort((a, b) => {
+        const activeA = a.income > 0 || a.expense > 0
+
+        const activeB = b.income > 0 || b.expense > 0
+
+        // ======================
+        // YANG TIDAK ADA
+        // BELANJA/KOPERASI
+        // KE BAWAH
+        // ======================
+
+        if (!activeA && activeB) {
+          return 1
+        }
+
+        if (!activeB && activeA) {
+          return -1
+        }
+
+        const remainingA = a.income - a.expense
+
+        const remainingB = b.income - b.expense
+
+        return remainingA - remainingB
+      })
+
+      .forEach((item) => {
+        const remaining = item.income - item.expense
+
+        grandIncome += item.income
+
+        grandExpense += item.expense
+
+        grandGas += item.gas
+
+        grandRemaining += remaining
+
+        grandPM += item.total_pm
+
+        reportTableBody.innerHTML += `
           <tr>
 
             <td>
@@ -523,31 +522,32 @@ generateButton.addEventListener('click', async () => {
               ${item.total_pm.toLocaleString('id-ID')}
             </td>
 
-            <td>
-              ${item.income ? formatRupiah(item.income) : '-'}
-            </td>
+<td>
+  ${formatRupiah(item.income)}
+</td>
 
-            <td>
-              ${item.expense ? formatRupiah(item.expense) : '-'}
-            </td>
+<td>
+  ${formatRupiah(item.expense)}
+</td>
 
-            <td>
-              ${item.gas ? formatRupiah(item.gas) : '-'}
-            </td>
+<td>
+  ${formatRupiah(item.gas)}
+</td>
 
 <td class="${remaining < 0 ? 'negative' : 'positive'}">
-  ${remaining ? formatRupiah(remaining) : '-'}
-            </td>
+  ${formatRupiah(remaining)}
+</td>
 
           </tr>
         `
-    })
+      })
 
-  totalIncome.textContent = formatRupiah(grandIncome)
+    reportTotalIncome.textContent = formatRupiah(grandIncome)
 
-  totalExpense.textContent = formatRupiah(grandExpense)
+    reportTotalExpense.textContent = formatRupiah(grandExpense)
 
-  totalGas.textContent = formatRupiah(grandGas)
+    reportTotalGas.textContent = formatRupiah(grandGas)
 
-  totalRemaining.textContent = formatRupiah(grandRemaining)
-})
+    reportTotalRemaining.textContent = formatRupiah(grandRemaining)
+  })
+})()

@@ -1,9 +1,11 @@
-async function loadTransactions() {
-  transactionsContainer.innerHTML = `
+async function loadTransactions(showLoading = true) {
+  if (showLoading) {
+    transactionsContainer.innerHTML = `
     <div class="transaction-card">
       Memuat transaksi...
     </div>
   `
+  }
 
   let query = supabaseClient.from('transactions').select(`
       *,
@@ -13,9 +15,7 @@ async function loadTransactions() {
     `)
 
   if (currentUser.role === 'viewer') {
-    query = query
-      .eq('flow_type', 'expense')
-      .eq('supplier_id', '3e80a99f-a5af-499e-bad5-32cce54c7361')
+    query = query.eq('flow_type', 'expense')
   }
 
   if (filterKitchen.value) {
@@ -115,12 +115,22 @@ async function loadTransactions() {
 
         </div>
 
-        <div class="transaction-target">
-          ${target}
-        </div>
+<div
+  class="
+    transaction-target
+    ${
+      transaction.flow_type === 'income'
+        ? 'target-income'
+        : transaction.flow_type === 'neutral'
+          ? 'target-gas'
+          : 'target-expense'
+    }
+  "
+>
+  ${target}
+</div>
 
-        <small class="transaction-date">
-          Diinput pada:
+<small class="transaction-date">
           ${new Date(transaction.transaction_date)
             .toLocaleDateString('id-ID', {
               day: '2-digit',
@@ -143,17 +153,17 @@ async function loadTransactions() {
             ? `
             <div class="transaction-actions">
 
-              <button
-                onclick='editTransaction(${JSON.stringify(transaction)})'
-              >
-                ✏️
-              </button>
+<button
+  onclick='editTransaction(${JSON.stringify(transaction)})'
+>
+  <i data-lucide="pencil"></i>
+</button>
 
-              <button
-                onclick="openDeleteModal('${transaction.id}')"
-              >
-                🗑
-              </button>
+<button
+  onclick="openDeleteModal('${transaction.id}')"
+>
+  <i data-lucide="trash-2"></i>
+</button>
 
             </div>
             `
@@ -167,6 +177,7 @@ async function loadTransactions() {
   </div>
 `
   })
+  lucide.createIcons()
 }
 
 loadMoreButton.addEventListener(
@@ -186,7 +197,7 @@ loadMoreButton.addEventListener(
     try {
       transactionLimit += 5
 
-      await loadTransactions()
+      await loadTransactions(false)
     } finally {
       loadMoreButton.disabled = false
 

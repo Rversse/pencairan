@@ -22,6 +22,8 @@ applyDashboardFilter?.addEventListener(
 
     try {
       await loadDashboard()
+
+      await loadDailyStatus()
     } finally {
       applyDashboardFilter.disabled = false
 

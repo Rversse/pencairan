@@ -31,6 +31,10 @@ async function startApp() {
 
   await loadDashboard()
 
+  await loadDailyStatus()
+
+  await loadSupplierReport()
+
   toggleFields()
 
   lucide.createIcons()
@@ -39,56 +43,58 @@ async function startApp() {
 }
 
 function applyRoleAccess() {
-  const dashboardLink = document.querySelector('a[href="index.html"]')
+  const dashboardLink = document.getElementById('dashboardTab')
+
+  const reportLink = document.getElementById('reportTab')
 
   const dashboard = document.querySelector('.dashboard')
-
-  const reportLink = document.querySelector('a[href="report.html"]')
 
   const adminSection = document.getElementById('adminTransactionsSection')
 
   const fabButton = document.querySelector('.fab-button')
 
   if (window.currentUser?.role === 'viewer') {
-    if (dashboardLink) {
-      dashboardLink.style.display = 'none'
+    // Hide menu
+    dashboardLink?.style.setProperty('display', 'none')
+
+    reportLink?.style.setProperty('display', 'none')
+
+    // Hide dashboard content
+    dashboard?.style.setProperty('display', 'none')
+
+    adminSection?.style.setProperty('display', 'none')
+
+    fabButton?.style.setProperty('display', 'none')
+
+    // Force supplier page
+    if (dashboardSection) {
+      dashboardSection.style.display = 'none'
     }
 
-    if (dashboard) {
-      dashboard.style.display = 'none'
+    if (reportSection) {
+      reportSection.style.display = 'none'
     }
 
-    if (reportLink) {
-      reportLink.style.display = 'none'
+    if (supplierSection) {
+      supplierSection.style.display = 'block'
     }
 
-    if (adminSection) {
-      adminSection.style.display = 'none'
-    }
+    // Active tab
+    dashboardTab?.classList.remove('active')
 
-    if (fabButton) {
-      fabButton.style.display = 'none'
-    }
+    reportTab?.classList.remove('active')
+
+    supplierReportTab?.classList.add('active')
   } else {
-    if (dashboardLink) {
-      dashboardLink.style.display = ''
-    }
+    dashboardLink?.style.setProperty('display', '')
 
-    if (dashboard) {
-      dashboard.style.display = ''
-    }
+    reportLink?.style.setProperty('display', '')
 
-    if (reportLink) {
-      reportLink.style.display = ''
-    }
+    dashboard?.style.setProperty('display', '')
 
-    if (adminSection) {
-      adminSection.style.display = ''
-    }
+    adminSection?.style.setProperty('display', '')
 
-    if (fabButton) {
-      fabButton.style.display = ''
-    }
+    fabButton?.style.setProperty('display', '')
   }
 }
 

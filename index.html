@@ -10,6 +10,8 @@
     <title>Pencairan Dapur</title>
 
     <link rel="stylesheet" href="./css/style.css" />
+
+    <link rel="stylesheet" href="./css/report.css" />
   </head>
 
   <body>
@@ -26,104 +28,211 @@
 
       <div class="navbar-right">
         <div id="viewerBadge"></div>
-        <a href="index.html" class="nav-link active"> Dashboard </a>
+        <a href="#" id="dashboardTab" class="nav-link active"> Dashboard </a>
 
-        <a href="report.html" class="nav-link"> Laporan </a>
+        <a href="#" id="supplierReportTab" class="nav-link"> Rekap Supplier </a>
+
+        <a href="#" id="reportTab" class="nav-link"> Laporan </a>
 
         <button id="logoutButton" class="logout-button">Logout</button>
       </div>
     </nav>
 
     <div class="container">
-      <div class="dashboard">
-        <div class="dashboard-card">
-          <div class="dashboard-card-top">
-            <div>
-              <small class="transaction-date"> Total Belanja BGN </small>
+      <div id="dashboardSection">
+        <div id="dailyStatusWidget">
+          <div id="dailyStatusSummary">
+            <div class="status-dot green">5</div>
 
-              <h2 id="surplusAmount">Rp 0</h2>
+            <div class="status-dot yellow">4</div>
+
+            <div class="status-dot red">2</div>
+          </div>
+
+          <div id="dailyStatusPanel" style="display: none">
+            <div class="daily-status-header">
+              <div>STATUS</div>
+
+              <small id="dailyStatusDate"> - </small>
+
+              <div class="daily-status-legend">
+                <span class="legend-belanja">B</span>
+                <span class="legend-koperasi">K</span>
+                <span class="legend-gas">G</span>
+              </div>
             </div>
 
-            <div class="dashboard-icon">
-              <i data-lucide="wallet"></i>
+            <div id="dailyStatusList"></div>
+          </div>
+        </div>
+        <div class="dashboard">
+          <div class="dashboard-card">
+            <div class="dashboard-card-top">
+              <div>
+                <small class="transaction-date"> Total Belanja BGN </small>
+
+                <h2 id="surplusAmount">Rp 0</h2>
+              </div>
+
+              <div class="dashboard-icon">
+                <i data-lucide="wallet"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="dashboard-card-top">
+              <div>
+                <small class="transaction-date"> Total Belanja Koperasi </small>
+
+                <h2 id="totalExpense">Rp 0</h2>
+              </div>
+
+              <div class="dashboard-icon">
+                <i data-lucide="receipt"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="dashboard-card-top">
+              <div>
+                <small class="transaction-date"> Total Belanja Gas </small>
+
+                <h2 id="totalGas">Rp 0</h2>
+              </div>
+
+              <div class="dashboard-icon">
+                <i data-lucide="flame"></i>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="dashboard-card">
-          <div class="dashboard-card-top">
-            <div>
-              <small class="transaction-date"> Total Belanja Koperasi </small>
+        <div class="dashboard-filters">
+          <input type="date" id="dashboardStartDate" />
 
-              <h2 id="totalExpense">Rp 0</h2>
-            </div>
+          <input type="date" id="dashboardEndDate" />
 
-            <div class="dashboard-icon">
-              <i data-lucide="receipt"></i>
-            </div>
-          </div>
+          <button id="applyDashboardFilter">Apply</button>
         </div>
 
-        <div class="dashboard-card">
-          <div class="dashboard-card-top">
-            <div>
-              <small class="transaction-date"> Total Belanja Gas </small>
-
-              <h2 id="totalGas">Rp 0</h2>
+        <div id="adminTransactionsSection">
+          <div class="transactions-section">
+            <div class="transactions-header">
+              <h3 class="section-title">Riwayat Transaksi</h3>
             </div>
+          </div>
 
-            <div class="dashboard-icon">
-              <i data-lucide="flame"></i>
-            </div>
+          <div class="filters">
+            <select id="filterKitchen">
+              <option value="">Semua Dapur</option>
+            </select>
+
+            <select id="filterFlow">
+              <option value="">Semua Jenis</option>
+
+              <option value="income">Pemasukan</option>
+
+              <option value="expense">Pengeluaran</option>
+
+              <option value="neutral">GAS</option>
+            </select>
+
+            <input type="date" id="filterDate" />
+
+            <button type="button" id="resetFilters">Reset Filter</button>
+          </div>
+
+          <div id="transactions" class="transactions-list"></div>
+
+          <div class="load-more-wrapper">
+            <button type="button" id="loadMoreButton">Load More</button>
           </div>
         </div>
       </div>
 
-      <div class="dashboard-filters">
-        <input type="date" id="dashboardStartDate" />
+      <!-- dashboardSection -->
 
-        <input type="date" id="dashboardEndDate" />
+      <div id="supplierSection" style="display: none">
+        <div class="dashboard-filters">
+          <input type="date" id="supplierStartDate" />
 
-        <button id="applyDashboardFilter">Apply</button>
+          <input type="date" id="supplierEndDate" />
+
+          <button id="applySupplierFilter">Apply</button>
+        </div>
+
+        <div id="supplierSummary"></div>
+
+        <div id="supplierDailySummary"></div>
       </div>
 
-      <div id="viewerSummary"></div>
+      <section id="reportSection" style="display: none">
+        <div class="topbar">
+          <div>
+            <h1>Laporan Rangkuman Transaksi Dapur</h1>
 
-      <div id="dailyViewerSummary"></div>
-
-      <div id="adminTransactionsSection">
-        <div class="transactions-section">
-          <div class="transactions-header">
-            <h3 class="section-title">Riwayat Transaksi</h3>
+            <p id="reportPeriod">-</p>
           </div>
+
+          <button id="printButton">Print / Save PDF</button>
         </div>
 
         <div class="filters">
-          <select id="filterKitchen">
-            <option value="">Semua Dapur</option>
-          </select>
+          <input type="date" id="startDate" />
 
-          <select id="filterFlow">
-            <option value="">Semua Jenis</option>
+          <input type="date" id="endDate" />
 
-            <option value="income">Pemasukan</option>
-
-            <option value="expense">Pengeluaran</option>
-
-            <option value="neutral">GAS</option>
-          </select>
-
-          <input type="date" id="filterDate" />
-
-          <button type="button" id="resetFilters">Reset Filter</button>
+          <button id="generateButton">Generate</button>
         </div>
 
-        <div id="transactions" class="transactions-list"></div>
+        <div class="summary-grid">
+          <div class="summary-card">
+            <small> BELANJA BGN </small>
 
-        <div class="load-more-wrapper">
-          <button type="button" id="loadMoreButton">Load More</button>
+            <h2 id="reportTotalIncome">Rp. 0</h2>
+          </div>
+
+          <div class="summary-card">
+            <small> KOPERASI </small>
+
+            <h2 id="reportTotalExpense">Rp. 0</h2>
+          </div>
+
+          <div class="summary-card">
+            <small> GAS </small>
+
+            <h2 id="reportTotalGas">Rp. 0</h2>
+          </div>
+
+          <div class="summary-card">
+            <small> TOTAL (Belanja BGN - Koperasi)</small>
+
+            <h2 id="reportTotalRemaining">Rp. 0</h2>
+          </div>
         </div>
-      </div>
+
+        <table>
+          <thead>
+            <tr>
+              <th>SPPG</th>
+
+              <th>TOTAL PM</th>
+
+              <th>BELANJA BGN</th>
+
+              <th>KOPERASI</th>
+
+              <th>GAS</th>
+
+              <th>TOTAL</th>
+            </tr>
+          </thead>
+
+          <tbody id="reportTableBody"></tbody>
+        </table>
+      </section>
     </div>
 
     <button id="openTransactionModal" class="fab-button">
@@ -193,6 +302,8 @@
     <script defer src="js/auth.js"></script>
 
     <script defer src="https://unpkg.com/lucide@latest"></script>
+
+    <script defer src="js/report.js"></script>
 
     <script defer src="js/app.js"></script>
   </body>

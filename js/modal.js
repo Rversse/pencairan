@@ -5,6 +5,9 @@ const openTransactionModal = document.getElementById('openTransactionModal')
 const closeTransactionModal = document.getElementById('closeTransactionModal')
 
 function openModal() {
+  if (window.currentUser?.role !== 'admin') {
+    return
+  }
   if (transactionModal.classList.contains('show')) {
     return
   }

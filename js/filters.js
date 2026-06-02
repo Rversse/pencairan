@@ -31,6 +31,8 @@ filterDate.addEventListener(
     await loadTransactions()
 
     await loadDashboard()
+
+    await loadDailyStatus()
   }
 )
 
@@ -49,5 +51,7 @@ resetFilters.addEventListener(
     await loadTransactions()
 
     await loadDashboard()
+
+    await loadDailyStatus()
   }
 )

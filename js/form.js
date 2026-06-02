@@ -225,6 +225,9 @@ function lockTransactionFields(isEditing) {
 }
 
 async function editTransaction(transaction) {
+  if (window.currentUser?.role !== 'admin') {
+    return
+  }
   if (isTransactionLocked(transaction.transaction_date)) {
     showToast('Transaksi sudah dikunci')
 
@@ -283,6 +286,11 @@ async function editTransaction(transaction) {
 }
 
 transactionForm.addEventListener('submit', async (event) => {
+  if (window.currentUser?.role !== 'admin') {
+    showToast('Akses ditolak')
+    return
+  }
+
   event.preventDefault()
 
   if (submitButton.disabled) {
@@ -364,14 +372,29 @@ transactionForm.addEventListener('submit', async (event) => {
   submitButton.textContent = 'Menyimpan...'
 
   try {
-    const duplicateCheck = await supabaseClient
+    let duplicateCheckQuery = supabaseClient
       .from('transactions')
       .select('id')
       .eq('transaction_date', payload.transaction_date)
       .eq('kitchen_id', payload.kitchen_id)
       .eq('flow_type', payload.flow_type)
       .eq('amount', payload.amount)
-      .limit(1)
+
+    if (payload.flow_type === 'expense') {
+      duplicateCheckQuery = duplicateCheckQuery.eq(
+        'supplier_id',
+        payload.supplier_id
+      )
+    }
+
+    if (payload.flow_type === 'income' || payload.flow_type === 'neutral') {
+      duplicateCheckQuery = duplicateCheckQuery.eq(
+        'account_id',
+        payload.account_id
+      )
+    }
+
+    const duplicateCheck = await duplicateCheckQuery.limit(1)
 
     if (duplicateCheck.data?.length && !editingTransactionId) {
       const proceed = confirm('Kemungkinan transaksi duplikat. Tetap simpan?')
@@ -408,6 +431,8 @@ transactionForm.addEventListener('submit', async (event) => {
     await loadTransactions()
 
     await loadDashboard()
+
+    await loadDailyStatus()
   } catch (error) {
     console.error(error)
 
