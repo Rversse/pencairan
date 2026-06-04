@@ -16,18 +16,18 @@ function updateFlowOptions() {
     </option>
 
     <option value="pemasukan">
-      Pemasukan
+      BELANJA BGN
     </option>
 
     <option value="pengeluaran">
-      Pengeluaran
+      BELANJA SUPPLIER
     </option>
     `
 
   if (hasGas) {
     flowType.innerHTML += `
       <option value="gas">
-        GAS
+        BELANJA GAS
       </option>
     `
   }

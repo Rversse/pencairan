@@ -74,18 +74,18 @@ async function loadTransactions(showLoading = true) {
   data.forEach((transaction) => {
     let badgeClass = 'badge-income'
 
-    let label = 'Pemasukan'
+    let label = 'BELANJA BGN'
 
     if (transaction.flow_type === 'expense') {
       badgeClass = 'badge-expense'
 
-      label = 'Pengeluaran'
+      label = 'BELANJA SUPPLIER'
     }
 
     if (transaction.flow_type === 'neutral') {
       badgeClass = 'badge-gas'
 
-      label = 'Gas'
+      label = 'BELANJA GAS'
     }
 
     const target = transaction.accounts
