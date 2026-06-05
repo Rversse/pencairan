@@ -88,7 +88,7 @@ async function loadAccountsFiltered(flow) {
 
   const flowMap = {
     pemasukan: 'income',
-    gas: 'neutral',
+    gas: 'neutral'
   }
 
   const dbFlow = flowMap[flow]
@@ -107,8 +107,6 @@ async function loadAccountsFiltered(flow) {
     )
     .eq('kitchen_id', kitchenId)
     .eq('flow_type', dbFlow)
-
-  console.log(flow, dbFlow, data)
 
   if (error) {
     console.error(error)

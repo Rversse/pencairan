@@ -30,6 +30,8 @@
         <div id="viewerBadge"></div>
         <a href="#" id="dashboardTab" class="nav-link active"> Dashboard </a>
 
+        <a href="#" id="disbursementTab" class="nav-link"> Pencairan </a>
+
         <a href="#" id="supplierReportTab" class="nav-link"> Rekap Supplier </a>
 
         <a href="#" id="reportTab" class="nav-link"> Laporan </a>
@@ -154,6 +156,15 @@
 
       <!-- dashboardSection -->
 
+      <div id="disbursementSection" style="display: none">
+        <div class="dashboard-filters">
+          <input type="date" id="disbursementDate" />
+        </div>
+
+        <div id="disbursementSummary"></div>
+
+        <div id="disbursementTable"></div>
+      </div>
       <div id="supplierSection" style="display: none">
         <div class="dashboard-filters">
           <input type="date" id="supplierStartDate" />

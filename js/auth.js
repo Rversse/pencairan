@@ -1,6 +1,6 @@
 async function initAuth() {
   const {
-    data: { session },
+    data: { session }
   } = await supabaseClient.auth.getSession()
 
   if (!session) {
@@ -23,11 +23,9 @@ async function initAuth() {
     return false
   }
 
-  console.log('AUTH SESSION:', session)
-
   window.currentUser = {
     ...session.user,
-    role: profile.role,
+    role: profile.role
   }
 
   return true
