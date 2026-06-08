@@ -10,7 +10,7 @@ function formatRupiah(number) {
 
     currency: 'IDR',
 
-    maximumFractionDigits: 0,
+    maximumFractionDigits: 0
   }).format(value)
 }
 
@@ -51,7 +51,7 @@ function isTransactionLocked(date) {
     (today.getFullYear() - transactionDate.getFullYear()) * 12 +
     (today.getMonth() - transactionDate.getMonth())
 
-  return diffMonths >= 2
+  return false
 }
 
 let inactivityTimer

@@ -516,7 +516,6 @@ async function renderSupplierSummary(data) {
     if (!grouped[kitchen]) {
       grouped[kitchen] = {
         Arutala: 0,
-        Barokah: 0,
         Sukalarang: 0,
         Aris: 0,
         Babinsa: 0,
@@ -542,10 +541,6 @@ async function renderSupplierSummary(data) {
         grouped[kitchen].Babinsa += Number(item.amount)
       }
 
-      if (supplier.includes('UMKM Barokah')) {
-        grouped[kitchen].Barokah += Number(item.amount)
-      }
-
       grouped[kitchen].Total += Number(item.amount)
     }
 
@@ -566,10 +561,6 @@ async function renderSupplierSummary(data) {
 
             <td>
               ${formatRupiah(values.Arutala)}
-            </td>
-
-            <td>
-              ${formatRupiah(values.Barokah)}
             </td>
 
             <td>
@@ -600,7 +591,6 @@ async function renderSupplierSummary(data) {
 
   const totals = {
     Arutala: 0,
-    Barokah: 0,
     Sukalarang: 0,
     Aris: 0,
     Babinsa: 0,
@@ -610,8 +600,6 @@ async function renderSupplierSummary(data) {
 
   Object.values(grouped).forEach((item) => {
     totals.Arutala += item.Arutala
-
-    totals.Barokah += item.Barokah
 
     totals.Sukalarang += item.Sukalarang
 
@@ -670,7 +658,6 @@ ${new Date(latestTransaction.created_at)
 
 <th>DAPUR</th>
 <th>ARUTALA</th>
-<th>UMKM BAROKAH</th>
 <th>SUKALARANG</th>
 <th>ARIS</th>
 <th>BABINSA</th>
@@ -699,15 +686,6 @@ ${new Date(latestTransaction.created_at)
 
               <strong>
                 ${formatRupiah(totals.Arutala)}
-              </strong>
-
-            </td>
-
-            
-            <td>
-
-              <strong>
-                ${formatRupiah(totals.Barokah)}
               </strong>
 
             </td>
@@ -804,7 +782,6 @@ async function renderSupplierDailySummary(data) {
       if (!grouped[kitchen]) {
         grouped[kitchen] = {
           Arutala: 0,
-          Barokah: 0,
           Sukalarang: 0,
           Aris: 0,
           Babinsa: 0,
@@ -830,10 +807,6 @@ async function renderSupplierDailySummary(data) {
           grouped[kitchen].Babinsa += Number(item.amount)
         }
 
-        if (supplier.includes('UMKM Barokah')) {
-          grouped[kitchen].Barokah += Number(item.amount)
-        }
-
         grouped[kitchen].Total += Number(item.amount)
       }
 
@@ -844,7 +817,6 @@ async function renderSupplierDailySummary(data) {
 
     const totals = {
       Arutala: 0,
-      Barokah: 0,
       Sukalarang: 0,
       Aris: 0,
       Babinsa: 0,
@@ -854,8 +826,6 @@ async function renderSupplierDailySummary(data) {
 
     Object.values(grouped).forEach((item) => {
       totals.Arutala += item.Arutala
-
-      totals.Barokah += item.Barokah
 
       totals.Sukalarang += item.Sukalarang
 
@@ -880,10 +850,6 @@ async function renderSupplierDailySummary(data) {
 
                 <td>
                   ${formatRupiah(values.Arutala)}
-                </td>
-
-                <td>
-                  ${formatRupiah(values.Barokah)}
                 </td>
 
                 <td>
@@ -952,7 +918,6 @@ async function renderSupplierDailySummary(data) {
 
 <th>DAPUR</th>
 <th>ARUTALA</th>
-<th>UMKM BAROKAH</th>
 <th>SUKALARANG</th>
 <th>ARIS</th>
 <th>BABINSA</th>
@@ -984,14 +949,6 @@ async function renderSupplierDailySummary(data) {
                     </strong>
 
                   </td>
-
-                  <td>
-
-              <strong>
-                ${formatRupiah(totals.Barokah)}
-              </strong>
-
-            </td>
 
                   <td>
 

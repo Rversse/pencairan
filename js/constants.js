@@ -56,4 +56,10 @@ const confirmDeleteButton = document.getElementById('confirmDelete')
 
 const cancelDeleteButton = document.getElementById('cancelDelete')
 
+const exportExcelButton = document.getElementById('exportExcelButton')
+
+const reportStartDate = document.getElementById('startDate')
+
+const reportEndDate = document.getElementById('endDate')
+
 const SUKARAJA_NAME = 'Sukaraja'

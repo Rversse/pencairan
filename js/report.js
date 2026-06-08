@@ -51,7 +51,7 @@
     return new Date(date).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
+      year: 'numeric'
     })
   }
 
@@ -306,7 +306,7 @@ ${new Date()
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit',
+    minute: '2-digit'
   })
   .replace(/\./g, ':')
   .replace(/\//g, '-')}
@@ -431,7 +431,7 @@ ${new Date()
 
         expense: 0,
 
-        gas: 0,
+        gas: 0
       }
     })
 
@@ -550,4 +550,310 @@ ${new Date()
 
     reportTotalRemaining.textContent = formatRupiah(grandRemaining)
   })
+
+  exportExcelButton?.addEventListener(
+    'click',
+
+    async () => {
+      await exportPelaporanExcel()
+    }
+  )
+
+  const EXPORT_LAYOUT = {
+    Sukaraja: [
+      'ARUTALA BRI',
+      'KPWS BRI',
+      'KOPERASI ARUTALA',
+      'KOPERASI SUKALARANG',
+      'ARIS',
+      'BABINSA'
+    ],
+
+    Cihaur: ['ARUTALA BRI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+
+    Cibaregbeg: ['ARUTALA BRI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+
+    Warungbitung: ['ARUTALA BRI', 'KOPERASI ARUTALA'],
+
+    Campakamulya: ['ARUTALA BNI', 'KOPERASI ARUTALA'],
+
+    Kertajadi: ['ARUTALA BNI', 'KOPERASI ARUTALA'],
+
+    Cisepat: ['ARUTALA BNI', 'KOPERASI ARUTALA'],
+
+    Cipetir: ['ARUTALA BNI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+
+    Cimanggu: ['ARUTALA BNI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+
+    Cikondang: ['ARUTALA BNI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+
+    Ciranca: ['ARUTALA BNI', 'KOPERASI ARUTALA']
+  }
+
+  async function exportPelaporanExcel() {
+    const startDate = document.getElementById('startDate').value
+
+    const endDate = document.getElementById('endDate').value
+
+    let transactions = []
+
+    let from = 0
+
+    const pageSize = 1000
+
+    while (true) {
+      const { data, error } = await supabaseClient
+        .from('transactions')
+        .select(
+          `
+        transaction_date,
+        kitchen_id,
+        account_id,
+        supplier_id,
+        flow_type,
+        amount
+      `
+        )
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate)
+        .range(from, from + pageSize - 1)
+
+      if (error) {
+        console.error(error)
+
+        return
+      }
+
+      transactions.push(...data)
+
+      if (data.length < pageSize) {
+        break
+      }
+
+      from += pageSize
+    }
+
+    const { count } = await supabaseClient.from('transactions').select('*', {
+      count: 'exact',
+      head: true
+    })
+
+    const { data: kitchens } = await supabaseClient
+      .from('kitchens')
+      .select('id,name')
+
+    const { data: accounts } = await supabaseClient
+      .from('accounts')
+      .select('id,name,bank')
+
+    const { data: suppliers } = await supabaseClient
+      .from('suppliers')
+      .select('id,name')
+
+    const kitchenMap = new Map(kitchens.map((item) => [item.id, item]))
+
+    const accountMap = new Map(accounts.map((item) => [item.id, item]))
+
+    const supplierMap = new Map(suppliers.map((item) => [item.id, item]))
+
+    const headerRow1 = ['Tanggal']
+
+    const headerRow2 = ['']
+
+    Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+      columns.forEach(() => {
+        headerRow1.push(kitchenName)
+      })
+
+      headerRow2.push(...columns)
+    })
+
+    const uniqueDates = [
+      ...new Set(
+        transactions.map((transaction) => transaction.transaction_date)
+      )
+    ].sort()
+
+    const pivotRows = uniqueDates.map((date) => {
+      const row = {
+        Tanggal: date
+      }
+
+      Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+        columns.forEach((column) => {
+          row[`${kitchenName}|${column}`] = 0
+        })
+      })
+
+      return row
+    })
+
+    const pivotMap = new Map()
+
+    pivotRows.forEach((row) => {
+      pivotMap.set(row.Tanggal, row)
+    })
+
+    transactions.forEach((transaction) => {
+      const row = pivotMap.get(transaction.transaction_date)
+
+      if (!row) {
+        return
+      }
+
+      const kitchen = kitchenMap.get(transaction.kitchen_id)
+
+      if (!kitchen) {
+        return
+      }
+
+      const amount = Number(transaction.amount) || 0
+
+      let columnName = null
+
+      if (transaction.flow_type === 'income') {
+        const account = accountMap.get(transaction.account_id)
+
+        if (!account) {
+          return
+        }
+
+        if (account.name === 'Arutala' && account.bank === 'BNI') {
+          columnName = 'ARUTALA BNI'
+        }
+
+        if (account.name === 'Arutala' && account.bank === 'BRI') {
+          columnName = 'ARUTALA BRI'
+        }
+
+        if (account.name === 'KPWS') {
+          columnName = 'KPWS BRI'
+        }
+
+        if (account.name === 'Dede Jaelani') {
+          columnName = 'DEDE JAELANI BNI'
+        }
+      }
+
+      if (transaction.flow_type === 'expense') {
+        const supplier = supplierMap.get(transaction.supplier_id)
+
+        if (!supplier) {
+          return
+        }
+
+        if (supplier.name === 'Koperasi Arutala') {
+          columnName = 'KOPERASI ARUTALA'
+        }
+
+        if (supplier.name === 'Sukalarang') {
+          columnName = 'KOPERASI SUKALARANG'
+        }
+
+        if (supplier.name === 'Aris') {
+          columnName = 'ARIS'
+        }
+
+        if (supplier.name === 'Babinsa') {
+          columnName = 'BABINSA'
+        }
+      }
+
+      if (!columnName) {
+        return
+      }
+
+      const key = `${kitchen.name}|${columnName}`
+
+      if (row[key] === undefined) {
+        return
+      }
+
+      row[key] += amount
+    })
+
+    const sheetData = [headerRow1, headerRow2]
+
+    pivotRows.forEach((row) => {
+      const sheetRow = [row.Tanggal]
+
+      Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+        columns.forEach((column) => {
+          sheetRow.push(row[`${kitchenName}|${column}`])
+        })
+      })
+
+      sheetData.push(sheetRow)
+    })
+
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData)
+
+    Object.keys(worksheet).forEach((cell) => {
+      if (cell.startsWith('!')) {
+        return
+      }
+
+      const value = worksheet[cell]?.v
+
+      if (typeof value === 'number') {
+        worksheet[cell].z = '#,##0'
+      }
+    })
+
+    worksheet['!merges'] = []
+
+    worksheet['!merges'].push({
+      s: { r: 0, c: 0 },
+      e: { r: 1, c: 0 }
+    })
+
+    let currentCol = 1
+
+    Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+      const startCol = currentCol
+      const endCol = currentCol + columns.length - 1
+
+      if (columns.length > 1) {
+        worksheet['!merges'].push({
+          s: {
+            r: 0,
+            c: startCol
+          },
+          e: {
+            r: 0,
+            c: endCol
+          }
+        })
+      }
+
+      currentCol = endCol + 1
+    })
+
+    worksheet['!cols'] = sheetData[0].map((_, colIndex) => {
+      let maxLength = 15
+
+      sheetData.forEach((row) => {
+        const value = row[colIndex]
+
+        if (value !== undefined && value !== null) {
+          maxLength = Math.max(maxLength, String(value).length + 2)
+        }
+      })
+
+      return {
+        wch: Math.min(maxLength, 25)
+      }
+    })
+
+    const workbook = XLSX.utils.book_new()
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pelaporan')
+
+    worksheet['!freeze'] = {
+      xSplit: 1,
+      ySplit: 2
+    }
+
+    XLSX.writeFile(workbook, `pelaporan-${startDate}-${endDate}.xlsx`)
+  }
 })()
