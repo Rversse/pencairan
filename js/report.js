@@ -3,6 +3,8 @@
 
   const endDate = document.getElementById('endDate')
 
+  const exportKitchen = document.getElementById('exportKitchen')
+
   const generateButton = document.getElementById('generateButton')
 
   const printButton = document.getElementById('printButton')
@@ -10,6 +12,8 @@
   const reportPeriod = document.getElementById('reportPeriod')
 
   const reportTableBody = document.getElementById('reportTableBody')
+
+  const reportDetails = document.getElementById('reportDetails')
 
   const reportTotalIncome = document.getElementById('reportTotalIncome')
 
@@ -55,6 +59,27 @@
     })
   }
 
+  async function loadKitchenOptions() {
+    const { data, error } = await supabaseClient
+      .from('kitchens')
+      .select('id,name')
+      .order('name')
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    data.forEach((kitchen) => {
+      exportKitchen.innerHTML += `
+      <option value="${kitchen.id}">
+        ${kitchen.name}
+      </option>
+    `
+    })
+  }
+
+  loadKitchenOptions()
   // ======================
   // PRINT
   // ======================
@@ -163,8 +188,7 @@
 
       .summary-card {
 
-        background:
-          #ECF0F6;
+background:rgba(255,255,255,.05);
 
         border-radius:
           8px;
@@ -392,15 +416,50 @@ ${new Date()
       query = query.eq('flow_type', 'expense')
     }
 
-    const { data, error } = await query
+    let data = []
 
-    if (error) {
-      console.error(error)
+    let from = 0
 
-      alert('Gagal generate laporan')
+    const pageSize = 1000
 
-      return
+    while (true) {
+      const { data: page, error } = await supabaseClient
+        .from('transactions')
+        .select(
+          `
+      *,
+      kitchens (
+        id,
+        name,
+        total_pm
+      )
+    `
+        )
+        .gte('transaction_date', startDate.value)
+        .lte('transaction_date', endDate.value)
+        .order('transaction_date', { ascending: true })
+        .range(from, from + pageSize - 1)
+
+      if (error) {
+        console.error(error)
+        alert('Gagal generate laporan')
+        return
+      }
+
+      data.push(...page)
+
+      if (page.length < pageSize) {
+        break
+      }
+
+      from += pageSize
     }
+
+    console.log('REPORT TRANSACTIONS', data.length)
+
+    console.log('FIRST', data[0]?.transaction_date)
+
+    console.log('LAST', data[data.length - 1]?.transaction_date)
 
     // lanjut bawahnya tetap 😭
 
@@ -416,6 +475,8 @@ ${new Date()
     }
 
     const grouped = {}
+
+    const dailyGrouped = {}
 
     // ======================
     // PREFILL ALL KITCHENS
@@ -433,6 +494,8 @@ ${new Date()
 
         gas: 0
       }
+
+      dailyGrouped[kitchen.id] = {}
     })
 
     // ======================
@@ -446,20 +509,40 @@ ${new Date()
         return
       }
 
+      const date = transaction.transaction_date
+
+      if (!dailyGrouped[kitchen.id][date]) {
+        dailyGrouped[kitchen.id][date] = {
+          income: 0,
+          expense: 0,
+          gas: 0
+        }
+      }
+
       if (transaction.flow_type === 'income') {
         grouped[kitchen.id].income += Number(transaction.amount)
+
+        dailyGrouped[kitchen.id][date].income += Number(transaction.amount)
       }
 
       if (transaction.flow_type === 'expense') {
         grouped[kitchen.id].expense += Number(transaction.amount)
+
+        dailyGrouped[kitchen.id][date].expense += Number(transaction.amount)
       }
 
       if (transaction.flow_type === 'neutral') {
         grouped[kitchen.id].gas += Number(transaction.amount)
+
+        dailyGrouped[kitchen.id][date].gas += Number(transaction.amount)
       }
     })
 
+    console.log('dailyGrouped', dailyGrouped)
+
     reportTableBody.innerHTML = ''
+
+    reportDetails.innerHTML = ''
 
     let grandIncome = 0
 
@@ -549,6 +632,110 @@ ${new Date()
     reportTotalGas.textContent = formatRupiah(grandGas)
 
     reportTotalRemaining.textContent = formatRupiah(grandRemaining)
+
+    reportDetails.innerHTML = ''
+
+    Object.entries(grouped)
+      .sort((a, b) => {
+        const totalA = a[1].income - a[1].expense
+
+        const totalB = b[1].income - b[1].expense
+
+        return totalA - totalB
+      })
+      .forEach(([kitchenId, kitchen]) => {
+        const dates = dailyGrouped[kitchenId]
+
+        if (
+          kitchen.income === 0 &&
+          kitchen.expense === 0 &&
+          kitchen.gas === 0
+        ) {
+          return
+        }
+
+        if (!dates) return
+
+        if (!kitchen) return
+
+        const dateCount = Object.keys(dates).length
+
+        if (dateCount === 0) return
+
+        const rows = Object.entries(dates)
+          .sort((a, b) => b[0].localeCompare(a[0]))
+          .map(([date, values]) => {
+            const remaining = values.income - values.expense
+
+            return `
+        <tr>
+          <td>${date.split('-').reverse().join('-')}</td>
+          <td>${formatRupiah(values.income)}</td>
+          <td>${formatRupiah(values.expense)}</td>
+          <td>${formatRupiah(values.gas)}</td>
+          <td class="${remaining < 0 ? 'negative' : 'positive'}">
+            ${formatRupiah(remaining)}
+          </td>
+        </tr>
+      `
+          })
+          .join('')
+
+        const remaining = kitchen.income - kitchen.expense
+
+        reportDetails.innerHTML += `
+    <details style="margin-top:16px">
+<summary
+  style="
+    list-style:none;
+    cursor:pointer;
+    font-weight:600;
+    padding:12px;
+    background:rgba(255,255,255,.05);
+    border-radius:8px;
+  "
+>
+  <div
+    style="
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+    "
+  >
+<span>
+  ${dates && Object.keys(dates).length ? '▶' : ''}
+  ${kitchen.kitchen_name}
+</span>
+
+<span
+  style="
+    color:${remaining < 0 ? '#ff6b6b' : '#32d583'};
+  "
+>
+  ${formatRupiah(remaining)}
+</span>
+  </div>
+</summary>
+
+      <table style="margin-top:10px">
+        <thead>
+          <tr>
+            <th>Tanggal</th>
+            <th>BGN</th>
+            <th>Supplier</th>
+            <th>Gas</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </details>
+  `
+      })
   })
 
   exportExcelButton?.addEventListener(
@@ -774,19 +961,57 @@ ${new Date()
 
     const sheetData = [headerRow1, headerRow2]
 
+    const detailRows = [['Tanggal', 'Dapur', 'Jenis', 'Nama', 'Nominal']]
+
     pivotRows.forEach((row) => {
       const sheetRow = [row.Tanggal]
 
       Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
         columns.forEach((column) => {
-          sheetRow.push(row[`${kitchenName}|${column}`])
+          const value = row[`${kitchenName}|${column}`]
+
+          sheetRow.push(value === 0 ? '-' : value)
         })
       })
 
       sheetData.push(sheetRow)
     })
 
+    transactions.forEach((transaction) => {
+      const kitchen = kitchenMap.get(transaction.kitchen_id)
+
+      if (!kitchen) return
+
+      let name = '-'
+
+      if (transaction.flow_type === 'income') {
+        const account = accountMap.get(transaction.account_id)
+
+        if (account) {
+          name = `${account.name} ${account.bank || ''}`.trim()
+        }
+      }
+
+      if (transaction.flow_type === 'expense') {
+        const supplier = supplierMap.get(transaction.supplier_id)
+
+        if (supplier) {
+          name = supplier.name
+        }
+      }
+
+      detailRows.push([
+        transaction.transaction_date,
+        kitchen.name,
+        transaction.flow_type,
+        name,
+        Number(transaction.amount) || 0
+      ])
+    })
+
     const worksheet = XLSX.utils.aoa_to_sheet(sheetData)
+
+    const detailWorksheet = XLSX.utils.aoa_to_sheet(detailRows)
 
     Object.keys(worksheet).forEach((cell) => {
       if (cell.startsWith('!')) {
@@ -848,6 +1073,8 @@ ${new Date()
     const workbook = XLSX.utils.book_new()
 
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Pelaporan')
+
+    XLSX.utils.book_append_sheet(workbook, detailWorksheet, 'Detail Transaksi')
 
     worksheet['!freeze'] = {
       xSplit: 1,
