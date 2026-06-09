@@ -59,6 +59,10 @@
     })
   }
 
+  function hasTransaction(data) {
+    return data.income > 0 || data.expense > 0 || data.gas > 0
+  }
+
   async function fetchAllTransactions({ startDate, endDate, select }) {
     const transactions = []
 
@@ -104,13 +108,17 @@
       return
     }
 
+    let optionsHtml = ''
+
     data.forEach((kitchen) => {
-      exportKitchen.innerHTML += `
-      <option value="${kitchen.id}">
-        ${kitchen.name}
-      </option>
-    `
+      optionsHtml += `
+    <option value="${kitchen.id}">
+      ${kitchen.name}
+    </option>
+  `
     })
+
+    exportKitchen.innerHTML += optionsHtml
   }
 
   loadKitchenOptions()
@@ -425,11 +433,7 @@ ${new Date()
 
     reportPeriod.textContent = sameDate
       ? formatDate(startDate.value)
-      : `
-          ${formatDate(startDate.value)}
-          —
-          ${formatDate(endDate.value)}
-        `
+      : `${formatDate(startDate.value)} — ${formatDate(endDate.value)}`
 
     let data = []
 
@@ -453,8 +457,6 @@ ${new Date()
 
       return
     }
-
-    // lanjut bawahnya tetap 😭
 
     const { data: kitchens, error: kitchensError } = await supabaseClient
       .from('kitchens')
@@ -498,6 +500,8 @@ ${new Date()
     data.forEach((transaction) => {
       const kitchen = transaction.kitchens
 
+      const amount = Number(transaction.amount) || 0
+
       if (!kitchen) {
         return
       }
@@ -513,21 +517,21 @@ ${new Date()
       }
 
       if (transaction.flow_type === 'income') {
-        grouped[kitchen.id].income += Number(transaction.amount)
+        grouped[kitchen.id].income += amount
 
-        dailyGrouped[kitchen.id][date].income += Number(transaction.amount)
+        dailyGrouped[kitchen.id][date].income += amount
       }
 
       if (transaction.flow_type === 'expense') {
-        grouped[kitchen.id].expense += Number(transaction.amount)
+        grouped[kitchen.id].expense += amount
 
-        dailyGrouped[kitchen.id][date].expense += Number(transaction.amount)
+        dailyGrouped[kitchen.id][date].expense += amount
       }
 
       if (transaction.flow_type === 'neutral') {
-        grouped[kitchen.id].gas += Number(transaction.amount)
+        grouped[kitchen.id].gas += amount
 
-        dailyGrouped[kitchen.id][date].gas += Number(transaction.amount)
+        dailyGrouped[kitchen.id][date].gas += amount
       }
     })
 
@@ -543,9 +547,9 @@ ${new Date()
 
     Object.values(grouped)
       .sort((a, b) => {
-        const activeA = a.income > 0 || a.expense > 0 || a.gas > 0
+        const activeA = hasTransaction(a)
 
-        const activeB = b.income > 0 || b.expense > 0 || b.gas > 0
+        const activeB = hasTransaction(b)
 
         // ======================
         // YANG TIDAK ADA
@@ -633,10 +637,7 @@ ${new Date()
       .forEach(([kitchenId, kitchen]) => {
         const dates = dailyGrouped[kitchenId]
 
-        const hasTransaction =
-          kitchen.income > 0 || kitchen.expense > 0 || kitchen.gas > 0
-
-        if (!hasTransaction) {
+        if (!hasTransaction(kitchen)) {
           return
         }
 
@@ -806,6 +807,9 @@ ${new Date()
       .from('suppliers')
       .select('id,name')
 
+    const selectedKitchen =
+      kitchens.find((k) => k.id === selectedKitchenId) || null
+
     const kitchenMap = new Map(kitchens.map((item) => [item.id, item]))
 
     const accountMap = new Map(accounts.map((item) => [item.id, item]))
@@ -814,12 +818,12 @@ ${new Date()
 
     let exportLayout = EXPORT_LAYOUT
 
-    if (selectedKitchenId) {
-      const selectedKitchen = kitchens.find((k) => k.id === selectedKitchenId)
+    if (selectedKitchen) {
+      const layout = EXPORT_LAYOUT[selectedKitchen.name]
 
-      if (selectedKitchen) {
+      if (layout) {
         exportLayout = {
-          [selectedKitchen.name]: EXPORT_LAYOUT[selectedKitchen.name]
+          [selectedKitchen.name]: layout
         }
       }
     }
@@ -981,12 +985,14 @@ ${new Date()
         }
       }
 
+      const amount = Number(transaction.amount) || 0
+
       detailRows.push([
         transaction.transaction_date,
         kitchen.name,
         transaction.flow_type,
         name,
-        Number(transaction.amount) || 0
+        amount
       ])
     })
 
@@ -1015,7 +1021,7 @@ ${new Date()
 
     let currentCol = 1
 
-    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
+    Object.entries(exportLayout).forEach(([, columns]) => {
       const startCol = currentCol
       const endCol = currentCol + columns.length - 1
 
@@ -1064,16 +1070,12 @@ ${new Date()
 
     let fileName = `pelaporan-${startDate}-${endDate}.xlsx`
 
-    if (selectedKitchenId) {
-      const selectedKitchen = kitchens.find((k) => k.id === selectedKitchenId)
+    if (selectedKitchen) {
+      const safeKitchenName = selectedKitchen.name
+        .toLowerCase()
+        .replace(/\s+/g, '-')
 
-      if (selectedKitchen) {
-        const safeKitchenName = selectedKitchen.name
-          .toLowerCase()
-          .replace(/\s+/g, '-')
-
-        fileName = `pelaporan-${safeKitchenName}-${startDate}-${endDate}.xlsx`
-      }
+      fileName = `pelaporan-${safeKitchenName}-${startDate}-${endDate}.xlsx`
     }
 
     XLSX.writeFile(workbook, fileName)
