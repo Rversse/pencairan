@@ -177,6 +177,12 @@
           none !important;
       }
 
+      #reportDetails {
+
+  display:
+    none !important;
+}
+
       .container {
 
         width: 100%;
@@ -961,6 +967,22 @@ ${new Date()
 
       sheetData.push(sheetRow)
     })
+
+    const totalRow = ['TOTAL']
+
+    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
+      columns.forEach((column) => {
+        let total = 0
+
+        pivotRows.forEach((row) => {
+          total += Number(row[`${kitchenName}|${column}`]) || 0
+        })
+
+        totalRow.push(total)
+      })
+    })
+
+    sheetData.push(totalRow)
 
     transactions.forEach((transaction) => {
       const kitchen = kitchenMap.get(transaction.kitchen_id)
