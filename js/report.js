@@ -765,6 +765,8 @@ ${new Date()
 
     const endDate = document.getElementById('endDate').value
 
+    const selectedKitchenId = exportKitchen.value
+
     let transactions = []
 
     try {
@@ -786,6 +788,12 @@ ${new Date()
       return
     }
 
+    if (selectedKitchenId) {
+      transactions = transactions.filter(
+        (transaction) => transaction.kitchen_id === selectedKitchenId
+      )
+    }
+
     const { data: kitchens } = await supabaseClient
       .from('kitchens')
       .select('id,name')
@@ -804,11 +812,23 @@ ${new Date()
 
     const supplierMap = new Map(suppliers.map((item) => [item.id, item]))
 
+    let exportLayout = EXPORT_LAYOUT
+
+    if (selectedKitchenId) {
+      const selectedKitchen = kitchens.find((k) => k.id === selectedKitchenId)
+
+      if (selectedKitchen) {
+        exportLayout = {
+          [selectedKitchen.name]: EXPORT_LAYOUT[selectedKitchen.name]
+        }
+      }
+    }
+
     const headerRow1 = ['Tanggal']
 
     const headerRow2 = ['']
 
-    Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
       columns.forEach(() => {
         headerRow1.push(kitchenName)
       })
@@ -827,7 +847,7 @@ ${new Date()
         Tanggal: date
       }
 
-      Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+      Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
         columns.forEach((column) => {
           row[`${kitchenName}|${column}`] = 0
         })
@@ -927,7 +947,7 @@ ${new Date()
     pivotRows.forEach((row) => {
       const sheetRow = [row.Tanggal]
 
-      Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+      Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
         columns.forEach((column) => {
           const value = row[`${kitchenName}|${column}`]
 
@@ -995,7 +1015,7 @@ ${new Date()
 
     let currentCol = 1
 
-    Object.entries(EXPORT_LAYOUT).forEach(([kitchenName, columns]) => {
+    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
       const startCol = currentCol
       const endCol = currentCol + columns.length - 1
 
@@ -1042,6 +1062,20 @@ ${new Date()
       ySplit: 2
     }
 
-    XLSX.writeFile(workbook, `pelaporan-${startDate}-${endDate}.xlsx`)
+    let fileName = `pelaporan-${startDate}-${endDate}.xlsx`
+
+    if (selectedKitchenId) {
+      const selectedKitchen = kitchens.find((k) => k.id === selectedKitchenId)
+
+      if (selectedKitchen) {
+        const safeKitchenName = selectedKitchen.name
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+
+        fileName = `pelaporan-${safeKitchenName}-${startDate}-${endDate}.xlsx`
+      }
+    }
+
+    XLSX.writeFile(workbook, fileName)
   }
 })()
