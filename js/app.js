@@ -47,6 +47,8 @@ function applyRoleAccess() {
 
   const reportLink = document.getElementById('reportTab')
 
+  const disbursementLink = document.getElementById('disbursementTab')
+
   const dashboard = document.querySelector('.dashboard')
 
   const adminSection = document.getElementById('adminTransactionsSection')
@@ -58,6 +60,8 @@ function applyRoleAccess() {
     dashboardLink?.style.setProperty('display', 'none')
 
     reportLink?.style.setProperty('display', 'none')
+
+    disbursementLink?.style.setProperty('display', 'none')
 
     // Hide dashboard content
     dashboard?.style.setProperty('display', 'none')
@@ -84,11 +88,15 @@ function applyRoleAccess() {
 
     reportTab?.classList.remove('active')
 
+    disbursementTab?.classList.remove('active')
+
     supplierReportTab?.classList.add('active')
   } else {
     dashboardLink?.style.setProperty('display', '')
 
     reportLink?.style.setProperty('display', '')
+
+    disbursementLink?.style.setProperty('display', '')
 
     dashboard?.style.setProperty('display', '')
 

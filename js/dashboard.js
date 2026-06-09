@@ -1287,6 +1287,8 @@ supplierReportTab?.addEventListener(
 
     reportTab?.classList.remove('active')
 
+    disbursementTab?.classList.remove('active')
+
     disbursementSection.style.display = 'none'
 
     supplierReportTab?.classList.add('active')
@@ -1382,6 +1384,8 @@ dashboardTab?.addEventListener(
     supplierReportTab?.classList.remove('active')
 
     reportTab?.classList.remove('active')
+
+    disbursementTab?.classList.remove('active')
 
     dashboardTab?.classList.add('active')
   }
