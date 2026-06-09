@@ -5,6 +5,8 @@
 
   const exportKitchen = document.getElementById('exportKitchen')
 
+  const exportFlowType = document.getElementById('exportFlowType')
+
   const generateButton = document.getElementById('generateButton')
 
   const printButton = document.getElementById('printButton')
@@ -774,6 +776,8 @@ ${new Date()
 
     const selectedKitchenId = exportKitchen.value
 
+    const selectedFlowType = exportFlowType.value
+
     let transactions = []
 
     try {
@@ -798,6 +802,12 @@ ${new Date()
     if (selectedKitchenId) {
       transactions = transactions.filter(
         (transaction) => transaction.kitchen_id === selectedKitchenId
+      )
+    }
+
+    if (selectedFlowType) {
+      transactions = transactions.filter(
+        (transaction) => transaction.flow_type === selectedFlowType
       )
     }
 
@@ -1090,15 +1100,19 @@ ${new Date()
       ySplit: 2
     }
 
-    let fileName = `pelaporan-${startDate}-${endDate}.xlsx`
+    const kitchenPart = selectedKitchen
+      ? selectedKitchen.name.toLowerCase().replace(/\s+/g, '-')
+      : 'semua'
 
-    if (selectedKitchen) {
-      const safeKitchenName = selectedKitchen.name
-        .toLowerCase()
-        .replace(/\s+/g, '-')
-
-      fileName = `pelaporan-${safeKitchenName}-${startDate}-${endDate}.xlsx`
+    const flowLabelMap = {
+      income: 'bgn',
+      expense: 'supplier',
+      neutral: 'gas'
     }
+
+    const flowPart = flowLabelMap[selectedFlowType] || 'semua'
+
+    const fileName = `pelaporan-${kitchenPart}-${flowPart}-${startDate}-${endDate}.xlsx`
 
     XLSX.writeFile(workbook, fileName)
   }
