@@ -59,6 +59,40 @@
     })
   }
 
+  async function fetchAllTransactions({ startDate, endDate, select }) {
+    const transactions = []
+
+    let from = 0
+
+    const pageSize = 1000
+
+    while (true) {
+      const { data, error } = await supabaseClient
+        .from('transactions')
+        .select(select)
+        .gte('transaction_date', startDate)
+        .lte('transaction_date', endDate)
+        .order('transaction_date', {
+          ascending: true
+        })
+        .range(from, from + pageSize - 1)
+
+      if (error) {
+        throw error
+      }
+
+      transactions.push(...data)
+
+      if (data.length < pageSize) {
+        break
+      }
+
+      from += pageSize
+    }
+
+    return transactions
+  }
+
   async function loadKitchenOptions() {
     const { data, error } = await supabaseClient
       .from('kitchens')
@@ -397,36 +431,13 @@ ${new Date()
           ${formatDate(endDate.value)}
         `
 
-    let query = supabaseClient
-      .from('transactions')
-      .select(
-        `
-          *,
-          kitchens (
-            id,
-            name,
-            total_pm
-          )
-        `
-      )
-      .gte('transaction_date', startDate.value)
-      .lte('transaction_date', endDate.value)
-
-    if (window.currentUser?.role === 'viewer') {
-      query = query.eq('flow_type', 'expense')
-    }
-
     let data = []
 
-    let from = 0
-
-    const pageSize = 1000
-
-    while (true) {
-      const { data: page, error } = await supabaseClient
-        .from('transactions')
-        .select(
-          `
+    try {
+      data = await fetchAllTransactions({
+        startDate: startDate.value,
+        endDate: endDate.value,
+        select: `
       *,
       kitchens (
         id,
@@ -434,32 +445,14 @@ ${new Date()
         total_pm
       )
     `
-        )
-        .gte('transaction_date', startDate.value)
-        .lte('transaction_date', endDate.value)
-        .order('transaction_date', { ascending: true })
-        .range(from, from + pageSize - 1)
+      })
+    } catch (error) {
+      console.error(error)
 
-      if (error) {
-        console.error(error)
-        alert('Gagal generate laporan')
-        return
-      }
+      alert('Gagal generate laporan')
 
-      data.push(...page)
-
-      if (page.length < pageSize) {
-        break
-      }
-
-      from += pageSize
+      return
     }
-
-    console.log('REPORT TRANSACTIONS', data.length)
-
-    console.log('FIRST', data[0]?.transaction_date)
-
-    console.log('LAST', data[data.length - 1]?.transaction_date)
 
     // lanjut bawahnya tetap 😭
 
@@ -538,12 +531,6 @@ ${new Date()
       }
     })
 
-    console.log('dailyGrouped', dailyGrouped)
-
-    reportTableBody.innerHTML = ''
-
-    reportDetails.innerHTML = ''
-
     let grandIncome = 0
 
     let grandExpense = 0
@@ -552,13 +539,13 @@ ${new Date()
 
     let grandRemaining = 0
 
-    let grandPM = 0
+    let tableHtml = ''
 
     Object.values(grouped)
       .sort((a, b) => {
-        const activeA = a.income > 0 || a.expense > 0
+        const activeA = a.income > 0 || a.expense > 0 || a.gas > 0
 
-        const activeB = b.income > 0 || b.expense > 0
+        const activeB = b.income > 0 || b.expense > 0 || b.gas > 0
 
         // ======================
         // YANG TIDAK ADA
@@ -592,9 +579,7 @@ ${new Date()
 
         grandRemaining += remaining
 
-        grandPM += item.total_pm
-
-        reportTableBody.innerHTML += `
+        tableHtml += `
           <tr>
 
             <td>
@@ -625,6 +610,8 @@ ${new Date()
         `
       })
 
+    reportTableBody.innerHTML = tableHtml
+
     reportTotalIncome.textContent = formatRupiah(grandIncome)
 
     reportTotalExpense.textContent = formatRupiah(grandExpense)
@@ -633,7 +620,7 @@ ${new Date()
 
     reportTotalRemaining.textContent = formatRupiah(grandRemaining)
 
-    reportDetails.innerHTML = ''
+    let detailsHtml = ''
 
     Object.entries(grouped)
       .sort((a, b) => {
@@ -646,21 +633,16 @@ ${new Date()
       .forEach(([kitchenId, kitchen]) => {
         const dates = dailyGrouped[kitchenId]
 
-        if (
-          kitchen.income === 0 &&
-          kitchen.expense === 0 &&
-          kitchen.gas === 0
-        ) {
+        const hasTransaction =
+          kitchen.income > 0 || kitchen.expense > 0 || kitchen.gas > 0
+
+        if (!hasTransaction) {
           return
         }
 
-        if (!dates) return
-
-        if (!kitchen) return
-
-        const dateCount = Object.keys(dates).length
-
-        if (dateCount === 0) return
+        if (Object.keys(dates).length === 0) {
+          return
+        }
 
         const rows = Object.entries(dates)
           .sort((a, b) => b[0].localeCompare(a[0]))
@@ -683,7 +665,7 @@ ${new Date()
 
         const remaining = kitchen.income - kitchen.expense
 
-        reportDetails.innerHTML += `
+        detailsHtml += `
     <details style="margin-top:16px">
 <summary
   style="
@@ -704,7 +686,6 @@ ${new Date()
     "
   >
 <span>
-  ${dates && Object.keys(dates).length ? '▶' : ''}
   ${kitchen.kitchen_name}
 </span>
 
@@ -736,6 +717,8 @@ ${new Date()
     </details>
   `
       })
+
+    reportDetails.innerHTML = detailsHtml
   })
 
   exportExcelButton?.addEventListener(
@@ -784,46 +767,24 @@ ${new Date()
 
     let transactions = []
 
-    let from = 0
+    try {
+      transactions = await fetchAllTransactions({
+        startDate,
+        endDate,
+        select: `
+      transaction_date,
+      kitchen_id,
+      account_id,
+      supplier_id,
+      flow_type,
+      amount
+    `
+      })
+    } catch (error) {
+      console.error(error)
 
-    const pageSize = 1000
-
-    while (true) {
-      const { data, error } = await supabaseClient
-        .from('transactions')
-        .select(
-          `
-        transaction_date,
-        kitchen_id,
-        account_id,
-        supplier_id,
-        flow_type,
-        amount
-      `
-        )
-        .gte('transaction_date', startDate)
-        .lte('transaction_date', endDate)
-        .range(from, from + pageSize - 1)
-
-      if (error) {
-        console.error(error)
-
-        return
-      }
-
-      transactions.push(...data)
-
-      if (data.length < pageSize) {
-        break
-      }
-
-      from += pageSize
+      return
     }
-
-    const { count } = await supabaseClient.from('transactions').select('*', {
-      count: 'exact',
-      head: true
-    })
 
     const { data: kitchens } = await supabaseClient
       .from('kitchens')
