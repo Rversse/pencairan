@@ -32,7 +32,7 @@ async function loadTransactions(showLoading = true) {
 
   const { data, error } = await query
     .order('created_at', {
-      ascending: false,
+      ascending: false
     })
     .limit(transactionLimit)
 
@@ -135,7 +135,7 @@ async function loadTransactions(showLoading = true) {
             .toLocaleDateString('id-ID', {
               day: '2-digit',
               month: '2-digit',
-              year: 'numeric',
+              year: 'numeric'
             })
             .replace(/\//g, '-')}
         </small>

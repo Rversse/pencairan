@@ -332,7 +332,7 @@ transactionForm.addEventListener('submit', async (event) => {
 
     kitchen_id: kitchenSelect.value,
 
-    amount: Number(amountInput.value.replace(/\./g, '')),
+    amount: Number(amountInput.value.replace(/\./g, ''))
   }
 
   if (flow === 'pemasukan') {

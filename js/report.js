@@ -742,31 +742,57 @@ ${new Date()
     Sukaraja: [
       'ARUTALA BRI',
       'KPWS BRI',
+      'CV KRAMAT BNI',
       'KOPERASI ARUTALA',
       'KOPERASI SUKALARANG',
       'ARIS',
       'BABINSA'
     ],
 
-    Cihaur: ['ARUTALA BRI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+    Cihaur: [
+      'ARUTALA BRI',
+      'DEDE JAELANI BNI',
+      'CV KRAMAT BNI',
+      'KOPERASI ARUTALA'
+    ],
 
-    Cibaregbeg: ['ARUTALA BRI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+    Cibaregbeg: [
+      'ARUTALA BNI',
+      'DEDE JAELANI BNI',
+      'CV KRAMAT BNI',
+      'KOPERASI ARUTALA'
+    ],
 
-    Warungbitung: ['ARUTALA BRI', 'KOPERASI ARUTALA'],
+    Warungbitung: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
 
-    Campakamulya: ['ARUTALA BNI', 'KOPERASI ARUTALA'],
+    Campakamulya: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
 
-    Kertajadi: ['ARUTALA BNI', 'KOPERASI ARUTALA'],
+    Kertajadi: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
 
-    Cisepat: ['ARUTALA BNI', 'KOPERASI ARUTALA'],
+    Cisepat: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
 
-    Cipetir: ['ARUTALA BNI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+    Cipetir: [
+      'ARUTALA BNI',
+      'CV KRAMAT BNI',
+      'DEDE JAELANI BNI',
+      'KOPERASI ARUTALA'
+    ],
 
-    Cimanggu: ['ARUTALA BNI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+    Cimanggu: [
+      'ARUTALA BNI',
+      'CV KRAMAT BNI',
+      'DEDE JAELANI BNI',
+      'KOPERASI ARUTALA'
+    ],
 
-    Cikondang: ['ARUTALA BNI', 'DEDE JAELANI BNI', 'KOPERASI ARUTALA'],
+    Cikondang: [
+      'ARUTALA BNI',
+      'CV KRAMAT BNI',
+      'DEDE JAELANI BNI',
+      'KOPERASI ARUTALA'
+    ],
 
-    Ciranca: ['ARUTALA BNI', 'KOPERASI ARUTALA']
+    Ciranca: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA']
   }
 
   async function exportPelaporanExcel() {
@@ -921,6 +947,17 @@ ${new Date()
         if (account.name === 'Dede Jaelani') {
           columnName = 'DEDE JAELANI BNI'
         }
+
+        if (account.name === 'CV Kramat') {
+          columnName = 'CV KRAMAT BNI'
+        }
+
+        console.log({
+          kitchen: kitchen.name,
+          account: account.name,
+          bank: account.bank,
+          columnName
+        })
       }
 
       if (transaction.flow_type === 'expense') {
@@ -953,9 +990,17 @@ ${new Date()
 
       const key = `${kitchen.name}|${columnName}`
 
+      console.log('EXPORT KEY', key, row[key])
+
       if (row[key] === undefined) {
         return
       }
+
+      console.log({
+        key,
+        exists: row[key] !== undefined,
+        amount
+      })
 
       row[key] += amount
     })
