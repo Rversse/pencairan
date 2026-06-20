@@ -14,7 +14,7 @@ async function loadTransactions(showLoading = true) {
       suppliers(name)
     `)
 
-  if (currentUser.role === 'viewer') {
+  if (currentUser?.role === 'viewer') {
     query = query.eq('flow_type', 'expense')
   }
 
@@ -89,7 +89,9 @@ async function loadTransactions(showLoading = true) {
     }
 
     const target = transaction.accounts
-      ? `${transaction.accounts.name} (${transaction.accounts.bank})`
+      ? `${getAccountDisplayName(
+          transaction.accounts.name
+        )} (${transaction.accounts.bank})`
       : transaction.suppliers?.name || '-'
 
     const isLocked = isTransactionLocked(transaction.transaction_date)

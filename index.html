@@ -32,7 +32,11 @@
 
         <a href="#" id="disbursementTab" class="nav-link"> Pencairan </a>
 
-        <a href="#" id="supplierReportTab" class="nav-link"> Rekap Supplier </a>
+        <a href="#" id="incomeReportTab" class="nav-link"> Rekap Pemasukan </a>
+
+        <a href="#" id="supplierReportTab" class="nav-link">
+          Rekap Pengeluaran
+        </a>
 
         <a href="#" id="reportTab" class="nav-link"> Laporan </a>
 
@@ -177,6 +181,18 @@
         <div id="supplierSummary"></div>
 
         <div id="supplierDailySummary"></div>
+      </div>
+
+      <div id="incomeSection" style="display: none">
+        <div class="dashboard-filters">
+          <input type="date" id="incomeStartDate" />
+
+          <input type="date" id="incomeEndDate" />
+
+          <button id="applyIncomeFilter">Apply</button>
+        </div>
+
+        <div id="incomeSummary"></div>
       </div>
 
       <section id="reportSection" style="display: none">

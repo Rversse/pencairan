@@ -13,12 +13,8 @@ async function loadDashboard() {
     summaryQuery = summaryQuery.eq('kitchen_id', filterKitchen.value)
   }
 
-  if (window.currentUser?.role === 'viewer') {
-    summaryQuery = summaryQuery.in('flow_type', ['expense', 'neutral'])
-  } else {
-    if (filterFlow.value) {
-      summaryQuery = summaryQuery.eq('flow_type', filterFlow.value)
-    }
+  if (filterFlow.value) {
+    summaryQuery = summaryQuery.eq('flow_type', filterFlow.value)
   }
 
   const today = getTodayLocal()
@@ -65,6 +61,23 @@ async function loadDashboard() {
 const DISBURSEMENT_ITEMS = 5
 
 const DISBURSEMENT_DATE_KEY = 'disbursement_selected_date'
+
+const ACCOUNT_ORDER = [
+  'ARUTALA',
+  'CV KRAMAT',
+  'UMKM BAROKAH',
+  'TOKO MEKAR SARI',
+  'KPWS'
+]
+
+function getAccountDisplayName(name) {
+  const aliases = {
+    'Dede Jaelani': 'UMKM Barokah',
+    'Tini Sumarni': 'Toko Mekar Sari'
+  }
+
+  return aliases[name] || name
+}
 
 function getTodayLocal() {
   const today = new Date()
@@ -150,6 +163,9 @@ function initializeDates() {
 
   supplierStartDate.value = today
   supplierEndDate.value = today
+
+  incomeStartDate.value = today
+  incomeEndDate.value = today
 
   if (disbursementDate) {
     const savedDate = localStorage.getItem(DISBURSEMENT_DATE_KEY)
@@ -478,6 +494,43 @@ async function loadSupplierReport() {
   await renderSupplierDailySummary(data)
 }
 
+async function loadIncomeReport() {
+  let query = supabaseClient
+    .from('transactions')
+    .select(
+      `
+  amount,
+  accounts (
+    name
+  )
+`
+    )
+    .eq('flow_type', 'income')
+
+  const today = getTodayLocal()
+
+  if (!incomeStartDate.value) {
+    incomeStartDate.value = today
+  }
+
+  if (!incomeEndDate.value) {
+    incomeEndDate.value = incomeStartDate.value
+  }
+
+  query = query
+    .gte('transaction_date', incomeStartDate.value)
+    .lte('transaction_date', incomeEndDate.value)
+
+  const { data, error } = await query
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  await renderIncomeSummary(data)
+}
+
 async function renderSupplierSummary(data) {
   const latestTransaction = [...data].sort(
     (a, b) => new Date(b.created_at) - new Date(a.created_at)
@@ -738,6 +791,108 @@ ${new Date(latestTransaction.created_at)
 
     </div>
   `
+}
+
+async function renderIncomeSummary(data) {
+  const incomeSummary = document.getElementById('incomeSummary')
+
+  if (!incomeSummary) return
+
+  if (!data.length) {
+    incomeSummary.innerHTML = `
+      <div class="empty-state">
+        Belum ada transaksi
+        pada periode ini
+      </div>
+    `
+    return
+  }
+
+  const grouped = {}
+
+  let grandTotal = 0
+
+  data.forEach((item) => {
+    const account = getAccountDisplayName(
+      item.accounts?.name || 'Lainnya'
+    ).toUpperCase()
+
+    if (!grouped[account]) {
+      grouped[account] = 0
+    }
+
+    grouped[account] += Number(item.amount || 0)
+
+    grandTotal += Number(item.amount || 0)
+  })
+
+  let rows = ''
+
+  Object.entries(grouped)
+    .sort(([a], [b]) => {
+      const indexA = ACCOUNT_ORDER.indexOf(a)
+      const indexB = ACCOUNT_ORDER.indexOf(b)
+
+      if (indexA === -1 && indexB === -1) {
+        return a.localeCompare(b)
+      }
+
+      if (indexA === -1) return 1
+      if (indexB === -1) return -1
+
+      return indexA - indexB
+    })
+    .forEach(([account, total]) => {
+      rows += `
+        <tr>
+          <td>${account}</td>
+          <td>${formatRupiah(total)}</td>
+        </tr>
+      `
+    })
+
+  incomeSummary.innerHTML = `
+  <div class="supplier-summary-top">
+
+    <h3>
+      Rekap Pemasukan
+    </h3>
+
+  </div>
+
+  <table class="summary-table">
+
+    <thead>
+      <tr>
+        <th>PENERIMAAN</th>
+        <th>TOTAL</th>
+      </tr>
+    </thead>
+
+    <tbody>
+
+      ${rows}
+
+      <tr class="summary-total-row">
+
+        <td>
+          <strong>
+            GRAND TOTAL
+          </strong>
+        </td>
+
+        <td>
+          <strong>
+            ${formatRupiah(grandTotal)}
+          </strong>
+        </td>
+
+      </tr>
+
+    </tbody>
+
+  </table>
+`
 }
 
 async function renderSupplierDailySummary(data) {
@@ -1205,6 +1360,16 @@ supplierStartDate?.addEventListener(
   }
 )
 
+incomeStartDate?.addEventListener(
+  'change',
+
+  async () => {
+    incomeEndDate.value = incomeStartDate.value
+
+    await loadIncomeReport()
+  }
+)
+
 const dailyStatusSummary = document.getElementById('dailyStatusSummary')
 
 const dailyStatusDate = document.getElementById('dailyStatusDate')
@@ -1271,6 +1436,10 @@ const reportTab = document.getElementById('reportTab')
 
 const supplierReportTab = document.getElementById('supplierReportTab')
 
+const incomeReportTab = document.getElementById('incomeReportTab')
+
+const incomeSection = document.getElementById('incomeSection')
+
 supplierReportTab?.addEventListener(
   'click',
 
@@ -1291,9 +1460,43 @@ supplierReportTab?.addEventListener(
 
     disbursementSection.style.display = 'none'
 
+    incomeSection.style.display = 'none'
+
+    incomeReportTab?.classList.remove('active')
+
     supplierReportTab?.classList.add('active')
 
     await loadSupplierReport()
+  }
+)
+
+incomeReportTab?.addEventListener(
+  'click',
+
+  async (event) => {
+    event.preventDefault()
+
+    dashboardSection.style.display = 'none'
+
+    supplierSection.style.display = 'none'
+
+    reportSection.style.display = 'none'
+
+    disbursementSection.style.display = 'none'
+
+    incomeSection.style.display = 'block'
+
+    dashboardTab?.classList.remove('active')
+
+    supplierReportTab?.classList.remove('active')
+
+    reportTab?.classList.remove('active')
+
+    disbursementTab?.classList.remove('active')
+
+    incomeReportTab?.classList.add('active')
+
+    await loadIncomeReport()
   }
 )
 
@@ -1311,6 +1514,10 @@ disbursementTab?.addEventListener(
   'click',
 
   async (event) => {
+    if (currentUser?.role === 'viewer') {
+      return
+    }
+
     event.preventDefault()
 
     dashboardSection.style.display = 'none'
@@ -1320,6 +1527,10 @@ disbursementTab?.addEventListener(
     reportSection.style.display = 'none'
 
     disbursementSection.style.display = 'block'
+
+    incomeSection.style.display = 'none'
+
+    incomeReportTab?.classList.remove('active')
 
     dashboardTab?.classList.remove('active')
 
@@ -1337,25 +1548,44 @@ reportTab?.addEventListener(
   'click',
 
   (event) => {
-    event.preventDefault()
+    if (currentUser?.role === 'viewer') {
+      return
+    }
 
+    event.preventDefault()
     dashboardSection.style.display = 'none'
 
     supplierSection.style.display = 'none'
 
     reportSection.style.display = 'block'
 
-    dashboardTab?.classList.remove('active')
+    incomeSection.style.display = 'none'
 
     disbursementSection.style.display = 'none'
 
+    dashboardTab?.classList.remove('active')
+
     supplierReportTab?.classList.remove('active')
+
+    incomeReportTab?.classList.remove('active')
+
+    disbursementTab?.classList.remove('active')
 
     reportTab?.classList.add('active')
   }
 )
 
 const applySupplierFilter = document.getElementById('applySupplierFilter')
+
+const applyIncomeFilter = document.getElementById('applyIncomeFilter')
+
+applyIncomeFilter?.addEventListener(
+  'click',
+
+  async () => {
+    await loadIncomeReport()
+  }
+)
 
 applySupplierFilter?.addEventListener(
   'click',
@@ -1371,6 +1601,10 @@ dashboardTab?.addEventListener(
   'click',
 
   (event) => {
+    if (currentUser?.role === 'viewer') {
+      return
+    }
+
     event.preventDefault()
 
     supplierSection.style.display = 'none'
@@ -1380,6 +1614,10 @@ dashboardTab?.addEventListener(
     disbursementSection.style.display = 'none'
 
     dashboardSection.style.display = 'block'
+
+    incomeSection.style.display = 'none'
+
+    incomeReportTab?.classList.remove('active')
 
     supplierReportTab?.classList.remove('active')
 

@@ -145,9 +145,9 @@ async function loadAccountsFiltered(flow) {
     }
 
     accountSelect.innerHTML += `
-    <option value="${account.id}">
-      ${account.name} (${account.bank})
-    </option>
+<option value="${account.id}">
+  ${getAccountDisplayName(account.name)} (${account.bank})
+</option>
   `
   })
 

@@ -1,11 +1,3 @@
-async function init() {
-  await loadKitchens()
-
-  await loadSuppliers()
-
-  await loadAccountsFiltered('pemasukan')
-}
-
 async function startApp() {
   document.body.style.visibility = 'hidden'
 
@@ -27,13 +19,39 @@ async function startApp() {
 
   await init()
 
-  await loadTransactions()
+  if (currentUser?.role === 'viewer') {
+    dashboardSection.style.display = 'none'
 
-  await loadDashboard()
+    supplierSection.style.display = 'none'
 
-  await loadDailyStatus()
+    reportSection.style.display = 'none'
 
-  await loadSupplierReport()
+    disbursementSection.style.display = 'none'
+
+    incomeSection.style.display = 'block'
+
+    dashboardTab?.classList.remove('active')
+
+    supplierReportTab?.classList.remove('active')
+
+    reportTab?.classList.remove('active')
+
+    disbursementTab?.classList.remove('active')
+
+    incomeReportTab?.classList.add('active')
+
+    await loadIncomeReport()
+
+    await loadSupplierReport()
+  } else {
+    await loadTransactions()
+
+    await loadDashboard()
+
+    await loadDailyStatus()
+
+    await loadSupplierReport()
+  }
 
   toggleFields()
 
@@ -69,28 +87,6 @@ function applyRoleAccess() {
     adminSection?.style.setProperty('display', 'none')
 
     fabButton?.style.setProperty('display', 'none')
-
-    // Force supplier page
-    if (dashboardSection) {
-      dashboardSection.style.display = 'none'
-    }
-
-    if (reportSection) {
-      reportSection.style.display = 'none'
-    }
-
-    if (supplierSection) {
-      supplierSection.style.display = 'block'
-    }
-
-    // Active tab
-    dashboardTab?.classList.remove('active')
-
-    reportTab?.classList.remove('active')
-
-    disbursementTab?.classList.remove('active')
-
-    supplierReportTab?.classList.add('active')
   } else {
     dashboardLink?.style.setProperty('display', '')
 

@@ -42,15 +42,8 @@ function showToast(message) {
   }, 2200)
 }
 
-function isTransactionLocked(date) {
-  const transactionDate = new Date(date)
-
-  const today = new Date()
-
-  const diffMonths =
-    (today.getFullYear() - transactionDate.getFullYear()) * 12 +
-    (today.getMonth() - transactionDate.getMonth())
-
+function isTransactionLocked() {
+  // TODO: implement lock period
   return false
 }
 

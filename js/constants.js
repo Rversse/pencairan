@@ -30,8 +30,6 @@ const amountInput = document.getElementById('amount')
 
 const submitButton = transactionForm.querySelector('button')
 
-const openModalButton = document.getElementById('openTransactionModal')
-
 const viewerBadge = document.getElementById('viewerBadge')
 
 const transactionsContainer = document.getElementById('transactions')
