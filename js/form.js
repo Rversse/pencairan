@@ -1,3 +1,7 @@
+const nextTransactionButton = document.getElementById('nextTransactionButton')
+
+let keepModalOpen = false
+
 function updateFlowOptions() {
   const selectedKitchen =
     kitchenSelect.options[kitchenSelect.selectedIndex]?.text || ''
@@ -192,15 +196,25 @@ function resetFormState() {
   transactionDate.value = currentDate
 
   toggleFields().then(() => {
-    if (currentAccount) {
-      accountSelect.value = currentAccount
+    if (flowType.value === 'pengeluaran') {
+      supplierSelect.value = ''
+
+      supplierSelect.focus()
+
+      return
     }
 
-    if (currentSupplier) {
-      supplierSelect.value = currentSupplier
+    if (flowType.value === 'pemasukan') {
+      accountSelect.value = ''
+
+      accountSelect.focus()
+
+      return
     }
 
-    amountInput.focus()
+    if (flowType.value === 'gas') {
+      amountInput.focus()
+    }
   })
 
   amountInput.value = ''
@@ -424,9 +438,17 @@ transactionForm.addEventListener('submit', async (event) => {
 
     showToast('Transaksi berhasil disimpan')
 
-    closeModal()
+    if (keepModalOpen && !editingTransactionId) {
+      resetFormState()
 
-    resetFormState()
+      amountInput.value = ''
+
+      amountInput.focus()
+    } else {
+      closeModal()
+
+      resetFormState()
+    }
 
     await loadTransactions()
 
@@ -441,15 +463,21 @@ transactionForm.addEventListener('submit', async (event) => {
     submitButton.disabled = false
 
     submitButton.textContent = originalText
+
+    keepModalOpen = false
   }
 })
 
-transactionForm.addEventListener('keydown', async (event) => {
-  if (event.key === 'Enter' && event.target.tagName === 'INPUT') {
-    event.preventDefault()
+transactionForm.addEventListener('keydown', (event) => {
+  if (event.key !== 'Enter') return
 
-    transactionForm.requestSubmit()
-  }
+  if (event.target !== amountInput) return
+
+  event.preventDefault()
+
+  keepModalOpen = true
+
+  transactionForm.requestSubmit()
 })
 
 kitchenSelect.addEventListener('change', async () => {
@@ -469,3 +497,13 @@ flowType.addEventListener('change', updateFormFlow)
 accountSelect.addEventListener('change', updateFormFlow)
 
 supplierSelect.addEventListener('change', updateFormFlow)
+
+nextTransactionButton?.addEventListener(
+  'click',
+
+  () => {
+    keepModalOpen = true
+
+    transactionForm.requestSubmit()
+  }
+)

@@ -380,6 +380,7 @@ button:disabled {
 .modal-content {
   width: 100%;
   max-width: 760px;
+  min-width: 560px;
   max-height: 92vh;
 
   overflow-y: auto;
@@ -393,8 +394,6 @@ button:disabled {
   backdrop-filter: blur(20px);
 
   box-shadow: 0 40px 80px rgba(0, 0, 0, 0.34);
-
-  animation: modalPop 0.28s ease;
 }
 
 @keyframes modalPop {
@@ -453,11 +452,33 @@ button:disabled {
 .modal-content form {
   display: grid;
 
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  grid-template-columns: 1fr 1fr;
 
   gap: 16px;
 
   padding: 24px;
+}
+
+#amount {
+  grid-column: 1 / -1;
+}
+
+.form-next-btn {
+  width: 160px;
+  justify-self: end;
+}
+
+.form-submit-row {
+  justify-self: start;
+}
+
+.form-submit-row button {
+  width: 160px;
+}
+
+.form-next-btn,
+.form-submit-row {
+  margin-top: 8px;
 }
 
 /* ======================
@@ -815,6 +836,23 @@ button:disabled {
 /* ======================
    TRANSACTIONS
 ====================== */
+
+.transaction-actions-row {
+  display: flex;
+
+  gap: 12px;
+
+  grid-column: 1 / -1;
+
+  margin-top: 4px;
+
+  justify-content: center;
+}
+
+.transaction-actions-row button {
+  width: 180px;
+  flex: unset;
+}
 
 .transactions-list {
   display: grid;
