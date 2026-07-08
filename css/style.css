@@ -373,6 +373,48 @@ button:disabled {
   backdrop-filter: blur(4px);
 }
 
+.mapping-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+}
+
+.mapping-item input {
+  width: 18px;
+  height: 18px;
+}
+
+.supplier-modal {
+  width: min(1000px, 92vw);
+  animation: modalPop 0.2s ease;
+}
+
+.supplier-account-card {
+  padding: 16px;
+  margin-bottom: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.account-number {
+  margin: 6px 0;
+  font-size: 0.95rem;
+  opacity: 0.8;
+}
+
+.account-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.account-actions button {
+  flex: 1;
+  min-height: 44px;
+}
+
 .modal-overlay.show {
   display: flex;
 }
@@ -1741,6 +1783,79 @@ button:disabled {
   border: 1px solid rgba(255, 255, 255, 0.06);
 
   box-shadow: none;
+}
+
+/* ===========================
+   SUPPLIER MASTER
+=========================== */
+
+.supplier-master-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+
+  max-width: var(--content-width);
+
+  margin: 0 auto 20px;
+}
+
+.supplier-master-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.supplier-master-actions input {
+  width: 280px;
+}
+
+#addSupplierButton {
+  width: auto;
+  white-space: nowrap;
+}
+
+.supplier-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 24px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.form-group textarea {
+  width: 100%;
+  min-height: 90px;
+
+  padding: 14px 16px;
+
+  resize: vertical;
+
+  color: #e2e8f0;
+
+  background: rgba(255, 255, 255, 0.06);
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  border-radius: 14px;
+
+  font-family: inherit;
+  font-size: 15px;
+}
+
+.modal-footer {
+  margin-top: 16px;
 }
 
 /* ======================

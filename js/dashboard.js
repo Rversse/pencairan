@@ -1414,191 +1414,124 @@ const incomeReportTab = document.getElementById('incomeReportTab')
 
 const incomeSection = document.getElementById('incomeSection')
 
-supplierReportTab?.addEventListener(
-  'click',
+const supplierMasterTab = document.getElementById('supplierMasterTab')
 
-  async (event) => {
-    event.preventDefault()
+const supplierMasterSection = document.getElementById('supplierMasterSection')
 
-    dashboardSection.style.display = 'none'
+const supplierMasterTable = document.getElementById('supplierMasterTable')
 
-    supplierSection.style.display = 'block'
+const supplierMasterSearch = document.getElementById('supplierMasterSearch')
 
-    reportSection.style.display = 'none'
+const addSupplierButton = document.getElementById('addSupplierButton')
 
-    dashboardTab?.classList.remove('active')
+function hideAllSections() {
+  dashboardSection.style.display = 'none'
+  supplierSection.style.display = 'none'
+  supplierMasterSection.style.display = 'none'
+  reportSection.style.display = 'none'
+  disbursementSection.style.display = 'none'
+  incomeSection.style.display = 'none'
+}
 
-    reportTab?.classList.remove('active')
+function resetActiveTabs() {
+  document.querySelectorAll('.nav-link').forEach((link) => {
+    link.classList.remove('active')
+  })
+}
 
-    disbursementTab?.classList.remove('active')
+supplierMasterTab?.addEventListener('click', async (e) => {
+  e.preventDefault()
 
-    disbursementSection.style.display = 'none'
+  hideAllSections()
+  resetActiveTabs()
 
-    incomeSection.style.display = 'none'
+  supplierMasterSection.style.display = 'block'
+  supplierMasterTab.classList.add('active')
 
-    incomeReportTab?.classList.remove('active')
+  await loadSupplierMaster()
+})
 
-    supplierReportTab?.classList.add('active')
+supplierReportTab?.addEventListener('click', async (event) => {
+  event.preventDefault()
 
-    await loadSupplierReport()
-  }
-)
+  hideAllSections()
+  resetActiveTabs()
 
-incomeReportTab?.addEventListener(
-  'click',
+  supplierSection.style.display = 'block'
+  supplierReportTab.classList.add('active')
 
-  async (event) => {
-    event.preventDefault()
+  await loadSupplierReport()
+})
 
-    dashboardSection.style.display = 'none'
+incomeReportTab?.addEventListener('click', async (event) => {
+  event.preventDefault()
 
-    supplierSection.style.display = 'none'
+  hideAllSections()
+  resetActiveTabs()
 
-    reportSection.style.display = 'none'
+  incomeSection.style.display = 'block'
+  incomeReportTab.classList.add('active')
 
-    disbursementSection.style.display = 'none'
+  await loadIncomeReport()
+})
 
-    incomeSection.style.display = 'block'
+disbursementDate?.addEventListener('change', async () => {
+  localStorage.setItem(DISBURSEMENT_DATE_KEY, disbursementDate.value)
 
-    dashboardTab?.classList.remove('active')
+  await loadDisbursementTable()
+})
 
-    supplierReportTab?.classList.remove('active')
+disbursementTab?.addEventListener('click', async (event) => {
+  if (currentUser?.role === 'viewer') return
 
-    reportTab?.classList.remove('active')
+  event.preventDefault()
 
-    disbursementTab?.classList.remove('active')
+  hideAllSections()
+  resetActiveTabs()
 
-    incomeReportTab?.classList.add('active')
+  disbursementSection.style.display = 'block'
+  disbursementTab.classList.add('active')
 
-    await loadIncomeReport()
-  }
-)
+  await loadDisbursementTable()
+})
 
-disbursementDate?.addEventListener(
-  'change',
+reportTab?.addEventListener('click', (event) => {
+  if (currentUser?.role === 'viewer') return
 
-  async () => {
-    localStorage.setItem(DISBURSEMENT_DATE_KEY, disbursementDate.value)
+  event.preventDefault()
 
-    await loadDisbursementTable()
-  }
-)
+  hideAllSections()
+  resetActiveTabs()
 
-disbursementTab?.addEventListener(
-  'click',
-
-  async (event) => {
-    if (currentUser?.role === 'viewer') {
-      return
-    }
-
-    event.preventDefault()
-
-    dashboardSection.style.display = 'none'
-
-    supplierSection.style.display = 'none'
-
-    reportSection.style.display = 'none'
-
-    disbursementSection.style.display = 'block'
-
-    incomeSection.style.display = 'none'
-
-    incomeReportTab?.classList.remove('active')
-
-    dashboardTab?.classList.remove('active')
-
-    supplierReportTab?.classList.remove('active')
-
-    reportTab?.classList.remove('active')
-
-    disbursementTab?.classList.add('active')
-
-    await loadDisbursementTable()
-  }
-)
-
-reportTab?.addEventListener(
-  'click',
-
-  (event) => {
-    if (currentUser?.role === 'viewer') {
-      return
-    }
-
-    event.preventDefault()
-    dashboardSection.style.display = 'none'
-
-    supplierSection.style.display = 'none'
-
-    reportSection.style.display = 'block'
-
-    incomeSection.style.display = 'none'
-
-    disbursementSection.style.display = 'none'
-
-    dashboardTab?.classList.remove('active')
-
-    supplierReportTab?.classList.remove('active')
-
-    incomeReportTab?.classList.remove('active')
-
-    disbursementTab?.classList.remove('active')
-
-    reportTab?.classList.add('active')
-  }
-)
+  reportSection.style.display = 'block'
+  reportTab.classList.add('active')
+})
 
 const applySupplierFilter = document.getElementById('applySupplierFilter')
-
 const applyIncomeFilter = document.getElementById('applyIncomeFilter')
 
-applyIncomeFilter?.addEventListener(
-  'click',
+applyIncomeFilter?.addEventListener('click', async () => {
+  await loadIncomeReport()
+})
 
-  async () => {
-    await loadIncomeReport()
-  }
-)
-
-applySupplierFilter?.addEventListener(
-  'click',
-
-  async () => {
-    await loadSupplierReport()
-  }
-)
+applySupplierFilter?.addEventListener('click', async () => {
+  await loadSupplierReport()
+})
 
 const dashboardTab = document.getElementById('dashboardTab')
 
-dashboardTab?.addEventListener(
-  'click',
+dashboardTab?.addEventListener('click', async (event) => {
+  if (currentUser?.role === 'viewer') return
 
-  (event) => {
-    if (currentUser?.role === 'viewer') {
-      return
-    }
+  event.preventDefault()
 
-    event.preventDefault()
+  hideAllSections()
+  resetActiveTabs()
 
-    supplierSection.style.display = 'none'
+  dashboardSection.style.display = 'block'
+  dashboardTab.classList.add('active')
 
-    reportSection.style.display = 'none'
-
-    disbursementSection.style.display = 'none'
-
-    dashboardSection.style.display = 'block'
-
-    incomeSection.style.display = 'none'
-
-    incomeReportTab?.classList.remove('active')
-
-    supplierReportTab?.classList.remove('active')
-
-    reportTab?.classList.remove('active')
-
-    disbursementTab?.classList.remove('active')
-
-    dashboardTab?.classList.add('active')
-  }
-)
+  await loadDashboard()
+  await loadTransactions()
+  await loadDailyStatus()
+})

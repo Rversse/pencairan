@@ -19,37 +19,40 @@ async function startApp() {
 
   await init()
 
+  // Reset semua section
+  dashboardSection.style.display = 'none'
+  supplierSection.style.display = 'none'
+  reportSection.style.display = 'none'
+  disbursementSection.style.display = 'none'
+  incomeSection.style.display = 'none'
+  supplierMasterSection.style.display = 'none'
+
   if (currentUser?.role === 'viewer') {
-    dashboardSection.style.display = 'none'
-
-    supplierSection.style.display = 'none'
-
-    reportSection.style.display = 'none'
-
-    disbursementSection.style.display = 'none'
-
     incomeSection.style.display = 'block'
 
     dashboardTab?.classList.remove('active')
-
+    supplierMasterTab?.classList.remove('active')
     supplierReportTab?.classList.remove('active')
-
     reportTab?.classList.remove('active')
-
     disbursementTab?.classList.remove('active')
 
     incomeReportTab?.classList.add('active')
 
     await loadIncomeReport()
-
     await loadSupplierReport()
   } else {
+    dashboardSection.style.display = 'block'
+
+    dashboardTab?.classList.add('active')
+    supplierMasterTab?.classList.remove('active')
+    supplierReportTab?.classList.remove('active')
+    incomeReportTab?.classList.remove('active')
+    reportTab?.classList.remove('active')
+    disbursementTab?.classList.remove('active')
+
     await loadTransactions()
-
     await loadDashboard()
-
     await loadDailyStatus()
-
     await loadSupplierReport()
   }
 
@@ -62,54 +65,33 @@ async function startApp() {
 
 function applyRoleAccess() {
   const dashboardLink = document.getElementById('dashboardTab')
-
   const reportLink = document.getElementById('reportTab')
-
   const disbursementLink = document.getElementById('disbursementTab')
 
   const dashboard = document.querySelector('.dashboard')
-
   const adminSection = document.getElementById('adminTransactionsSection')
-
   const fabButton = document.querySelector('.fab-button')
 
-  if (window.currentUser?.role === 'viewer') {
-    // Hide menu
-    dashboardLink?.style.setProperty('display', 'none')
+  const isViewer = window.currentUser?.role === 'viewer'
 
-    reportLink?.style.setProperty('display', 'none')
+  dashboardLink?.style.setProperty('display', isViewer ? 'none' : '')
+  reportLink?.style.setProperty('display', isViewer ? 'none' : '')
+  disbursementLink?.style.setProperty('display', isViewer ? 'none' : '')
 
-    disbursementLink?.style.setProperty('display', 'none')
-
-    // Hide dashboard content
-    dashboard?.style.setProperty('display', 'none')
-
-    adminSection?.style.setProperty('display', 'none')
-
-    fabButton?.style.setProperty('display', 'none')
-  } else {
-    dashboardLink?.style.setProperty('display', '')
-
-    reportLink?.style.setProperty('display', '')
-
-    disbursementLink?.style.setProperty('display', '')
-
-    dashboard?.style.setProperty('display', '')
-
-    adminSection?.style.setProperty('display', '')
-
-    fabButton?.style.setProperty('display', '')
-  }
+  dashboard?.style.setProperty('display', isViewer ? 'none' : '')
+  adminSection?.style.setProperty('display', isViewer ? 'none' : '')
+  fabButton?.style.setProperty('display', isViewer ? 'none' : '')
 }
 
 function applyViewerBadge() {
-  if (window.currentUser?.role === 'viewer') {
-    viewerBadge.innerHTML = `
+  viewerBadge.innerHTML =
+    window.currentUser?.role === 'viewer'
+      ? `
       <div class="viewer-badge">
         Viewer Mode
       </div>
     `
-  }
+      : ''
 }
 
 startApp()

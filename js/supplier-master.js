@@ -1,0 +1,551 @@
+const mappingEditor = document.getElementById('mappingEditor')
+const supplierModal = document.getElementById('supplierModal')
+const closeSupplierModal = document.getElementById('closeSupplierModal')
+const accountModal = document.getElementById('accountModal')
+const accountEditor = document.getElementById('accountEditor')
+const supplierBusinessName = document.getElementById('supplierBusinessName')
+const supplierOwnerName = document.getElementById('supplierOwnerName')
+const supplierProductType = document.getElementById('supplierProductType')
+const supplierPhone = document.getElementById('supplierPhone')
+const supplierAddress = document.getElementById('supplierAddress')
+const supplierStatus = document.getElementById('supplierStatus')
+const saveSupplierButton = document.getElementById('saveSupplierButton')
+const supplierAccountsList = document.getElementById('supplierAccountsList')
+const addAccountButton = document.getElementById('addAccountButton')
+const accountModalTitle = document.getElementById('accountModalTitle')
+const closeAccountModal = document.getElementById('closeAccountModal')
+const accountBank = document.getElementById('accountBank')
+const accountNumber = document.getElementById('accountNumber')
+const accountStatus = document.getElementById('accountStatus')
+const saveAccountButton = document.getElementById('saveAccountButton')
+const kitchenMappingList = document.getElementById('kitchenMappingList')
+const saveKitchenMappingButton = document.getElementById(
+  'saveKitchenMappingButton'
+)
+const supplierModalTitle = document.getElementById('supplierModalTitle')
+
+let currentAccountId = null
+
+let supplierMaster = []
+
+let supplierMode = 'edit'
+
+let currentSupplierId = null
+
+addAccountButton.addEventListener('click', () => {
+  currentAccountId = null
+
+  accountBank.value = 'BNI'
+  accountNumber.value = ''
+  accountStatus.value = 'true'
+
+  accountEditor.style.display = 'block'
+
+  accountBank.focus()
+})
+
+function openNewSupplierModal() {
+  supplierMode = 'add'
+  currentSupplierId = null
+
+  supplierBusinessName.value = ''
+  supplierOwnerName.value = ''
+  supplierProductType.value = ''
+  supplierPhone.value = ''
+  supplierAddress.value = ''
+  supplierStatus.value = 'true'
+
+  supplierModalTitle.textContent = 'Tambah Supplier'
+
+  supplierModal.style.display = 'flex'
+}
+
+function renderSupplierAccounts(accounts) {
+  if (!accounts.length) {
+    supplierAccountsList.innerHTML = `
+      <div class="empty-state">
+        Supplier belum memiliki rekening.
+      </div>
+    `
+    return
+  }
+
+  supplierAccountsList.innerHTML = accounts
+    .map((account) => {
+      const totalKitchens = account.kitchen_account_rules.length
+
+      return `
+<div class="supplier-account-card">
+
+  <div class="account-info">
+
+    <strong>${account.bank}</strong>
+
+    <div class="account-number">
+      ${account.account_number ?? '-'}
+    </div>
+
+    <small>
+      ${totalKitchens} dapur
+    </small>
+
+  </div>
+
+  <div class="account-actions">
+
+    <button
+      class="editAccountButton"
+      data-id="${account.id}"
+    >
+      ✏ Edit
+    </button>
+
+    <button
+      class="mappingAccountButton"
+      data-id="${account.id}"
+    >
+      🏠 Mapping
+    </button>
+
+  </div>
+
+</div>
+    `
+    })
+    .join('')
+
+  document.querySelectorAll('.editAccountButton').forEach((button) => {
+    button.addEventListener('click', () => {
+      openAccountModal(button.dataset.id)
+    })
+  })
+
+  document.querySelectorAll('.mappingAccountButton').forEach((button) => {
+    button.addEventListener('click', () => {
+      openKitchenMapping(button.dataset.id)
+    })
+  })
+}
+
+async function saveKitchenMapping() {
+  const checked = [
+    ...document.querySelectorAll('#kitchenMappingList input:checked')
+  ].map((item) => item.value)
+
+  const { error: deleteError } = await supabaseClient
+    .from('kitchen_account_rules')
+    .delete()
+    .eq('account_id', currentAccountId)
+    .eq('flow_type', 'income')
+
+  if (deleteError) {
+    console.error(deleteError)
+    alert('Gagal menghapus mapping lama.')
+    return
+  }
+
+  if (checked.length) {
+    const payload = checked.map((kitchenId) => ({
+      account_id: currentAccountId,
+      kitchen_id: kitchenId,
+      flow_type: 'income'
+    }))
+
+    const { error: insertError } = await supabaseClient
+      .from('kitchen_account_rules')
+      .insert(payload)
+
+    if (insertError) {
+      console.error(insertError)
+      alert('Gagal menyimpan mapping.')
+      return
+    }
+  }
+
+  alert('Mapping berhasil disimpan.')
+
+  await loadSupplierMaster()
+
+  openAccountManager(currentSupplierId)
+
+  mappingEditor.style.display = 'none'
+}
+
+function resetAccountEditor() {
+  currentAccountId = null
+
+  accountEditor.style.display = 'none'
+  mappingEditor.style.display = 'none'
+
+  kitchenMappingList.innerHTML = ''
+
+  accountBank.value = 'BNI'
+  accountNumber.value = ''
+  accountStatus.value = 'true'
+}
+
+closeAccountModal.addEventListener('click', () => {
+  resetAccountEditor()
+  accountModal.style.display = 'none'
+})
+
+async function openKitchenMapping(accountId) {
+  currentAccountId = accountId
+
+  const { data: kitchens, error: kitchenError } = await supabaseClient
+    .from('kitchens')
+    .select('id,name')
+    .order('name')
+
+  if (kitchenError) {
+    console.error(kitchenError)
+    return
+  }
+
+  const { data: rules, error: ruleError } = await supabaseClient
+    .from('kitchen_account_rules')
+    .select('kitchen_id')
+    .eq('account_id', accountId)
+
+  if (ruleError) {
+    console.error(ruleError)
+    return
+  }
+
+  const selected = new Set(rules.map((rule) => rule.kitchen_id))
+
+  kitchenMappingList.innerHTML = kitchens
+    .map(
+      (kitchen) => `
+      <label class="mapping-item">
+        <input
+          type="checkbox"
+          value="${kitchen.id}"
+          ${selected.has(kitchen.id) ? 'checked' : ''}
+        >
+        ${kitchen.name}
+      </label>
+    `
+    )
+    .join('')
+
+  accountEditor.style.display = 'none'
+  mappingEditor.style.display = 'block'
+}
+
+function openAccountModal(id) {
+  currentAccountId = id
+
+  const supplier = supplierMaster.find((supplier) =>
+    supplier.accounts.some((account) => account.id === id)
+  )
+
+  if (!supplier) return
+
+  const account = supplier.accounts.find((account) => account.id === id)
+
+  if (!account) return
+
+  accountBank.value = account.bank
+  accountNumber.value = account.account_number ?? ''
+  accountStatus.value = String(account.is_active)
+  mappingEditor.style.display = 'none'
+  accountEditor.style.display = 'block'
+  accountModal.style.display = 'flex'
+}
+
+async function loadSupplierMaster() {
+  const { data, error } = await supabaseClient
+    .from('income_suppliers')
+    .select(
+      `
+      *,
+      accounts (
+        id,
+        bank,
+        account_number,
+        is_active,
+        kitchen_account_rules (
+          kitchen_id
+        )
+      )
+    `
+    )
+    .order('business_name')
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  supplierMaster = data
+
+  renderSupplierMaster()
+}
+
+function openAccountManager(id) {
+  resetAccountEditor()
+
+  currentSupplierId = id
+
+  const supplier = supplierMaster.find((item) => item.id === id)
+
+  if (!supplier) return
+
+  accountModalTitle.textContent = `Rekening - ${supplier.business_name}`
+
+  renderSupplierAccounts(supplier.accounts)
+
+  accountModal.style.display = 'flex'
+}
+
+function renderSupplierMaster() {
+  let rows = ''
+
+  supplierMaster.forEach((supplier) => {
+    const totalAccounts = supplier.accounts.filter(
+      (account) => account.is_active
+    ).length
+
+    const totalKitchens = new Set(
+      supplier.accounts.flatMap((account) =>
+        account.kitchen_account_rules.map((rule) => rule.kitchen_id)
+      )
+    ).size
+
+    rows += `
+      <tr>
+
+        <td>${supplier.business_name}</td>
+
+        <td class="text-center">
+          ${totalAccounts}
+        </td>
+
+        <td class="text-center">
+          ${totalKitchens}
+        </td>
+
+        <td>
+          ${
+            supplier.is_active
+              ? '<span class="badge badge-income">Aktif</span>'
+              : '<span class="badge badge-expense">Nonaktif</span>'
+          }
+        </td>
+
+<td class="text-center">
+
+  <button
+    class="editSupplierButton"
+    data-id="${supplier.id}"
+  >
+    ✏ Data
+  </button>
+
+  <button
+    class="manageAccountButton"
+    data-id="${supplier.id}"
+  >
+    🏦 Rekening
+  </button>
+
+</td>
+
+      </tr>
+    `
+  })
+
+  supplierMasterTable.innerHTML = `
+    <div class="supplier-summary">
+
+      <table class="summary-table">
+
+        <thead>
+
+          <tr>
+            <th>SUPPLIER</th>
+            <th>REKENING</th>
+            <th>DAPUR</th>
+            <th>STATUS</th>
+            <th>AKSI</th>
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+          ${rows}
+
+        </tbody>
+
+      </table>
+
+    </div>
+  `
+
+  document.querySelectorAll('.editSupplierButton').forEach((button) => {
+    button.addEventListener('click', () => {
+      openSupplierModal(button.dataset.id)
+    })
+  })
+
+  document.querySelectorAll('.manageAccountButton').forEach((button) => {
+    button.addEventListener('click', () => {
+      openAccountManager(button.dataset.id)
+    })
+  })
+}
+
+function openSupplierModal(id) {
+  supplierMode = 'edit'
+
+  supplierModalTitle.textContent = 'Edit Supplier'
+
+  currentSupplierId = id
+
+  const supplier = supplierMaster.find((item) => item.id === id)
+
+  if (!supplier) return
+
+  supplierBusinessName.value = supplier.business_name ?? ''
+  supplierOwnerName.value = supplier.owner_name ?? ''
+  supplierProductType.value = supplier.product_type ?? ''
+  supplierPhone.value = supplier.phone ?? ''
+  supplierAddress.value = supplier.address ?? ''
+  supplierStatus.value = String(supplier.is_active)
+
+  supplierModal.style.display = 'flex'
+}
+
+addSupplierButton?.addEventListener('click', () => {
+  openNewSupplierModal()
+})
+
+function closeModal() {
+  supplierModal.style.display = 'none'
+
+  accountModal.style.display = 'none'
+}
+
+closeSupplierModal.addEventListener('click', closeModal)
+
+window.addEventListener('click', (e) => {
+  if (e.target === supplierModal) {
+    closeModal()
+  }
+})
+
+async function saveSupplier() {
+  if (supplierMode === 'add') {
+    await insertSupplier()
+  } else {
+    await updateSupplier()
+  }
+}
+
+async function updateSupplier() {
+  const { error } = await supabaseClient
+    .from('income_suppliers')
+    .update({
+      business_name: supplierBusinessName.value.trim(),
+      owner_name: supplierOwnerName.value.trim(),
+      product_type: supplierProductType.value.trim(),
+      phone: supplierPhone.value.trim(),
+      address: supplierAddress.value.trim(),
+      is_active: supplierStatus.value === 'true',
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', currentSupplierId)
+
+  if (error) {
+    console.error(error)
+    alert('Gagal memperbarui supplier.')
+    return
+  }
+
+  closeModal()
+
+  await loadSupplierMaster()
+}
+
+async function insertSupplier() {
+  const { error } = await supabaseClient.from('income_suppliers').insert({
+    business_name: supplierBusinessName.value.trim(),
+    owner_name: supplierOwnerName.value.trim(),
+    product_type: supplierProductType.value.trim(),
+    phone: supplierPhone.value.trim() || null,
+    address: supplierAddress.value.trim() || null,
+    is_active: supplierStatus.value === 'true'
+  })
+
+  if (error) {
+    console.error(error)
+    alert('Gagal menambahkan supplier.')
+    return
+  }
+
+  closeModal()
+
+  supplierMode = 'edit'
+
+  await loadSupplierMaster()
+
+  alert('Supplier berhasil ditambahkan.')
+}
+
+async function saveAccount() {
+  if (!accountNumber.value.trim()) {
+    alert('Nomor rekening wajib diisi.')
+    accountNumber.focus()
+    return
+  }
+
+  let error
+
+  if (currentAccountId) {
+    const result = await supabaseClient
+      .from('accounts')
+      .update({
+        bank: accountBank.value,
+        account_number: accountNumber.value.trim(),
+        is_active: accountStatus.value === 'true'
+      })
+      .eq('id', currentAccountId)
+
+    error = result.error
+  } else {
+    const result = await supabaseClient.from('accounts').insert({
+      name: supplierMaster.find((s) => s.id === currentSupplierId)
+        .business_name,
+
+      bank: accountBank.value,
+
+      account_number: accountNumber.value.trim(),
+
+      supplier_id: currentSupplierId,
+
+      is_active: accountStatus.value === 'true'
+    })
+
+    error = result.error
+  }
+
+  if (error) {
+    console.error(error)
+    alert('Gagal menyimpan rekening.')
+    return
+  }
+
+  resetAccountEditor()
+
+  await loadSupplierMaster()
+
+  openAccountManager(currentSupplierId)
+}
+
+async function saveKitchenRules() {}
+
+saveKitchenMappingButton.addEventListener('click', saveKitchenMapping)
+saveSupplierButton.addEventListener('click', saveSupplier)
+saveAccountButton.addEventListener('click', saveAccount)
