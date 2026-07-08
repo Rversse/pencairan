@@ -1,0 +1,292 @@
+/* ==========================
+   MODAL
+========================== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  z-index: 99999;
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(15, 23, 42, 0.28);
+
+  backdrop-filter: blur(6px);
+}
+
+.modal-overlay.show {
+  display: flex;
+}
+
+/* ==========================
+   SUPPLIER ACCOUNT MODAL
+========================== */
+
+.supplier-modal {
+  width: min(620px, 92vw);
+
+  animation: modalPop 0.2s ease;
+}
+
+.modal-content {
+  width: min(760px, 92vw);
+  max-height: 85vh;
+  overflow-y: auto;
+  overflow-x: hidden; /* ganti dari `overflow: hidden`, biar y-axis gak ketiban */
+
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: 0 30px 70px rgba(15, 23, 42, 0.18);
+}
+
+/* ==========================
+   HEADER
+========================== */
+
+.modal-header {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  padding: 20px 24px;
+
+  min-height: 72px;
+
+  background: var(--bg-soft);
+
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2,
+.modal-header h3 {
+  margin: 0;
+
+  font-size: 20px;
+
+  font-weight: 700;
+
+  color: var(--navy);
+}
+
+.close-modal {
+  width: 42px;
+
+  height: 42px;
+
+  padding: 0;
+
+  font-size: 22px;
+
+  color: var(--navy);
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 12px;
+}
+
+.close-modal:hover {
+  background: var(--bg-soft);
+}
+
+/* ==========================
+   ACCOUNT CARD
+========================== */
+
+.supplier-account-card {
+  padding: 18px;
+
+  margin: 14px 18px;
+
+  border-radius: 18px;
+
+  border: 1px solid var(--border);
+
+  background: var(--card);
+
+  box-shadow: var(--shadow);
+
+  transition: var(--transition);
+}
+
+.supplier-account-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow: var(--shadow-hover);
+}
+
+.supplier-account-card h4 {
+  margin: 0 0 10px;
+
+  font-size: 20px;
+
+  color: var(--navy);
+}
+
+#supplierAccountsContainer {
+  padding-top: 8px;
+}
+
+.account-number {
+  margin: 6px 0;
+
+  font-size: 14px;
+
+  color: var(--navy-soft);
+}
+
+/* ==========================
+   MAPPING
+========================== */
+
+.mapping-item {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  padding: 10px 0;
+}
+
+.mapping-item input {
+  width: 18px;
+
+  height: 18px;
+}
+
+/* ==========================
+   ACCOUNT ACTION
+========================== */
+
+.account-actions {
+  display: grid;
+
+  grid-template-columns: 1fr 1fr;
+
+  gap: 10px;
+
+  margin-top: 18px;
+}
+
+.account-actions button {
+  min-height: 42px;
+}
+
+/* ==========================
+   FORM MODAL
+========================== */
+
+.modal-content form {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 16px;
+
+  padding: 24px;
+}
+
+/* ==========================
+   DELETE MODAL
+========================== */
+
+.delete-modal-content {
+  width: 100%;
+
+  max-width: 420px;
+
+  padding: 28px;
+
+  color: var(--navy);
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 24px;
+
+  box-shadow: var(--shadow);
+}
+
+.delete-modal-content h3 {
+  margin: 0 0 10px;
+
+  font-size: 22px;
+}
+
+.delete-modal-content p {
+  margin: 0;
+
+  line-height: 1.5;
+
+  color: var(--navy-soft);
+}
+
+.delete-actions {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 12px;
+
+  margin-top: 24px;
+}
+
+.secondary-button {
+  color: var(--navy);
+
+  background: var(--bg-soft);
+}
+
+.secondary-button:hover {
+  background: var(--border);
+}
+
+.danger-button {
+  background: linear-gradient(135deg, #dc2626, #b91c1c);
+}
+
+.danger-button:hover {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+}
+
+/* ==========================
+   FOOTER
+========================== */
+
+.modal-footer {
+  margin-top: 16px;
+}
+
+.modal-footer button {
+  width: 100%;
+}
+
+/* ==========================
+   ANIMATION
+========================== */
+
+@keyframes modalPop {
+  from {
+    opacity: 0;
+
+    transform: translateY(18px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+
+    transform: translateY(0) scale(1);
+  }
+}

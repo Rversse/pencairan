@@ -1,0 +1,29 @@
+.supplier-master-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+
+  max-width: var(--content-width);
+
+  margin: 0 auto 20px;
+}
+
+.supplier-master-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.supplier-master-actions input {
+  width: 280px;
+}
+
+.supplier-summary-top {
+  gap: 12px;
+}
+
+#addSupplierButton {
+  width: auto;
+  white-space: nowrap;
+}

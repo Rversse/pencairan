@@ -1,0 +1,13 @@
+@import './variables.css';
+@import './layout.css';
+@import './navbar.css';
+@import './forms.css';
+@import './modal.css';
+@import './dashboard.css';
+@import './tables.css';
+@import './transaction.css';
+@import './supplier.css';
+@import './daily-status.css';
+@import './filters.css';
+@import './misc.css';
+@import './report.css';

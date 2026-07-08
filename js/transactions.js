@@ -1,10 +1,17 @@
 async function loadTransactions(showLoading = true) {
+  let loadingTimer = null
+
   if (showLoading) {
-    transactionsContainer.innerHTML = `
-    <div class="transaction-card">
-      Memuat transaksi...
-    </div>
-  `
+    loadMoreButton.style.display = 'none'
+
+    // baru tampilin "Memuat..." kalau fetch lebih dari 250ms
+    loadingTimer = setTimeout(() => {
+      transactionsContainer.innerHTML = `
+        <div class="transaction-card">
+          Memuat transaksi...
+        </div>
+      `
+    }, 250)
   }
 
   let query = supabaseClient.from('transactions').select(`
@@ -17,36 +24,19 @@ async function loadTransactions(showLoading = true) {
   if (currentUser?.role === 'viewer') {
     query = query.eq('flow_type', 'expense')
   }
-
-  if (filterKitchen.value) {
-    query = query.eq('kitchen_id', filterKitchen.value)
-  }
-
-  if (filterFlow.value) {
-    query = query.eq('flow_type', filterFlow.value)
-  }
-
-  if (filterDate.value) {
-    query = query.eq('transaction_date', filterDate.value)
-  }
+  if (filterKitchen.value) query = query.eq('kitchen_id', filterKitchen.value)
+  if (filterFlow.value) query = query.eq('flow_type', filterFlow.value)
+  if (filterDate.value) query = query.eq('transaction_date', filterDate.value)
 
   const { data, error } = await query
-    .order('created_at', {
-      ascending: false
-    })
+    .order('created_at', { ascending: false })
     .limit(transactionLimit)
 
-  const latestTransaction = data?.[0]
+  clearTimeout(loadingTimer) // batalin placeholder kalau belum sempat muncul
 
   if (error) {
     console.error(error)
-
-    transactionsContainer.innerHTML = `
-      <div class="transaction-card">
-        Gagal memuat transaksi
-      </div>
-      `
-
+    transactionsContainer.innerHTML = `<div class="transaction-card">Gagal memuat transaksi</div>`
     return
   }
 

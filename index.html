@@ -9,9 +9,7 @@
 
     <title>Pencairan Dapur</title>
 
-    <link rel="stylesheet" href="./css/style.css" />
-
-    <link rel="stylesheet" href="./css/report.css" />
+    <link rel="stylesheet" href="css/app.css" />
   </head>
 
   <body>
@@ -291,7 +289,7 @@
           <button id="printButton">Print / Save PDF</button>
         </div>
 
-        <div class="filters">
+        <div class="report-filters">
           <input type="date" id="startDate" />
 
           <input type="date" id="endDate" />
@@ -338,25 +336,22 @@
           </div>
         </div>
 
-        <table>
-          <thead>
-            <tr>
-              <th>SPPG</th>
+        <div class="supplier-summary">
+          <table class="summary-table">
+            <thead>
+              <tr>
+                <th>SPPG</th>
+                <th>TOTAL PM</th>
+                <th>BELANJA BGN</th>
+                <th>BELANJA SUPPLIER</th>
+                <th>GAS</th>
+                <th>TOTAL</th>
+              </tr>
+            </thead>
 
-              <th>TOTAL PM</th>
-
-              <th>BELANJA BGN</th>
-
-              <th>BELANJA SUPPLIER</th>
-
-              <th>GAS</th>
-
-              <th>TOTAL</th>
-            </tr>
-          </thead>
-
-          <tbody id="reportTableBody"></tbody>
-        </table>
+            <tbody id="reportTableBody"></tbody>
+          </table>
+        </div>
 
         <div id="reportDetails"></div>
       </section>
@@ -389,16 +384,18 @@
 
           <input type="text" id="amount" placeholder="Nominal" required />
 
-          <button
-            type="button"
-            id="nextTransactionButton"
-            class="secondary-button form-next-btn"
-          >
-            Next
-          </button>
+          <div class="form-actions-row">
+            <button
+              type="button"
+              id="nextTransactionButton"
+              class="secondary-button form-next-btn"
+            >
+              Next
+            </button>
 
-          <div class="form-submit-row">
-            <button type="submit" id="saveTransactionButton">Simpan</button>
+            <div class="form-submit-row">
+              <button type="submit" id="saveTransactionButton">Simpan</button>
+            </div>
           </div>
         </form>
       </div>

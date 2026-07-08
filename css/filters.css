@@ -1,0 +1,25 @@
+.filters {
+  display: grid;
+
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+
+  gap: 10px;
+
+  margin: 0 auto 14px;
+
+  max-width: var(--content-width);
+}
+
+.filters select,
+.filters input,
+.filters button {
+  height: 36px;
+
+  padding: 0 14px;
+
+  font-size: 13px;
+
+  font-weight: 500;
+
+  border-radius: 14px;
+}

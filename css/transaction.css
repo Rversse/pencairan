@@ -1,0 +1,243 @@
+.transaction-actions-row {
+  display: flex;
+
+  gap: 12px;
+
+  grid-column: 1 / -1;
+
+  margin-top: 4px;
+
+  justify-content: center;
+}
+
+.transaction-actions-row button {
+  width: 180px;
+  flex: unset;
+}
+
+.transactions-list {
+  display: grid;
+
+  max-width: var(--content-width);
+
+  margin: 0 auto;
+
+  gap: 14px;
+}
+
+.transaction-card {
+  position: relative;
+
+  min-height: 110px;
+
+  padding: 18px 22px;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 24px;
+
+  backdrop-filter: blur(14px);
+
+  overflow: hidden;
+
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+}
+
+.transaction-card::before {
+  content: '';
+
+  position: absolute;
+
+  inset: 0;
+
+  background: linear-gradient(180deg, rgba(37, 99, 235, 0.04), transparent);
+
+  pointer-events: none;
+}
+
+.transaction-card:hover {
+  transform: translateY(-2px);
+
+  border-color: var(--gold-soft);
+
+  box-shadow: var(--shadow-hover);
+}
+
+.transaction-card small {
+  color: var(--navy-soft);
+
+  font-size: 13px;
+
+  opacity: 0.92;
+}
+
+.transaction-date {
+  font-size: 13px;
+
+  font-style: italic;
+}
+
+.amount {
+  text-align: right;
+
+  white-space: nowrap;
+
+  font-size: 18px;
+
+  font-weight: 800;
+
+  letter-spacing: -0.03em;
+
+  color: var(--navy);
+}
+
+.transaction-actions {
+  display: flex;
+
+  gap: 6px;
+
+  margin-top: auto;
+}
+
+.transaction-card button {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+
+  width: 34px;
+
+  height: 34px;
+
+  padding: 0;
+
+  font-size: 14px;
+
+  border-radius: 12px;
+
+  background: var(--bg-soft);
+
+  border: 1px solid var(--border);
+
+  color: var(--navy-soft);
+
+  box-shadow: none;
+
+  transition:
+    transform 0.18s ease,
+    background 0.18s ease,
+    border-color 0.18s ease;
+}
+
+.transaction-card button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.transaction-card button:hover {
+  transform: translateY(-1px);
+
+  background: var(--border);
+
+  border-color: var(--border);
+
+  color: var(--navy);
+}
+
+.transaction-layout {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  gap: 18px;
+}
+
+.transaction-left {
+  display: flex;
+
+  flex-direction: column;
+
+  gap: 10px;
+
+  flex: 1;
+
+  min-width: 0;
+}
+
+.transaction-right {
+  display: flex;
+
+  flex-direction: column;
+
+  align-items: flex-end;
+
+  justify-content: center;
+
+  gap: 4px;
+
+  min-width: 180px;
+}
+
+.transaction-header {
+  display: flex;
+
+  align-items: center;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+
+  line-height: 1;
+}
+
+.transaction-target {
+  color: var(--navy-soft);
+
+  font-size: 14px;
+
+  font-weight: 500;
+
+  line-height: 1.45;
+}
+
+.transactions-header {
+  display: flex;
+
+  align-items: center;
+
+  justify-content: space-between;
+
+  margin-bottom: 8px;
+}
+
+.view-all-link {
+  font-size: 14px;
+  font-weight: 600;
+
+  color: var(--navy);
+
+  text-decoration: none;
+
+  transition: var(--transition);
+}
+
+.view-all-link:hover {
+  color: var(--gold);
+}
+
+.target-income {
+  color: #2563eb;
+}
+
+.target-expense {
+  color: var(--success);
+}
+
+.target-gas {
+  color: #ca8a04;
+}

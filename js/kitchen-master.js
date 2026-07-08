@@ -33,6 +33,9 @@ kitchenMasterTab?.addEventListener('click', async (e) => {
   kitchenMasterSection.style.display = 'block'
   kitchenMasterTab.classList.add('active')
 
+  addKitchenButton.style.display =
+    currentUser?.role === 'admin' ? 'inline-flex' : 'none'
+
   await loadKitchenMaster()
 })
 
@@ -74,12 +77,16 @@ function renderKitchenMaster() {
 
 <td>${kitchen.name}</td>
 
+<td class="text-center">
+  ${kitchen.total_pm ?? '-'}
+</td>
+
 <td>
   ${kitchen.pic ?? '-'}
 </td>
 
-<td class="text-center">
-  ${kitchen.total_pm ?? '-'}
+<td>
+  ${kitchen.address ?? '-'}
 </td>
 
           <td>
@@ -93,10 +100,10 @@ function renderKitchenMaster() {
 ${
   isAdmin
     ? `
-<td class="text-center">
+<td class="text-center kitchen-action-column">
 
   <button
-    class="editKitchenButton"
+    class="action-button"
     data-id="${kitchen.id}"
   >
     ✏ Edit
@@ -120,11 +127,12 @@ ${
 
 <tr>
   <th>DAPUR</th>
-  <th>PIC</th>
   <th>TOTAL PM</th>
+  <th>PIC</th>
+  <th>ALAMAT</th>
   <th>STATUS</th>
 
-  ${isAdmin ? '<th>AKSI</th>' : ''}
+  ${isAdmin ? '<th class="kitchen-action-column">AKSI</th>' : ''}
 </tr>
 
         </thead>
@@ -140,7 +148,7 @@ ${
     </div>
   `
 
-  document.querySelectorAll('.editKitchenButton').forEach((button) => {
+  document.querySelectorAll('.action-button').forEach((button) => {
     button.addEventListener('click', () => {
       openKitchenModal(button.dataset.id)
     })

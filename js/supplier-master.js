@@ -79,7 +79,9 @@ function renderSupplierAccounts(accounts) {
 
   supplierAccountsList.innerHTML = accounts
     .map((account) => {
-      const totalKitchens = account.kitchen_account_rules.length
+      const totalKitchens = new Set(
+        account.kitchen_account_rules.map((rule) => rule.kitchen_id)
+      ).size
 
       return `
 <div class="supplier-account-card">
@@ -361,49 +363,52 @@ function renderSupplierMaster() {
       rows += `
       <tr>
 
-        <td>${supplier.business_name}</td>
+<tr>
+  <td>${supplier.business_name}</td>
 
-        <td class="text-center">
-  ${activeAccounts}/${totalAccounts}
-</td>
+  <td>
+    ${supplier.owner_name ?? '-'}
+  </td>
 
-        <td class="text-center">
-          ${totalKitchens}
-        </td>
+  <td>
+    ${supplier.product_type ?? '-'}
+  </td>
 
-        <td>
-          ${
-            supplier.is_active
-              ? '<span class="badge badge-income">Aktif</span>'
-              : '<span class="badge badge-expense">Nonaktif</span>'
-          }
-        </td>
+  <td>
+    ${supplier.phone ?? '-'}
+  </td>
 
-${
-  isAdmin
-    ? `
-<td class="text-center">
+  <td>
+    ${supplier.address ?? '-'}
+  </td>
 
-  <button
-    class="editSupplierButton"
-    data-id="${supplier.id}"
-  >
-    ✏ Edit
-  </button>
+  <td class="text-center">
+    ${activeAccounts}/${totalAccounts}
+  </td>
 
-  <button
-    class="manageAccountButton"
-    data-id="${supplier.id}"
-  >
-    💳 Rekening
-  </button>
+  <td class="text-center">
+    ${totalKitchens}
+  </td>
 
+  <td>
+    ${
+      supplier.is_active
+        ? '<span class="badge badge-income">Aktif</span>'
+        : '<span class="badge badge-expense">Nonaktif</span>'
+    }
+  </td>
+
+  ${
+    isAdmin
+      ? `
+<td class="text-center supplier-action-column">
+  <button class="action-button editSupplierButton" data-id="${supplier.id}">✏ Edit</button>
+  <button class="action-button manageAccountButton" data-id="${supplier.id}">💳 Rekening</button>
 </td>
 `
-    : ''
-}
-
-      </tr>
+      : ''
+  }
+</tr>
     `
     })
 
@@ -416,11 +421,14 @@ ${
 
 <tr>
   <th>SUPPLIER</th>
+  <th>PEMILIK</th>
+  <th>PRODUK</th>
+  <th>NO HP</th>
+  <th>ALAMAT</th>
   <th>REKENING</th>
   <th>DAPUR</th>
   <th>STATUS</th>
-
-  ${isAdmin ? '<th>AKSI</th>' : ''}
+  ${isAdmin ? '<th class="supplier-action-column">AKSI</th>' : ''}
 </tr>
 
         </thead>

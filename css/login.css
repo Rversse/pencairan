@@ -14,10 +14,14 @@ body {
   overflow: hidden;
 
   display: flex;
+
   align-items: center;
+
   justify-content: center;
 
   font-family: 'Inter', sans-serif;
+
+  line-height: 1.5;
 
   background:
     radial-gradient(
@@ -55,7 +59,7 @@ body {
   width: 100%;
   max-width: 420px;
 
-  padding: 42px 36px;
+  padding: 40px 36px;
 
   text-align: center;
 
@@ -71,7 +75,7 @@ body {
     0 30px 80px rgba(0, 0, 0, 0.34),
     inset 0 1px 0 rgba(255, 255, 255, 0.04);
 
-  animation: fadeIn 0.45s ease;
+  animation: fadeIn 0.35s ease;
 }
 
 @keyframes fadeIn {
@@ -100,14 +104,14 @@ body {
 
   border-radius: 22px;
 
-  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  background: var(--gold);
 
-  color: #111827;
+  color: var(--white);
 
   font-size: 24px;
   font-weight: 700;
 
-  box-shadow: 0 20px 40px rgba(251, 191, 36, 0.24);
+  box-shadow: 0 12px 28px rgba(251, 191, 36, 0.22);
 }
 
 h1 {
@@ -119,11 +123,14 @@ h1 {
 
 p {
   margin-top: 10px;
+
   margin-bottom: 34px;
 
   color: rgba(255, 255, 255, 0.64);
 
   font-size: 14px;
+
+  line-height: 1.6;
 }
 
 .pin-wrapper {
@@ -140,8 +147,12 @@ p {
 
 .pin-dots {
   display: flex;
+
   justify-content: center;
+
   gap: 14px;
+
+  cursor: text;
 }
 
 .dot {
@@ -168,7 +179,7 @@ p {
 #errorText {
   display: block;
 
-  min-height: 20px;
+  min-height: 24px;
 
   margin-top: 24px;
 
