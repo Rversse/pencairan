@@ -97,16 +97,20 @@ async function loadAccountsFiltered(flow) {
     .from('kitchen_account_rules')
     .select(
       `
-        account_id,
-        accounts (
-          id,
-          name,
-          bank
-        )
-      `
+      account_id,
+      accounts (
+        id,
+        name,
+        bank
+      )
+    `
     )
     .eq('kitchen_id', kitchenId)
     .eq('flow_type', dbFlow)
+    .order('name', {
+      foreignTable: 'accounts',
+      ascending: true
+    })
 
   if (error) {
     console.error(error)
@@ -114,47 +118,51 @@ async function loadAccountsFiltered(flow) {
     return
   }
 
-  accountSelect.innerHTML = `
-<option
-  value=""
-  disabled
-  selected
-  hidden
->
-  Pilih Rekening
-</option>
-    `
+  const uniqueAccounts = [
+    ...new Map(
+      data
+        .filter((item) => item.accounts)
+        .map((item) => [item.accounts.id, item.accounts])
+    ).values()
+  ]
 
-  if (!data.length) {
+  accountSelect.innerHTML = `
+    <option
+      value=""
+      disabled
+      selected
+      hidden
+    >
+      Pilih Rekening
+    </option>
+  `
+
+  if (!uniqueAccounts.length) {
     accountSelect.innerHTML = `
       <option value="">
         Tidak tersedia
       </option>
-      `
+    `
 
     accountSelect.disabled = true
 
     return
   }
 
-  data.forEach((item) => {
-    const account = item.accounts
+  let options = ''
 
-    if (!account) {
-      return
-    }
-
-    accountSelect.innerHTML += `
-<option value="${account.id}">
-  ${getAccountDisplayName(account.name)} (${account.bank})
-</option>
-  `
+  uniqueAccounts.forEach((account) => {
+    options += `
+      <option value="${account.id}">
+        ${account.name} (${account.bank})
+      </option>
+    `
   })
 
-  const validAccounts = data.filter((item) => item.accounts)
+  accountSelect.innerHTML += options
 
-  if (validAccounts.length === 1) {
-    accountSelect.value = validAccounts[0].accounts.id
+  if (uniqueAccounts.length === 1) {
+    accountSelect.value = uniqueAccounts[0].id
 
     accountSelect.disabled = true
   } else {
@@ -175,20 +183,32 @@ async function loadSuppliersFiltered() {
     .from('kitchen_supplier_rules')
     .select(
       `
-        supplier_id,
-        suppliers (
-          id,
-          name
-        )
-      `
+      supplier_id,
+      suppliers (
+        id,
+        name
+      )
+    `
     )
     .eq('kitchen_id', kitchenId)
+    .order('name', {
+      foreignTable: 'suppliers',
+      ascending: true
+    })
 
   if (error) {
     console.error(error)
 
     return
   }
+
+  const uniqueSuppliers = [
+    ...new Map(
+      data
+        .filter((item) => item.suppliers)
+        .map((item) => [item.suppliers.id, item.suppliers])
+    ).values()
+  ]
 
   supplierSelect.innerHTML = `
     <option
@@ -199,32 +219,34 @@ async function loadSuppliersFiltered() {
     >
       Pilih Supplier
     </option>
-    `
+  `
 
-  if (!data.length) {
+  if (!uniqueSuppliers.length) {
     supplierSelect.innerHTML = `
       <option value="">
         Tidak tersedia
       </option>
-      `
+    `
 
     supplierSelect.disabled = true
 
     return
   }
 
-  data.forEach((item) => {
-    const supplier = item.suppliers
+  let options = ''
 
-    supplierSelect.innerHTML += `
+  uniqueSuppliers.forEach((supplier) => {
+    options += `
       <option value="${supplier.id}">
         ${supplier.name}
       </option>
     `
   })
 
-  if (data.length === 1) {
-    supplierSelect.value = data[0].suppliers.id
+  supplierSelect.innerHTML += options
+
+  if (uniqueSuppliers.length === 1) {
+    supplierSelect.value = uniqueSuppliers[0].id
 
     supplierSelect.disabled = true
   } else {

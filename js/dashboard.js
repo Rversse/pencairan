@@ -13,7 +13,9 @@ async function loadDashboard() {
     summaryQuery = summaryQuery.eq('kitchen_id', filterKitchen.value)
   }
 
-  if (filterFlow.value) {
+  if (window.currentUser?.role === 'viewer') {
+    summaryQuery = summaryQuery.in('flow_type', ['expense', 'neutral'])
+  } else if (filterFlow.value) {
     summaryQuery = summaryQuery.eq('flow_type', filterFlow.value)
   }
 
@@ -61,23 +63,6 @@ async function loadDashboard() {
 const DISBURSEMENT_ITEMS = 5
 
 const DISBURSEMENT_DATE_KEY = 'disbursement_selected_date'
-
-const ACCOUNT_ORDER = [
-  'ARUTALA',
-  'CV KRAMAT',
-  'UMKM BAROKAH',
-  'TOKO MEKAR SARI',
-  'KPWS'
-]
-
-function getAccountDisplayName(name) {
-  const aliases = {
-    'Dede Jaelani': 'UMKM Barokah',
-    'Tini Sumarni': 'Toko Mekar Sari'
-  }
-
-  return aliases[name] || name
-}
 
 function getTodayLocal() {
   const today = new Date()
@@ -501,7 +486,8 @@ async function loadIncomeReport() {
       `
   amount,
   accounts (
-    name
+    name,
+    bank
   )
 `
     )
@@ -813,9 +799,9 @@ async function renderIncomeSummary(data) {
   let grandTotal = 0
 
   data.forEach((item) => {
-    const account = getAccountDisplayName(
-      item.accounts?.name || 'Lainnya'
-    ).toUpperCase()
+    const account = item.accounts
+      ? [item.accounts.name, item.accounts.bank].filter(Boolean).join(' ')
+      : 'Lainnya'
 
     if (!grouped[account]) {
       grouped[account] = 0
@@ -829,19 +815,7 @@ async function renderIncomeSummary(data) {
   let rows = ''
 
   Object.entries(grouped)
-    .sort(([a], [b]) => {
-      const indexA = ACCOUNT_ORDER.indexOf(a)
-      const indexB = ACCOUNT_ORDER.indexOf(b)
-
-      if (indexA === -1 && indexB === -1) {
-        return a.localeCompare(b)
-      }
-
-      if (indexA === -1) return 1
-      if (indexB === -1) return -1
-
-      return indexA - indexB
-    })
+    .sort(([a], [b]) => a.localeCompare(b))
     .forEach(([account, total]) => {
       rows += `
         <tr>

@@ -751,44 +751,111 @@ ${new Date()
 
     Cihaur: [
       'ARUTALA BRI',
-      'DEDE JAELANI BNI',
       'CV KRAMAT BNI',
+      'UMKM BAROKAH BNI',
+      'UD BERKAH MANDIRI BNI',
+      'DENISH FRESH CHICKEN BNI',
+      'RR JAYA BROILER BNI',
+      'RPU NUGRAHA BROILER BNI',
       'KOPERASI ARUTALA'
     ],
 
     Cibaregbeg: [
       'ARUTALA BNI',
-      'DEDE JAELANI BNI',
       'CV KRAMAT BNI',
+      'UMKM BAROKAH BNI',
+      'UD BERKAH MANDIRI BNI',
+      'DENISH FRESH CHICKEN BNI',
+      'RR JAYA BROILER BNI',
+      'RPU NUGRAHA BROILER BNI',
       'KOPERASI ARUTALA'
     ],
 
-    Warungbitung: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
+    Warungbitung: [
+      'ARUTALA BNI',
+      'CV KRAMAT BNI',
+      'UD BERKAH MANDIRI BNI',
+      'IMAM NUGROHO BCA',
+      'TOKO SEMBAKO BERKAH BNI',
+      'KOPERASI ARUTALA'
+    ],
 
-    Campakamulya: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
+    Campakamulya: [
+      'ARUTALA BNI',
+      'CV KRAMAT BNI',
+      'ASEP RIDWAN BJB',
+      'UMKM SUMBER SEGAR BRI',
+      'UMKM SUMBER MAKMUR MANDIRI',
+      'UMKM TEMPE JAYA MANDIRI BRI',
+      'KOPERASI ARUTALA'
+    ],
 
-    Kertajadi: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
+    Kertajadi: [
+      'ARUTALA BNI',
+      'CV KRAMAT BNI',
+      'ITIKURIH BRI',
+      'PABRIK TAHU CIOGONG 2 BRI',
+      'TOKO FAUZAN DAGING FRESH BNI',
+      'UMKM BERKAH AMANAH BRI',
+      'UMKM MAJU JAYA BRI',
+      'UMKM MITRA BAROKAH BJB',
+      'UMKM PURWANTI BRI',
+      'UMKM SABILULUNGAN BJB',
+      'UMKM SEGAR MAKMUR BRI',
+      'UMKM SIMPANG RASA BNI',
+      'UMKM SUMBER SEGAR BJB',
+      'WARUNG SEMBAKO SERBA ADA BJB',
+      'KOPERASI ARUTALA'
+    ],
 
-    Cisepat: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA'],
+    Cisepat: [
+      'ARUTALA BNI',
+      'CV KRAMAT BNI',
+      'ITIKURIH BRI',
+      'PABRIK TAHU CIOGONG 2 BRI',
+      'TOKO FAUZAN DAGING FRESH BNI',
+      'UMKM BERKAH AMANAH BRI',
+      'UMKM MAJU JAYA BRI',
+      'UMKM MITRA BAROKAH BJB',
+      'UMKM PURWANTI BRI',
+      'UMKM SABILULUNGAN BJB',
+      'UMKM SEGAR MAKMUR BRI',
+      'UMKM SIMPANG RASA BNI',
+      'UMKM SUMBER SEGAR BJB',
+      'WARUNG SEMBAKO SERBA ADA BJB',
+      'KOPERASI ARUTALA'
+    ],
 
     Cipetir: [
       'ARUTALA BNI',
       'CV KRAMAT BNI',
-      'DEDE JAELANI BNI',
+      'UMKM BAROKAH BNI',
+      'UD BERKAH MANDIRI BNI',
+      'DENISH FRESH CHICKEN BNI',
+      'RR JAYA BROILER BNI',
+      'RPU NUGRAHA BROILER BNI',
       'KOPERASI ARUTALA'
     ],
 
     Cimanggu: [
       'ARUTALA BNI',
       'CV KRAMAT BNI',
-      'DEDE JAELANI BNI',
+      'UMKM BAROKAH BNI',
+      'UD BERKAH MANDIRI BNI',
+      'DENISH FRESH CHICKEN BNI',
+      'RR JAYA BROILER BNI',
+      'RPU NUGRAHA BROILER BNI',
       'KOPERASI ARUTALA'
     ],
 
     Cikondang: [
       'ARUTALA BNI',
       'CV KRAMAT BNI',
-      'DEDE JAELANI BNI',
+      'UMKM BAROKAH BNI',
+      'UD BERKAH MANDIRI BNI',
+      'DENISH FRESH CHICKEN BNI',
+      'RR JAYA BROILER BNI',
+      'RPU NUGRAHA BROILER BNI',
       'KOPERASI ARUTALA'
     ],
 
@@ -932,32 +999,7 @@ ${new Date()
           return
         }
 
-        if (account.name === 'Arutala' && account.bank === 'BNI') {
-          columnName = 'ARUTALA BNI'
-        }
-
-        if (account.name === 'Arutala' && account.bank === 'BRI') {
-          columnName = 'ARUTALA BRI'
-        }
-
-        if (account.name === 'KPWS') {
-          columnName = 'KPWS BRI'
-        }
-
-        if (account.name === 'Dede Jaelani') {
-          columnName = 'DEDE JAELANI BNI'
-        }
-
-        if (account.name === 'CV Kramat') {
-          columnName = 'CV KRAMAT BNI'
-        }
-
-        console.log({
-          kitchen: kitchen.name,
-          account: account.name,
-          bank: account.bank,
-          columnName
-        })
+        columnName = `${account.name} ${account.bank}`
       }
 
       if (transaction.flow_type === 'expense') {
@@ -990,17 +1032,9 @@ ${new Date()
 
       const key = `${kitchen.name}|${columnName}`
 
-      console.log('EXPORT KEY', key, row[key])
-
       if (row[key] === undefined) {
         return
       }
-
-      console.log({
-        key,
-        exists: row[key] !== undefined,
-        amount
-      })
 
       row[key] += amount
     })

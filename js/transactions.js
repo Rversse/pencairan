@@ -89,9 +89,7 @@ async function loadTransactions(showLoading = true) {
     }
 
     const target = transaction.accounts
-      ? `${getAccountDisplayName(
-          transaction.accounts.name
-        )} (${transaction.accounts.bank})`
+      ? `${transaction.accounts.name} (${transaction.accounts.bank})`
       : transaction.suppliers?.name || '-'
 
     const isLocked = isTransactionLocked(transaction.transaction_date)
