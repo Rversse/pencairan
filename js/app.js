@@ -26,6 +26,7 @@ async function startApp() {
   disbursementSection.style.display = 'none'
   incomeSection.style.display = 'none'
   supplierMasterSection.style.display = 'none'
+  kitchenMasterSection.style.display = 'none'
 
   if (currentUser?.role === 'viewer') {
     incomeSection.style.display = 'block'
@@ -64,23 +65,35 @@ async function startApp() {
 }
 
 function applyRoleAccess() {
-  const dashboardLink = document.getElementById('dashboardTab')
-  const reportLink = document.getElementById('reportTab')
-  const disbursementLink = document.getElementById('disbursementTab')
-
-  const dashboard = document.querySelector('.dashboard')
-  const adminSection = document.getElementById('adminTransactionsSection')
-  const fabButton = document.querySelector('.fab-button')
-
   const isViewer = window.currentUser?.role === 'viewer'
 
-  dashboardLink?.style.setProperty('display', isViewer ? 'none' : '')
-  reportLink?.style.setProperty('display', isViewer ? 'none' : '')
-  disbursementLink?.style.setProperty('display', isViewer ? 'none' : '')
+  // Tabs
+  dashboardTab?.style.setProperty('display', isViewer ? 'none' : '')
+  reportTab?.style.setProperty('display', isViewer ? 'none' : '')
+  disbursementTab?.style.setProperty('display', isViewer ? 'none' : '')
+  supplierMasterTab?.style.setProperty('display', '')
+  kitchenMasterTab?.style.setProperty('display', '')
 
-  dashboard?.style.setProperty('display', isViewer ? 'none' : '')
-  adminSection?.style.setProperty('display', isViewer ? 'none' : '')
-  fabButton?.style.setProperty('display', isViewer ? 'none' : '')
+  // Dashboard
+  document
+    .querySelector('.dashboard')
+    ?.style.setProperty('display', isViewer ? 'none' : '')
+
+  // Transaksi
+  document
+    .getElementById('adminTransactionsSection')
+    ?.style.setProperty('display', isViewer ? 'none' : '')
+
+  // Floating Action Button
+  document
+    .querySelector('.fab-button')
+    ?.style.setProperty('display', isViewer ? 'none' : '')
+
+  // Supplier Master
+  addSupplierButton?.style.setProperty('display', isViewer ? 'none' : '')
+
+  // Kitchen Master
+  addKitchenButton?.style.setProperty('display', isViewer ? 'none' : '')
 }
 
 function applyViewerBadge() {

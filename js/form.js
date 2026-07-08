@@ -122,6 +122,14 @@ async function toggleFields() {
 
     await loadAccountsFiltered(flow)
 
+    const accounts = Array.from(accountSelect.options).filter(
+      (option) => option.value
+    )
+
+    if (accounts.length === 1) {
+      accountSelect.value = accounts[0].value
+    }
+
     updateFormFlow()
 
     return
@@ -157,6 +165,14 @@ async function toggleFields() {
     supplierSelect.style.display = 'block'
 
     await loadSuppliersFiltered()
+
+    const suppliers = Array.from(supplierSelect.options).filter(
+      (option) => option.value
+    )
+
+    if (suppliers.length === 1) {
+      supplierSelect.value = suppliers[0].value
+    }
 
     updateFormFlow()
 
@@ -239,6 +255,7 @@ function lockTransactionFields(isEditing) {
 }
 
 async function editTransaction(transaction) {
+  submitButton.disabled = true
   if (window.currentUser?.role !== 'admin') {
     return
   }
@@ -269,6 +286,8 @@ async function editTransaction(transaction) {
   }
 
   await toggleFields()
+
+  submitButton.disabled = false
 
   if (transaction.account_id) {
     accountSelect.value = transaction.account_id
@@ -319,9 +338,10 @@ transactionForm.addEventListener('submit', async (event) => {
     return
   }
 
-  if (!amountInput.value) {
-    showToast('Nominal wajib diisi')
+  const amount = Number(amountInput.value.replace(/\./g, ''))
 
+  if (amount <= 0) {
+    showToast('Nominal harus lebih dari 0')
     return
   }
 
@@ -346,7 +366,7 @@ transactionForm.addEventListener('submit', async (event) => {
 
     kitchen_id: kitchenSelect.value,
 
-    amount: Number(amountInput.value.replace(/\./g, ''))
+    amount: amount
   }
 
   if (flow === 'pemasukan') {

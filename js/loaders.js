@@ -10,6 +10,7 @@ async function loadKitchens() {
   const { data, error } = await supabaseClient
     .from('kitchens')
     .select('*')
+    .eq('is_active', true)
     .order('name')
 
   if (error) {
@@ -54,6 +55,7 @@ async function loadSuppliers() {
   const { data, error } = await supabaseClient
     .from('suppliers')
     .select('*')
+    .eq('is_active', true)
     .order('name')
 
   if (error) {
@@ -98,11 +100,12 @@ async function loadAccountsFiltered(flow) {
     .select(
       `
       account_id,
-      accounts (
-        id,
-        name,
-        bank
-      )
+accounts (
+  id,
+  name,
+  bank,
+  is_active
+)
     `
     )
     .eq('kitchen_id', kitchenId)
@@ -121,7 +124,7 @@ async function loadAccountsFiltered(flow) {
   const uniqueAccounts = [
     ...new Map(
       data
-        .filter((item) => item.accounts)
+        .filter((item) => item.accounts && item.accounts.is_active)
         .map((item) => [item.accounts.id, item.accounts])
     ).values()
   ]
@@ -184,10 +187,11 @@ async function loadSuppliersFiltered() {
     .select(
       `
       supplier_id,
-      suppliers (
-        id,
-        name
-      )
+suppliers (
+  id,
+  name,
+  is_active
+)
     `
     )
     .eq('kitchen_id', kitchenId)
@@ -205,7 +209,7 @@ async function loadSuppliersFiltered() {
   const uniqueSuppliers = [
     ...new Map(
       data
-        .filter((item) => item.suppliers)
+        .filter((item) => item.suppliers && item.suppliers.is_active)
         .map((item) => [item.suppliers.id, item.suppliers])
     ).values()
   ]

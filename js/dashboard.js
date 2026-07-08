@@ -218,6 +218,7 @@ async function loadDisbursementTable() {
     .from('kitchens')
     .select('id,name')
     .eq('include_disbursement', true)
+    .eq('is_active', true)
     .order('name')
 
   if (error) {
@@ -1180,6 +1181,7 @@ async function loadDailyStatus() {
   const { data: kitchens } = await supabaseClient
     .from('kitchens')
     .select('id,name')
+    .eq('is_active', true)
     .order('name')
 
   const { data: transactions } = await supabaseClient
@@ -1429,6 +1431,7 @@ function hideAllSections() {
   supplierSection.style.display = 'none'
   supplierMasterSection.style.display = 'none'
   reportSection.style.display = 'none'
+  kitchenMasterSection.style.display = 'none'
   disbursementSection.style.display = 'none'
   incomeSection.style.display = 'none'
 }

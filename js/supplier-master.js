@@ -32,7 +32,10 @@ let supplierMode = 'edit'
 
 let currentSupplierId = null
 
-addAccountButton.addEventListener('click', () => {
+addAccountButton?.addEventListener('click', () => {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
   currentAccountId = null
 
   accountBank.value = 'BNI'
@@ -45,6 +48,10 @@ addAccountButton.addEventListener('click', () => {
 })
 
 function openNewSupplierModal() {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+
   supplierMode = 'add'
   currentSupplierId = null
 
@@ -85,32 +92,46 @@ function renderSupplierAccounts(accounts) {
       ${account.account_number ?? '-'}
     </div>
 
+    <div class="account-status">
+      ${
+        account.is_active
+          ? '<span class="badge badge-income">Aktif</span>'
+          : '<span class="badge badge-expense">Nonaktif</span>'
+      }
+    </div>
+
     <small>
       ${totalKitchens} dapur
     </small>
 
   </div>
 
-  <div class="account-actions">
+  ${
+    currentUser?.role === 'admin'
+      ? `
+      <div class="account-actions">
 
-    <button
-      class="editAccountButton"
-      data-id="${account.id}"
-    >
-      ✏ Edit
-    </button>
+        <button
+          class="editAccountButton"
+          data-id="${account.id}"
+        >
+          ✏ Edit
+        </button>
 
-    <button
-      class="mappingAccountButton"
-      data-id="${account.id}"
-    >
-      🏠 Mapping
-    </button>
+        <button
+          class="mappingAccountButton"
+          data-id="${account.id}"
+        >
+          🏠 Mapping
+        </button>
 
-  </div>
+      </div>
+      `
+      : ''
+  }
 
 </div>
-    `
+`
     })
     .join('')
 
@@ -128,6 +149,9 @@ function renderSupplierAccounts(accounts) {
 }
 
 async function saveKitchenMapping() {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
   const checked = [
     ...document.querySelectorAll('#kitchenMappingList input:checked')
   ].map((item) => item.value)
@@ -184,17 +208,16 @@ function resetAccountEditor() {
   accountStatus.value = 'true'
 }
 
-closeAccountModal.addEventListener('click', () => {
-  resetAccountEditor()
-  accountModal.style.display = 'none'
-})
-
 async function openKitchenMapping(accountId) {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
   currentAccountId = accountId
 
   const { data: kitchens, error: kitchenError } = await supabaseClient
     .from('kitchens')
     .select('id,name')
+    .eq('is_active', true)
     .order('name')
 
   if (kitchenError) {
@@ -234,6 +257,10 @@ async function openKitchenMapping(accountId) {
 }
 
 function openAccountModal(id) {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+
   currentAccountId = id
 
   const supplier = supplierMaster.find((supplier) =>
@@ -249,6 +276,7 @@ function openAccountModal(id) {
   accountBank.value = account.bank
   accountNumber.value = account.account_number ?? ''
   accountStatus.value = String(account.is_active)
+
   mappingEditor.style.display = 'none'
   accountEditor.style.display = 'block'
   accountModal.style.display = 'flex'
@@ -284,6 +312,10 @@ async function loadSupplierMaster() {
 }
 
 function openAccountManager(id) {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+
   resetAccountEditor()
 
   currentSupplierId = id
@@ -300,27 +332,40 @@ function openAccountManager(id) {
 }
 
 function renderSupplierMaster() {
+  const isAdmin = currentUser?.role === 'admin'
+
+  const keyword = supplierMasterSearch.value.trim().toLowerCase()
+
   let rows = ''
 
-  supplierMaster.forEach((supplier) => {
-    const totalAccounts = supplier.accounts.filter(
-      (account) => account.is_active
-    ).length
-
-    const totalKitchens = new Set(
-      supplier.accounts.flatMap((account) =>
-        account.kitchen_account_rules.map((rule) => rule.kitchen_id)
+  supplierMaster
+    .filter((supplier) => {
+      return (
+        supplier.business_name.toLowerCase().includes(keyword) ||
+        (supplier.owner_name ?? '').toLowerCase().includes(keyword)
       )
-    ).size
+    })
+    .forEach((supplier) => {
+      const activeAccounts = supplier.accounts.filter(
+        (account) => account.is_active
+      ).length
 
-    rows += `
+      const totalAccounts = supplier.accounts.length
+
+      const totalKitchens = new Set(
+        supplier.accounts.flatMap((account) =>
+          account.kitchen_account_rules.map((rule) => rule.kitchen_id)
+        )
+      ).size
+
+      rows += `
       <tr>
 
         <td>${supplier.business_name}</td>
 
         <td class="text-center">
-          ${totalAccounts}
-        </td>
+  ${activeAccounts}/${totalAccounts}
+</td>
 
         <td class="text-center">
           ${totalKitchens}
@@ -334,27 +379,33 @@ function renderSupplierMaster() {
           }
         </td>
 
+${
+  isAdmin
+    ? `
 <td class="text-center">
 
   <button
     class="editSupplierButton"
     data-id="${supplier.id}"
   >
-    ✏ Data
+    ✏ Edit
   </button>
 
   <button
     class="manageAccountButton"
     data-id="${supplier.id}"
   >
-    🏦 Rekening
+    💳 Rekening
   </button>
 
 </td>
+`
+    : ''
+}
 
       </tr>
     `
-  })
+    })
 
   supplierMasterTable.innerHTML = `
     <div class="supplier-summary">
@@ -363,13 +414,14 @@ function renderSupplierMaster() {
 
         <thead>
 
-          <tr>
-            <th>SUPPLIER</th>
-            <th>REKENING</th>
-            <th>DAPUR</th>
-            <th>STATUS</th>
-            <th>AKSI</th>
-          </tr>
+<tr>
+  <th>SUPPLIER</th>
+  <th>REKENING</th>
+  <th>DAPUR</th>
+  <th>STATUS</th>
+
+  ${isAdmin ? '<th>AKSI</th>' : ''}
+</tr>
 
         </thead>
 
@@ -398,6 +450,10 @@ function renderSupplierMaster() {
 }
 
 function openSupplierModal(id) {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+
   supplierMode = 'edit'
 
   supplierModalTitle.textContent = 'Edit Supplier'
@@ -418,25 +474,44 @@ function openSupplierModal(id) {
   supplierModal.style.display = 'flex'
 }
 
-addSupplierButton?.addEventListener('click', () => {
-  openNewSupplierModal()
+addSupplierButton?.addEventListener('click', openNewSupplierModal)
+
+supplierMasterSearch?.addEventListener('input', () => {
+  renderSupplierMaster()
 })
 
 function closeModal() {
+  supplierMode = 'edit'
+
   supplierModal.style.display = 'none'
 
-  accountModal.style.display = 'none'
+  closeAccountManager()
 }
 
 closeSupplierModal.addEventListener('click', closeModal)
+
+function closeAccountManager() {
+  resetAccountEditor()
+  accountModal.style.display = 'none'
+}
+
+closeAccountModal.addEventListener('click', closeAccountManager)
 
 window.addEventListener('click', (e) => {
   if (e.target === supplierModal) {
     closeModal()
   }
+
+  if (e.target === accountModal) {
+    closeAccountManager()
+  }
 })
 
 async function saveSupplier() {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+
   if (supplierMode === 'add') {
     await insertSupplier()
   } else {
@@ -445,6 +520,15 @@ async function saveSupplier() {
 }
 
 async function updateSupplier() {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+  if (!supplierBusinessName.value.trim()) {
+    alert('Nama supplier wajib diisi.')
+    supplierBusinessName.focus()
+    return
+  }
+
   const { error } = await supabaseClient
     .from('income_suppliers')
     .update({
@@ -470,6 +554,15 @@ async function updateSupplier() {
 }
 
 async function insertSupplier() {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+  if (!supplierBusinessName.value.trim()) {
+    alert('Nama supplier wajib diisi.')
+    supplierBusinessName.focus()
+    return
+  }
+
   const { error } = await supabaseClient.from('income_suppliers').insert({
     business_name: supplierBusinessName.value.trim(),
     owner_name: supplierOwnerName.value.trim(),
@@ -495,6 +588,15 @@ async function insertSupplier() {
 }
 
 async function saveAccount() {
+  if (currentUser?.role !== 'admin') {
+    return
+  }
+  if (!accountBank.value) {
+    alert('Bank wajib dipilih.')
+    accountBank.focus()
+    return
+  }
+
   if (!accountNumber.value.trim()) {
     alert('Nomor rekening wajib diisi.')
     accountNumber.focus()
@@ -502,6 +604,22 @@ async function saveAccount() {
   }
 
   let error
+
+  const duplicate = supplierMaster
+    .find((s) => s.id === currentSupplierId)
+    .accounts.find((account) => {
+      if (account.id === currentAccountId) return false
+
+      return (
+        account.bank === accountBank.value &&
+        (account.account_number ?? '') === accountNumber.value.trim()
+      )
+    })
+
+  if (duplicate) {
+    alert('Rekening dengan bank dan nomor tersebut sudah ada.')
+    return
+  }
 
   if (currentAccountId) {
     const result = await supabaseClient
@@ -543,8 +661,6 @@ async function saveAccount() {
 
   openAccountManager(currentSupplierId)
 }
-
-async function saveKitchenRules() {}
 
 saveKitchenMappingButton.addEventListener('click', saveKitchenMapping)
 saveSupplierButton.addEventListener('click', saveSupplier)

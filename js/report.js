@@ -103,6 +103,7 @@
     const { data, error } = await supabaseClient
       .from('kitchens')
       .select('id,name')
+      .eq('is_active', true)
       .order('name')
 
     if (error) {
@@ -469,6 +470,7 @@ ${new Date()
     const { data: kitchens, error: kitchensError } = await supabaseClient
       .from('kitchens')
       .select('*')
+      .eq('is_active', true)
       .order('name')
 
     if (kitchensError) {
@@ -907,14 +909,17 @@ ${new Date()
     const { data: kitchens } = await supabaseClient
       .from('kitchens')
       .select('id,name')
+      .eq('is_active', true)
 
     const { data: accounts } = await supabaseClient
       .from('accounts')
       .select('id,name,bank')
+      .eq('is_active', true)
 
     const { data: suppliers } = await supabaseClient
       .from('suppliers')
       .select('id,name')
+      .eq('is_active', true)
 
     const selectedKitchen =
       kitchens.find((k) => k.id === selectedKitchenId) || null
