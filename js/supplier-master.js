@@ -10,6 +10,7 @@ const supplierPhone = document.getElementById('supplierPhone')
 const supplierAddress = document.getElementById('supplierAddress')
 const supplierStatus = document.getElementById('supplierStatus')
 const saveSupplierButton = document.getElementById('saveSupplierButton')
+const deleteSupplierButton = document.getElementById('deleteSupplierButton')
 const supplierAccountsList = document.getElementById('supplierAccountsList')
 const addAccountButton = document.getElementById('addAccountButton')
 const accountModalTitle = document.getElementById('accountModalTitle')
@@ -63,6 +64,8 @@ function openNewSupplierModal() {
   supplierStatus.value = 'true'
 
   supplierModalTitle.textContent = 'Tambah Supplier'
+
+  deleteSupplierButton.style.display = 'none'
 
   supplierModal.style.display = 'flex'
 
@@ -129,6 +132,14 @@ function renderSupplierAccounts(accounts) {
           🏠 Mapping
         </button>
 
+        <button
+  class="deleteAccountButton"
+  data-id="${account.id}"
+  ${totalKitchens > 0 ? 'disabled' : ''}
+>
+  🗑 Hapus
+</button>
+
       </div>
       `
       : ''
@@ -148,6 +159,12 @@ function renderSupplierAccounts(accounts) {
   document.querySelectorAll('.mappingAccountButton').forEach((button) => {
     button.addEventListener('click', () => {
       openKitchenMapping(button.dataset.id)
+    })
+  })
+
+  document.querySelectorAll('.deleteAccountButton').forEach((button) => {
+    button.addEventListener('click', () => {
+      deleteAccount(button.dataset.id)
     })
   })
 }
@@ -284,6 +301,7 @@ function openAccountModal(id) {
   mappingEditor.style.display = 'none'
   accountEditor.style.display = 'block'
   accountModal.style.display = 'flex'
+  resetModalScroll(accountModal)
 }
 
 async function loadSupplierMaster() {
@@ -365,8 +383,6 @@ function renderSupplierMaster() {
       ).size
 
       rows += `
-      <tr>
-
 <tr>
   <td>${supplier.business_name}</td>
 
@@ -470,6 +486,8 @@ function openSupplierModal(id) {
 
   supplierModalTitle.textContent = 'Edit Supplier'
 
+  deleteSupplierButton.style.display = 'inline-flex'
+
   currentSupplierId = id
 
   const supplier = supplierMaster.find((item) => item.id === id)
@@ -533,20 +551,65 @@ async function saveSupplier() {
   }
 }
 
+async function deleteSupplier() {
+  if (currentUser?.role !== 'admin') return
+
+  if (!currentSupplierId) return
+
+  const supplier = supplierMaster.find((item) => item.id === currentSupplierId)
+
+  if (!supplier) return
+
+  const totalAccounts = supplier.accounts?.length ?? 0
+
+  if (totalAccounts > 0) {
+    alert(
+      `Supplier masih memiliki ${totalAccounts} rekening.\nHapus seluruh rekening terlebih dahulu.`
+    )
+    return
+  }
+
+  const confirmed = confirm(
+    `Yakin ingin menghapus supplier "${supplier.business_name}"?\n\nTindakan ini tidak dapat dibatalkan.`
+  )
+
+  if (!confirmed) return
+
+  const { error } = await supabaseClient
+    .from('income_suppliers')
+    .delete()
+    .eq('id', currentSupplierId)
+
+  if (error) {
+    console.error(error)
+    alert('Gagal menghapus supplier.')
+    return
+  }
+
+  closeModal()
+
+  await loadSupplierMaster()
+
+  alert('Supplier berhasil dihapus.')
+}
+
 async function updateSupplier() {
   if (currentUser?.role !== 'admin') {
     return
   }
+
   if (!supplierBusinessName.value.trim()) {
     alert('Nama supplier wajib diisi.')
     supplierBusinessName.focus()
     return
   }
 
+  const businessName = supplierBusinessName.value.trim()
+
   const { error } = await supabaseClient
     .from('income_suppliers')
     .update({
-      business_name: supplierBusinessName.value.trim(),
+      business_name: businessName,
       owner_name: supplierOwnerName.value.trim(),
       product_type: supplierProductType.value.trim(),
       phone: supplierPhone.value.trim(),
@@ -560,6 +623,20 @@ async function updateSupplier() {
     console.error(error)
     alert('Gagal memperbarui supplier.')
     return
+  }
+
+  const { error: accountError } = await supabaseClient
+    .from('accounts')
+    .update({
+      name: businessName
+    })
+    .eq('supplier_id', currentSupplierId)
+
+  if (accountError) {
+    console.error(accountError)
+    alert(
+      'Supplier berhasil diperbarui, tetapi sinkronisasi nama rekening gagal.'
+    )
   }
 
   closeModal()
@@ -594,8 +671,6 @@ async function insertSupplier() {
 
   closeModal()
 
-  supplierMode = 'edit'
-
   await loadSupplierMaster()
 
   alert('Supplier berhasil ditambahkan.')
@@ -605,6 +680,7 @@ async function saveAccount() {
   if (currentUser?.role !== 'admin') {
     return
   }
+
   if (!accountBank.value) {
     alert('Bank wajib dipilih.')
     accountBank.focus()
@@ -617,23 +693,28 @@ async function saveAccount() {
     return
   }
 
-  let error
+  const supplier = supplierMaster.find((item) => item.id === currentSupplierId)
 
-  const duplicate = supplierMaster
-    .find((s) => s.id === currentSupplierId)
-    .accounts.find((account) => {
-      if (account.id === currentAccountId) return false
+  if (!supplier) {
+    alert('Supplier tidak ditemukan.')
+    return
+  }
 
-      return (
-        account.bank === accountBank.value &&
-        (account.account_number ?? '') === accountNumber.value.trim()
-      )
-    })
+  const duplicate = supplier.accounts.find((account) => {
+    if (account.id === currentAccountId) return false
+
+    return (
+      account.bank === accountBank.value &&
+      (account.account_number ?? '') === accountNumber.value.trim()
+    )
+  })
 
   if (duplicate) {
     alert('Rekening dengan bank dan nomor tersebut sudah ada.')
     return
   }
+
+  let error
 
   if (currentAccountId) {
     const result = await supabaseClient
@@ -648,15 +729,10 @@ async function saveAccount() {
     error = result.error
   } else {
     const result = await supabaseClient.from('accounts').insert({
-      name: supplierMaster.find((s) => s.id === currentSupplierId)
-        .business_name,
-
-      bank: accountBank.value,
-
-      account_number: accountNumber.value.trim(),
-
       supplier_id: currentSupplierId,
-
+      name: supplier.business_name,
+      bank: accountBank.value,
+      account_number: accountNumber.value.trim(),
       is_active: accountStatus.value === 'true'
     })
 
@@ -676,6 +752,98 @@ async function saveAccount() {
   openAccountManager(currentSupplierId)
 }
 
+async function deleteAccount(accountId) {
+  if (currentUser?.role !== 'admin') return
+
+  const supplier = supplierMaster.find((supplier) =>
+    supplier.accounts.some((account) => account.id === accountId)
+  )
+
+  if (!supplier) return
+
+  const account = supplier.accounts.find((account) => account.id === accountId)
+
+  if (!account) return
+
+  // Cek mapping terbaru langsung dari database
+  const { count: mappingCount, error: mappingError } = await supabaseClient
+    .from('kitchen_account_rules')
+    .select('*', {
+      count: 'exact',
+      head: true
+    })
+    .eq('account_id', accountId)
+
+  if (mappingError) {
+    console.error(mappingError)
+    alert('Gagal mengecek mapping rekening.')
+    return
+  }
+
+  if ((mappingCount ?? 0) > 0) {
+    alert(
+      `Rekening masih dipakai oleh ${mappingCount} dapur.\nHapus mapping terlebih dahulu.`
+    )
+    return
+  }
+
+  // Cek apakah rekening pernah dipakai transaksi
+  const { count: transactionCount, error: transactionError } =
+    await supabaseClient
+      .from('transactions')
+      .select('*', {
+        count: 'exact',
+        head: true
+      })
+      .eq('account_id', accountId)
+
+  if (transactionError) {
+    console.error(transactionError)
+    alert('Gagal mengecek riwayat transaksi.')
+    return
+  }
+
+  if ((transactionCount ?? 0) > 0) {
+    alert(
+      `Rekening tidak dapat dihapus karena sudah digunakan pada ${transactionCount} transaksi.`
+    )
+    return
+  }
+
+  // Jangan sampai supplier tidak memiliki rekening sama sekali
+  if (supplier.accounts.length <= 1) {
+    alert('Supplier harus memiliki minimal satu rekening.')
+    return
+  }
+
+  const confirmed = confirm(
+    `Yakin ingin menghapus rekening ${account.bank} ${account.account_number ?? '-'}?\n\nTindakan ini tidak dapat dibatalkan.`
+  )
+
+  if (!confirmed) return
+
+  const { error: deleteError } = await supabaseClient
+    .from('accounts')
+    .delete()
+    .eq('id', accountId)
+
+  if (deleteError) {
+    console.error(deleteError)
+    alert('Gagal menghapus rekening.')
+    return
+  }
+
+  await loadSupplierMaster()
+
+  openAccountManager(currentSupplierId)
+
+  alert('Rekening berhasil dihapus.')
+}
+
 saveKitchenMappingButton.addEventListener('click', saveKitchenMapping)
+
 saveSupplierButton.addEventListener('click', saveSupplier)
+
+deleteSupplierButton.addEventListener('click', deleteSupplier)
+
 saveAccountButton.addEventListener('click', saveAccount)

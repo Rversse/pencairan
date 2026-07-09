@@ -42,6 +42,8 @@ async function startApp() {
     } else {
       dashboardSection.style.display = 'block'
 
+      transactionFab.style.display = 'flex'
+
       dashboardTab?.classList.add('active')
       supplierMasterTab?.classList.remove('active')
       supplierReportTab?.classList.remove('active')

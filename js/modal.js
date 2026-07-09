@@ -8,8 +8,13 @@ function openModal() {
   if (window.currentUser?.role !== 'admin') {
     return
   }
+
   if (transactionModal.classList.contains('show')) {
     return
+  }
+
+  if (!editingTransactionId) {
+    resetFormState()
   }
 
   transactionModal.classList.add('show')

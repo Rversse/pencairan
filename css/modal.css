@@ -304,6 +304,19 @@
   margin-top: 24px;
 }
 
+.deleteAccountButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.deleteAccountButton {
+  background: #dc2626;
+}
+
+.deleteAccountButton:hover:not(:disabled) {
+  background: #b91c1c;
+}
+
 .secondary-button {
   color: var(--navy);
 
@@ -327,11 +340,17 @@
 ========================== */
 
 .modal-footer {
-  margin-top: 16px;
+  display: flex;
+
+  gap: 12px;
+
+  margin-top: 20px;
 }
 
 .modal-footer button {
-  width: 100%;
+  flex: 1;
+
+  width: auto;
 }
 
 /* ==========================

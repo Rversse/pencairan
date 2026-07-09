@@ -1,5 +1,3 @@
-const nextTransactionButton = document.getElementById('nextTransactionButton')
-
 let keepModalOpen = false
 
 function updateFlowOptions() {
@@ -185,9 +183,9 @@ async function toggleFields() {
 function resetFormState() {
   const currentKitchen = kitchenSelect.value
 
-  const currentDate = transactionDate.value
-
   const currentFlow = flowType.value
+
+  const today = new Date().toISOString().split('T')[0]
 
   const currentAccount = accountSelect.value
 
@@ -209,7 +207,7 @@ function resetFormState() {
 
   flowType.value = currentFlow
 
-  transactionDate.value = currentDate
+  transactionDate.value = today
 
   toggleFields().then(() => {
     if (flowType.value === 'pengeluaran') {
@@ -458,7 +456,7 @@ transactionForm.addEventListener('submit', async (event) => {
 
     showToast('Transaksi berhasil disimpan')
 
-    if (keepModalOpen && !editingTransactionId) {
+    if (!editingTransactionId) {
       resetFormState()
 
       amountInput.value = ''
@@ -517,13 +515,3 @@ flowType.addEventListener('change', updateFormFlow)
 accountSelect.addEventListener('change', updateFormFlow)
 
 supplierSelect.addEventListener('change', updateFormFlow)
-
-nextTransactionButton?.addEventListener(
-  'click',
-
-  () => {
-    keepModalOpen = true
-
-    transactionForm.requestSubmit()
-  }
-)

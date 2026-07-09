@@ -27,6 +27,8 @@ const dailyStatusSummary = document.getElementById('dailyStatusSummary')
 const dailyStatusDate = document.getElementById('dailyStatusDate')
 const dailyStatusPanel = document.getElementById('dailyStatusPanel')
 
+const transactionFab = document.getElementById('openTransactionModal')
+
 // ============================================================
 // CONSTANTS
 // ============================================================
@@ -142,6 +144,7 @@ function hideAllSections() {
   kitchenMasterSection.style.display = 'none'
   disbursementSection.style.display = 'none'
   incomeSection.style.display = 'none'
+  transactionFab.style.display = 'none'
 }
 
 function resetActiveTabs() {
@@ -1375,6 +1378,24 @@ async function loadDailyStatus() {
 // EVENT LISTENERS
 // ============================================================
 
+dashboardTab?.addEventListener('click', async (event) => {
+  if (currentUser?.role === 'viewer') return
+
+  event.preventDefault()
+
+  hideAllSections()
+  resetActiveTabs()
+
+  dashboardSection.style.display = 'block'
+  transactionFab.style.display = 'flex'
+
+  dashboardTab.classList.add('active')
+
+  await loadDashboard()
+  await loadTransactions()
+  await loadDailyStatus()
+})
+
 dashboardStartDate?.addEventListener(
   'change',
 
@@ -1523,22 +1544,6 @@ applyIncomeFilter?.addEventListener('click', async () => {
 
 applySupplierFilter?.addEventListener('click', async () => {
   await loadSupplierReport()
-})
-
-dashboardTab?.addEventListener('click', async (event) => {
-  if (currentUser?.role === 'viewer') return
-
-  event.preventDefault()
-
-  hideAllSections()
-  resetActiveTabs()
-
-  dashboardSection.style.display = 'block'
-  dashboardTab.classList.add('active')
-
-  await loadDashboard()
-  await loadTransactions()
-  await loadDailyStatus()
 })
 
 // ============================================================

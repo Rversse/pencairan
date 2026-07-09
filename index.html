@@ -7,7 +7,7 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Pencairan Dapur</title>
+    <title>Sistem Informasi Manajemen SPPG</title>
 
     <link rel="stylesheet" href="css/app.css" />
   </head>
@@ -15,12 +15,14 @@
   <body>
     <nav class="navbar">
       <div class="navbar-left">
-        <div class="logo">PD</div>
+        <div class="logo">SS</div>
 
         <div class="navbar-brand">
-          <h2>Pencairan Dapur</h2>
+          <h2>SIM SPPG</h2>
 
-          <small class="transaction-date"> Sistem Operasional </small>
+          <small class="transaction-date">
+            Sistem Informasi Manajemen SPPG
+          </small>
         </div>
       </div>
 
@@ -469,8 +471,17 @@
             </select>
           </div>
 
-          <div class="modal-footer">
-            <button id="saveSupplierButton">Simpan</button>
+          <div class="modal-footer modal-footer-actions">
+            <button
+              id="deleteSupplierButton"
+              class="danger-button"
+              type="button"
+              style="display: none"
+            >
+              🗑 Hapus
+            </button>
+
+            <button id="saveSupplierButton" type="button">Simpan</button>
           </div>
         </div>
       </div>
