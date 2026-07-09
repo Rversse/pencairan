@@ -37,13 +37,34 @@
 .modal-content {
   width: min(760px, 92vw);
   max-height: 85vh;
-  overflow-y: auto;
-  overflow-x: hidden; /* ganti dari `overflow: hidden`, biar y-axis gak ketiban */
+  overflow: hidden; /* ganti dari overflow-y:auto + overflow-x:hidden */
+  display: flex;
+  flex-direction: column;
 
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 28px;
   box-shadow: 0 30px 70px rgba(15, 23, 42, 0.18);
+}
+
+.modal-content > *:last-child {
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0; /* wajib, biar flex-child bisa scroll bukan expand */
+}
+
+.modal-content > *:last-child::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-content > *:last-child::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-content > *:last-child::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 8px;
+}
+.modal-content > *:last-child::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
 }
 
 /* ==========================
@@ -103,46 +124,88 @@
    ACCOUNT CARD
 ========================== */
 
+.supplier-section {
+  padding: 8px 24px 24px;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.section-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+#supplierAccountsList {
+  padding-top: 12px;
+}
+
+#accountEditor hr {
+  margin: 20px 0 20px;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+#accountEditor h3 {
+  margin: 0 0 16px;
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+.modal-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 8px;
+}
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--navy-soft);
+}
+
 .supplier-account-card {
-  padding: 18px;
-
-  margin: 14px 18px;
-
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  margin: 0 0 14px;
   border-radius: 18px;
-
   border: 1px solid var(--border);
-
   background: var(--card);
-
   box-shadow: var(--shadow);
-
   transition: var(--transition);
 }
 
 .supplier-account-card:hover {
   transform: translateY(-2px);
-
   box-shadow: var(--shadow-hover);
+  border-color: var(--gold-soft);
 }
 
-.supplier-account-card h4 {
-  margin: 0 0 10px;
+.account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
 
-  font-size: 20px;
-
+.account-info strong {
+  font-size: 18px;
   color: var(--navy);
 }
 
-#supplierAccountsContainer {
-  padding-top: 8px;
+.account-number {
+  font-size: 13px;
+  color: var(--navy-soft);
 }
 
-.account-number {
-  margin: 6px 0;
-
-  font-size: 14px;
-
-  color: var(--navy-soft);
+.account-status {
+  margin: 2px 0;
 }
 
 /* ==========================
@@ -170,17 +233,15 @@
 ========================== */
 
 .account-actions {
-  display: grid;
-
-  grid-template-columns: 1fr 1fr;
-
+  display: flex;
   gap: 10px;
-
-  margin-top: 18px;
+  flex-shrink: 0;
 }
 
 .account-actions button {
-  min-height: 42px;
+  min-height: 40px;
+  font-size: 13px;
+  white-space: nowrap;
 }
 
 /* ==========================

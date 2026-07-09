@@ -9,7 +9,7 @@
   --navy-soft: #64748b;
 
   --gold: #d97706;
-  --gold-soft: rgba(37, 99, 235, 0.12);
+  --gold-soft: rgba(217, 119, 6, 0.12);
 
   --white: #ffffff;
 
@@ -21,14 +21,13 @@
   --radius: 18px;
 
   --shadow: 0 6px 18px rgba(15, 23, 42, 0.08);
-
   --shadow-hover: 0 10px 28px rgba(15, 23, 42, 0.12);
 
   --transition: 0.24s cubic-bezier(0.4, 0, 0.2, 1);
 
   --content-width: 980px;
 
-  --gold-hover: #d94206;
+  --gold-hover: #b45309;
 
   --scrollbar: #cbd5e1;
   --scrollbar-hover: #94a3b8;

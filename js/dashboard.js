@@ -1,68 +1,42 @@
-async function loadDashboard() {
-  let summaryQuery = supabaseClient.from('transactions').select(`
-    *,
-    kitchens (
-      name
-    ),
-    suppliers (
-      name
-    )
-  `)
+// ============================================================
+// DOM REFERENCES
+// ============================================================
 
-  if (filterKitchen.value) {
-    summaryQuery = summaryQuery.eq('kitchen_id', filterKitchen.value)
-  }
+const dashboardSection = document.getElementById('dashboardSection')
+const supplierSection = document.getElementById('supplierSection')
+const supplierMasterSection = document.getElementById('supplierMasterSection')
+const supplierMasterTable = document.getElementById('supplierMasterTable')
+const supplierMasterSearch = document.getElementById('supplierMasterSearch')
+const addSupplierButton = document.getElementById('addSupplierButton')
+const reportSection = document.getElementById('reportSection')
+const incomeSection = document.getElementById('incomeSection')
+const disbursementSection = document.getElementById('disbursementSection')
+const disbursementDate = document.getElementById('disbursementDate')
 
-  if (window.currentUser?.role === 'viewer') {
-    summaryQuery = summaryQuery.in('flow_type', ['expense', 'neutral'])
-  } else if (filterFlow.value) {
-    summaryQuery = summaryQuery.eq('flow_type', filterFlow.value)
-  }
+const dashboardTab = document.getElementById('dashboardTab')
+const supplierMasterTab = document.getElementById('supplierMasterTab')
+const supplierReportTab = document.getElementById('supplierReportTab')
+const incomeReportTab = document.getElementById('incomeReportTab')
+const reportTab = document.getElementById('reportTab')
+const disbursementTab = document.getElementById('disbursementTab')
 
-  const today = getTodayLocal()
+const applySupplierFilter = document.getElementById('applySupplierFilter')
+const applyIncomeFilter = document.getElementById('applyIncomeFilter')
 
-  if (!dashboardStartDate.value) {
-    dashboardStartDate.value = today
-  }
+const dailyStatusSummary = document.getElementById('dailyStatusSummary')
+const dailyStatusDate = document.getElementById('dailyStatusDate')
+const dailyStatusPanel = document.getElementById('dailyStatusPanel')
 
-  if (!dashboardEndDate.value) {
-    dashboardEndDate.value = dashboardStartDate.value
-  }
-
-  summaryQuery = summaryQuery
-    .gte('transaction_date', dashboardStartDate.value)
-    .lte('transaction_date', dashboardEndDate.value)
-
-  const { data: summaryData, error: summaryError } = await summaryQuery
-
-  if (summaryError) {
-    console.error(summaryError)
-
-    return
-  }
-
-  const income = summaryData
-    .filter((item) => item.flow_type === 'income')
-    .reduce((sum, item) => sum + Number(item.amount), 0)
-
-  const expense = summaryData
-    .filter((item) => item.flow_type === 'expense')
-    .reduce((sum, item) => sum + Number(item.amount), 0)
-
-  const gas = summaryData
-    .filter((item) => item.flow_type === 'neutral')
-    .reduce((sum, item) => sum + Number(item.amount), 0)
-
-  surplusAmount.textContent = income ? formatRupiah(income) : 'Rp 0'
-
-  totalGas.textContent = gas ? formatRupiah(gas) : 'Rp 0'
-
-  totalExpense.textContent = expense ? formatRupiah(expense) : 'Rp 0'
-}
+// ============================================================
+// CONSTANTS
+// ============================================================
 
 const DISBURSEMENT_ITEMS = 5
-
 const DISBURSEMENT_DATE_KEY = 'disbursement_selected_date'
+
+// ============================================================
+// HELPERS
+// ============================================================
 
 function getTodayLocal() {
   const today = new Date()
@@ -152,11 +126,94 @@ function initializeDates() {
   incomeStartDate.value = today
   incomeEndDate.value = today
 
+  filterDate.value = today
+
   if (disbursementDate) {
     const savedDate = localStorage.getItem(DISBURSEMENT_DATE_KEY)
-
     disbursementDate.value = savedDate || getLastFriday()
   }
+}
+
+function hideAllSections() {
+  dashboardSection.style.display = 'none'
+  supplierSection.style.display = 'none'
+  supplierMasterSection.style.display = 'none'
+  reportSection.style.display = 'none'
+  kitchenMasterSection.style.display = 'none'
+  disbursementSection.style.display = 'none'
+  incomeSection.style.display = 'none'
+}
+
+function resetActiveTabs() {
+  document.querySelectorAll('.nav-link').forEach((link) => {
+    link.classList.remove('active')
+  })
+}
+
+// ============================================================
+// LOAD / RENDER FUNCTIONS
+// ============================================================
+
+async function loadDashboard() {
+  let summaryQuery = supabaseClient.from('transactions').select(`
+    *,
+    kitchens (
+      name
+    ),
+    suppliers (
+      name
+    )
+  `)
+
+  if (filterKitchen.value) {
+    summaryQuery = summaryQuery.eq('kitchen_id', filterKitchen.value)
+  }
+
+  if (window.currentUser?.role === 'viewer') {
+    summaryQuery = summaryQuery.in('flow_type', ['expense', 'neutral'])
+  } else if (filterFlow.value) {
+    summaryQuery = summaryQuery.eq('flow_type', filterFlow.value)
+  }
+
+  const today = getTodayLocal()
+
+  if (!dashboardStartDate.value) {
+    dashboardStartDate.value = today
+  }
+
+  if (!dashboardEndDate.value) {
+    dashboardEndDate.value = dashboardStartDate.value
+  }
+
+  summaryQuery = summaryQuery
+    .gte('transaction_date', dashboardStartDate.value)
+    .lte('transaction_date', dashboardEndDate.value)
+
+  const { data: summaryData, error: summaryError } = await summaryQuery
+
+  if (summaryError) {
+    console.error(summaryError)
+
+    return
+  }
+
+  const income = summaryData
+    .filter((item) => item.flow_type === 'income')
+    .reduce((sum, item) => sum + Number(item.amount), 0)
+
+  const expense = summaryData
+    .filter((item) => item.flow_type === 'expense')
+    .reduce((sum, item) => sum + Number(item.amount), 0)
+
+  const gas = summaryData
+    .filter((item) => item.flow_type === 'neutral')
+    .reduce((sum, item) => sum + Number(item.amount), 0)
+
+  surplusAmount.textContent = income ? formatRupiah(income) : 'Rp 0'
+
+  totalGas.textContent = gas ? formatRupiah(gas) : 'Rp 0'
+
+  totalExpense.textContent = expense ? formatRupiah(expense) : 'Rp 0'
 }
 
 async function saveDisbursementCheckbox(kitchenId, field, value) {
@@ -702,7 +759,7 @@ ${new Date(latestTransaction.created_at)
 <th>ARIS</th>
 <th>BABINSA</th>
 <th>GAS</th>
-<th>TOTAL</th>
+<th>TOTAL (TANPA GAS)</th>
 
           </tr>
 
@@ -839,7 +896,7 @@ async function renderIncomeSummary(data) {
 
     <thead>
       <tr>
-        <th>PENERIMAAN</th>
+        <th>REKENING</th>
         <th>TOTAL</th>
       </tr>
     </thead>
@@ -1158,9 +1215,9 @@ async function renderSupplierDailySummary(data) {
 async function loadDailyStatus() {
   const dailyStatusList = document.getElementById('dailyStatusList')
 
-  const dailyStatusSummary = document.getElementById('dailyStatusSummary')
+  const dailyStatusSummaryEl = document.getElementById('dailyStatusSummary')
 
-  if (!dailyStatusList || !dailyStatusSummary) {
+  if (!dailyStatusList || !dailyStatusSummaryEl) {
     return
   }
 
@@ -1288,7 +1345,7 @@ async function loadDailyStatus() {
 
   html = statusRows.map((item) => item.html).join('')
 
-  dailyStatusSummary.innerHTML = `
+  dailyStatusSummaryEl.innerHTML = `
   <div class="status-trigger">
     ❯
   </div>
@@ -1313,6 +1370,10 @@ async function loadDailyStatus() {
 
   dailyStatusList.innerHTML = html
 }
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
 
 dashboardStartDate?.addEventListener(
   'change',
@@ -1345,12 +1406,6 @@ incomeStartDate?.addEventListener(
     await loadIncomeReport()
   }
 )
-
-const dailyStatusSummary = document.getElementById('dailyStatusSummary')
-
-const dailyStatusDate = document.getElementById('dailyStatusDate')
-
-const dailyStatusPanel = document.getElementById('dailyStatusPanel')
 
 dailyStatusSummary?.addEventListener(
   'click',
@@ -1393,54 +1448,6 @@ document.addEventListener(
     }
   }
 )
-
-const dashboardSection = document.getElementById('dashboardSection')
-
-const disbursementDate = document.getElementById('disbursementDate')
-
-const disbursementSection = document.getElementById('disbursementSection')
-
-initializeDates()
-
-const disbursementTab = document.getElementById('disbursementTab')
-
-const supplierSection = document.getElementById('supplierSection')
-
-const reportSection = document.getElementById('reportSection')
-
-const reportTab = document.getElementById('reportTab')
-
-const supplierReportTab = document.getElementById('supplierReportTab')
-
-const incomeReportTab = document.getElementById('incomeReportTab')
-
-const incomeSection = document.getElementById('incomeSection')
-
-const supplierMasterTab = document.getElementById('supplierMasterTab')
-
-const supplierMasterSection = document.getElementById('supplierMasterSection')
-
-const supplierMasterTable = document.getElementById('supplierMasterTable')
-
-const supplierMasterSearch = document.getElementById('supplierMasterSearch')
-
-const addSupplierButton = document.getElementById('addSupplierButton')
-
-function hideAllSections() {
-  dashboardSection.style.display = 'none'
-  supplierSection.style.display = 'none'
-  supplierMasterSection.style.display = 'none'
-  reportSection.style.display = 'none'
-  kitchenMasterSection.style.display = 'none'
-  disbursementSection.style.display = 'none'
-  incomeSection.style.display = 'none'
-}
-
-function resetActiveTabs() {
-  document.querySelectorAll('.nav-link').forEach((link) => {
-    link.classList.remove('active')
-  })
-}
 
 supplierMasterTab?.addEventListener('click', async (e) => {
   e.preventDefault()
@@ -1510,9 +1517,6 @@ reportTab?.addEventListener('click', (event) => {
   reportTab.classList.add('active')
 })
 
-const applySupplierFilter = document.getElementById('applySupplierFilter')
-const applyIncomeFilter = document.getElementById('applyIncomeFilter')
-
 applyIncomeFilter?.addEventListener('click', async () => {
   await loadIncomeReport()
 })
@@ -1520,8 +1524,6 @@ applyIncomeFilter?.addEventListener('click', async () => {
 applySupplierFilter?.addEventListener('click', async () => {
   await loadSupplierReport()
 })
-
-const dashboardTab = document.getElementById('dashboardTab')
 
 dashboardTab?.addEventListener('click', async (event) => {
   if (currentUser?.role === 'viewer') return
@@ -1538,3 +1540,9 @@ dashboardTab?.addEventListener('click', async (event) => {
   await loadTransactions()
   await loadDailyStatus()
 })
+
+// ============================================================
+// INIT
+// ============================================================
+
+initializeDates()

@@ -44,7 +44,7 @@ resetFilters.addEventListener(
 
     filterFlow.value = ''
 
-    filterDate.value = ''
+    filterDate.value = getTodayLocal() // ← ganti dari '' jadi ini
 
     transactionLimit = 5
 

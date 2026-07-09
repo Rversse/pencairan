@@ -177,6 +177,8 @@ addKitchenButton?.addEventListener('click', () => {
   kitchenStatus.value = 'true'
 
   kitchenModal.style.display = 'flex'
+
+  resetModalScroll(kitchenModal)
 })
 
 function openKitchenModal(id) {
@@ -201,6 +203,8 @@ function openKitchenModal(id) {
   kitchenStatus.value = String(kitchen.is_active)
 
   kitchenModal.style.display = 'flex'
+
+  resetModalScroll(kitchenModal)
 }
 
 async function saveKitchen() {

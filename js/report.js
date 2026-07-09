@@ -634,6 +634,9 @@ ${new Date()
 
     reportTotalRemaining.textContent = formatRupiah(grandRemaining)
 
+    const totalCard = reportTotalRemaining.closest('.summary-card')
+    totalCard.classList.toggle('is-negative', grandRemaining < 0)
+
     let detailsHtml = ''
 
     Object.entries(grouped)
@@ -677,56 +680,48 @@ ${new Date()
         const remaining = kitchen.income - kitchen.expense
 
         detailsHtml += `
-    <details style="margin-top:16px">
+  <details style="
+    margin-top:14px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  ">
 <summary
   style="
     list-style:none;
     cursor:pointer;
     font-weight:600;
-    padding:12px;
-    background:rgba(255,255,255,.05);
-    border-radius:8px;
+    padding:16px 18px;
+    background: var(--bg-soft);
   "
 >
-  <div
-    style="
-      display:flex;
-      justify-content:space-between;
-      align-items:center;
-      gap:20px;
-    "
-  >
-<span>
-  ${kitchen.kitchen_name}
-</span>
-
-<span
-  style="
-    color:${remaining < 0 ? '#ff6b6b' : '#32d583'};
-  "
->
-  ${formatRupiah(remaining)}
-</span>
+  <div style="display:flex; justify-content:space-between; align-items:center; gap:20px;">
+    <span>${kitchen.kitchen_name}</span>
+    <span style="color:${remaining < 0 ? 'var(--danger)' : 'var(--success)'};">
+      ${formatRupiah(remaining)}
+    </span>
   </div>
 </summary>
 
-      <table style="margin-top:10px">
-        <thead>
-          <tr>
-            <th>Tanggal</th>
-            <th>BGN</th>
-            <th>Supplier</th>
-            <th>Gas</th>
-            <th>Total</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          ${rows}
-        </tbody>
-      </table>
-    </details>
-  `
+  <div style="padding: 0 18px 18px;">
+    <table class="summary-table" style="margin-top:14px">
+      <thead>
+        <tr>
+          <th>Tanggal</th>
+          <th>BGN</th>
+          <th>Supplier</th>
+          <th>Gas</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+      </tbody>
+    </table>
+  </div>
+</details>
+`
       })
 
     reportDetails.innerHTML = detailsHtml

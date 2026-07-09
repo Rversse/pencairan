@@ -14,6 +14,8 @@ function openModal() {
 
   transactionModal.classList.add('show')
 
+  resetModalScroll(transactionModal)
+
   document.body.style.overflow = 'hidden'
 
   updateFormFlow()

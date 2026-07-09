@@ -65,6 +65,8 @@ function openNewSupplierModal() {
   supplierModalTitle.textContent = 'Tambah Supplier'
 
   supplierModal.style.display = 'flex'
+
+  resetModalScroll(supplierModal)
 }
 
 function renderSupplierAccounts(accounts) {
@@ -331,6 +333,8 @@ function openAccountManager(id) {
   renderSupplierAccounts(supplier.accounts)
 
   accountModal.style.display = 'flex'
+
+  resetModalScroll(accountModal)
 }
 
 function renderSupplierMaster() {
@@ -480,6 +484,8 @@ function openSupplierModal(id) {
   supplierStatus.value = String(supplier.is_active)
 
   supplierModal.style.display = 'flex'
+
+  resetModalScroll(supplierModal)
 }
 
 addSupplierButton?.addEventListener('click', openNewSupplierModal)

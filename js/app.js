@@ -1,3 +1,8 @@
+function resetModalScroll(modalEl) {
+  const scrollable = modalEl.querySelector('.modal-content > *:last-child')
+  if (scrollable) scrollable.scrollTop = 0
+}
+
 async function startApp() {
   document.body.style.visibility = 'hidden'
 
