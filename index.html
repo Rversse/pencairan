@@ -174,12 +174,16 @@
         <div id="disbursementTable"></div>
       </div>
       <div id="supplierSection" style="display: none">
-        <div class="dashboard-filters">
-          <input type="date" id="supplierStartDate" />
+        <div class="recap-header">
+          <h2>Rekap Pengeluaran</h2>
 
-          <input type="date" id="supplierEndDate" />
+          <div class="dashboard-filters">
+            <input type="date" id="supplierStartDate" />
 
-          <button id="applySupplierFilter">Apply</button>
+            <input type="date" id="supplierEndDate" />
+
+            <button id="applySupplierFilter">Apply</button>
+          </div>
         </div>
 
         <div id="supplierSummary"></div>
@@ -188,12 +192,16 @@
       </div>
 
       <div id="incomeSection" style="display: none">
-        <div class="dashboard-filters">
-          <input type="date" id="incomeStartDate" />
+        <div class="recap-header">
+          <h2>Rekap Pemasukan</h2>
 
-          <input type="date" id="incomeEndDate" />
+          <div class="dashboard-filters">
+            <input type="date" id="incomeStartDate" />
 
-          <button id="applyIncomeFilter">Apply</button>
+            <input type="date" id="incomeEndDate" />
+
+            <button id="applyIncomeFilter">Apply</button>
+          </div>
         </div>
 
         <div id="incomeSummary"></div>
@@ -239,6 +247,11 @@
             <div class="form-group">
               <label>PIC</label>
               <input id="kitchenPIC" type="text" />
+            </div>
+
+            <div class="form-group">
+              <label>Yayasan</label>
+              <input id="kitchenFoundation" type="text" />
             </div>
 
             <div class="form-group">

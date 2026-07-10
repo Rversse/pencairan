@@ -137,6 +137,38 @@
   min-width: 120px;
 }
 
+.recap-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: var(--content-width);
+  margin: 18px auto 20px;
+}
+
+.recap-header h2 {
+  margin: 0;
+  color: var(--navy);
+  font-size: 24px;
+}
+
+.recap-header .dashboard-filters {
+  max-width: none;
+  margin: 0;
+}
+
+@media (max-width: 640px) {
+  .recap-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .recap-header .dashboard-filters {
+    margin: 0;
+  }
+}
+
 .dashboard-icon {
   width: 48px;
 

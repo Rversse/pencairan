@@ -109,6 +109,46 @@ p {
   line-height: 1.6;
 }
 
+.login-label {
+  display: block;
+  margin: 0 0 8px;
+  text-align: left;
+  color: var(--navy);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.account-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.account-option {
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  color: var(--navy);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.account-option:hover,
+.account-option:focus-visible {
+  border-color: var(--gold);
+}
+
+.account-option.selected {
+  border-color: var(--gold);
+  background: var(--gold);
+  color: var(--white);
+  box-shadow: 0 6px 14px var(--gold-soft);
+}
+
 .pin-wrapper {
   position: relative;
 }

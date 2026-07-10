@@ -1,17 +1,5 @@
 const PIN_LENGTH = 6
 
-const CREDENTIALS = {
-  555999: {
-    email: 'admin@internal.local',
-    password: '555999'
-  },
-
-  123456: {
-    email: 'viewer@internal.local',
-    password: '123456'
-  }
-}
-
 async function initLogin() {
   const { data } = await supabaseClient.auth.getSession()
 
@@ -20,19 +8,33 @@ async function initLogin() {
     return
   }
 
+  const accountOptions = document.querySelectorAll('.account-option')
   const pinInput = document.getElementById('pinInput')
   const dots = document.querySelectorAll('.dot')
   const errorText = document.getElementById('errorText')
   const loginCard = document.querySelector('.login-card')
 
   let isLoggingIn = false
+  let selectedUsername = ''
+
+  pinInput.disabled = true
 
   window.addEventListener('load', () => {
-    pinInput.focus()
+    accountOptions[0]?.focus()
   })
 
-  window.addEventListener('click', () => {
-    pinInput.focus()
+  accountOptions.forEach((option) => {
+    option.addEventListener('click', () => {
+      selectedUsername = option.dataset.username
+
+      accountOptions.forEach((item) => {
+        item.classList.toggle('selected', item === option)
+      })
+
+      errorText.textContent = ''
+      pinInput.disabled = false
+      pinInput.focus()
+    })
   })
 
   pinInput.addEventListener('input', () => {
@@ -58,24 +60,29 @@ async function initLogin() {
 
     errorText.textContent = ''
 
+    const username = selectedUsername
     const pin = pinInput.value.trim()
 
-    const userData = CREDENTIALS[pin]
-
-    if (!userData) {
-      invalidPin()
-      isLoggingIn = false
-      return
-    }
-
     try {
-      const { error } = await supabaseClient.auth.signInWithPassword({
-        email: userData.email,
-        password: userData.password
+      const { data, error } = await supabaseClient.functions.invoke(
+        'login-with-username',
+        {
+          body: { username, pin }
+        }
+      )
+
+      if (error || !data?.access_token || !data?.refresh_token) {
+        invalidLogin()
+        return
+      }
+
+      const { error: sessionError } = await supabaseClient.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token
       })
 
-      if (error) {
-        invalidPin()
+      if (sessionError) {
+        invalidLogin()
         return
       }
 
@@ -83,16 +90,16 @@ async function initLogin() {
     } catch (err) {
       console.error(err)
 
-      invalidPin()
+      invalidLogin()
     } finally {
       isLoggingIn = false
     }
   }
 
-  function invalidPin() {
+  function invalidLogin() {
     loginCard.classList.add('shake')
 
-    errorText.textContent = 'PIN salah'
+    errorText.textContent = 'Username atau PIN salah'
 
     pinInput.value = ''
 

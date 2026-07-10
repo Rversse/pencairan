@@ -564,7 +564,8 @@ function renderSupplierMaster() {
     .filter((supplier) => {
       return (
         supplier.business_name.toLowerCase().includes(keyword) ||
-        (supplier.owner_name ?? '').toLowerCase().includes(keyword)
+        (supplier.owner_name ?? '').toLowerCase().includes(keyword) ||
+        (supplier.product_type ?? '').toLowerCase().includes(keyword)
       )
     })
     .forEach((supplier) => {

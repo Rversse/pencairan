@@ -19,6 +19,7 @@ const kitchenStatus = document.getElementById('kitchenStatus')
 const saveKitchenButton = document.getElementById('saveKitchenButton')
 
 const kitchenPIC = document.getElementById('kitchenPIC')
+const kitchenFoundation = document.getElementById('kitchenFoundation')
 const kitchenAddress = document.getElementById('kitchenAddress')
 
 let kitchenMode = 'edit'
@@ -65,7 +66,8 @@ function renderKitchenMaster() {
   const filtered = kitchenMaster.filter((kitchen) => {
     return (
       kitchen.name.toLowerCase().includes(keyword) ||
-      (kitchen.pic ?? '').toLowerCase().includes(keyword)
+      (kitchen.pic ?? '').toLowerCase().includes(keyword) ||
+      (kitchen.foundation ?? '').toLowerCase().includes(keyword)
     )
   })
 
@@ -83,6 +85,10 @@ function renderKitchenMaster() {
 
 <td>
   ${kitchen.pic ?? '-'}
+</td>
+
+<td>
+  ${kitchen.foundation ?? '-'}
 </td>
 
 <td>
@@ -129,6 +135,7 @@ ${
   <th>DAPUR</th>
   <th>TOTAL PM</th>
   <th>PIC</th>
+  <th>YAYASAN</th>
   <th>ALAMAT</th>
   <th>STATUS</th>
 
@@ -155,6 +162,10 @@ ${
   })
 }
 
+kitchenMasterSearch?.addEventListener('input', () => {
+  renderKitchenMaster()
+})
+
 function openKitchenAccountMapping(id) {
   console.log(id)
 }
@@ -173,6 +184,7 @@ addKitchenButton?.addEventListener('click', () => {
   kitchenName.value = ''
   kitchenPM.value = ''
   kitchenPIC.value = ''
+  kitchenFoundation.value = ''
   kitchenAddress.value = ''
   kitchenStatus.value = 'true'
 
@@ -199,6 +211,7 @@ function openKitchenModal(id) {
   kitchenName.value = kitchen.name
   kitchenPM.value = kitchen.total_pm ?? ''
   kitchenPIC.value = kitchen.pic ?? ''
+  kitchenFoundation.value = kitchen.foundation ?? ''
   kitchenAddress.value = kitchen.address ?? ''
   kitchenStatus.value = String(kitchen.is_active)
 
@@ -239,6 +252,7 @@ async function insertKitchen() {
     name: kitchenName.value.trim(),
     total_pm: Number(kitchenPM.value),
     pic: kitchenPIC.value.trim(),
+    foundation: kitchenFoundation.value.trim() || null,
     address: kitchenAddress.value.trim(),
     is_active: kitchenStatus.value === 'true'
   })
@@ -276,6 +290,7 @@ async function updateKitchen() {
       name: kitchenName.value.trim(),
       total_pm: Number(kitchenPM.value),
       pic: kitchenPIC.value.trim(),
+      foundation: kitchenFoundation.value.trim() || null,
       address: kitchenAddress.value.trim(),
       is_active: kitchenStatus.value === 'true'
     })
