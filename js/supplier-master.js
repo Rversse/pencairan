@@ -25,6 +25,12 @@ const saveKitchenMappingButton = document.getElementById(
 )
 const supplierModalTitle = document.getElementById('supplierModalTitle')
 
+const accountPreviewModal = document.getElementById('accountPreviewModal')
+const accountPreviewContent = document.getElementById('accountPreviewContent')
+const closeAccountPreview = document.getElementById('closeAccountPreview')
+const accountPreviewSubtitle = document.getElementById('accountPreviewSubtitle')
+const accountPreviewTitle = document.getElementById('accountPreviewTitle')
+
 let currentAccountId = null
 
 let supplierMaster = []
@@ -84,32 +90,43 @@ function renderSupplierAccounts(accounts) {
 
   supplierAccountsList.innerHTML = accounts
     .map((account) => {
-      const totalKitchens = new Set(
-        account.kitchen_account_rules.map((rule) => rule.kitchen_id)
-      ).size
+      const kitchenNames = [
+        ...new Map(
+          account.kitchen_account_rules.map((rule) => [
+            rule.kitchen_id,
+            rule.kitchens?.name
+          ])
+        ).values()
+      ]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'id'))
 
       return `
-<div class="supplier-account-card">
+<div class="supplier-account-card ${account.is_active ? '' : 'inactive'}">
 
   <div class="account-info">
 
-    <strong>${account.bank}</strong>
+    <strong>🏦 ${account.bank}</strong>
 
-    <div class="account-number">
-      ${account.account_number ?? '-'}
+<div
+  class="account-number copyAccountNumber"
+  data-number="${account.account_number ?? ''}"
+  title="Klik untuk menyalin"
+>
+  ${account.account_number ?? '-'}
+</div>
+
+<div class="account-status">
+  ${
+    account.is_active
+      ? '<span class="badge badge-income">Aktif</span>'
+      : '<span class="badge badge-expense">Nonaktif</span>'
+  }
+</div>
+
+    <div class="account-kitchens">
+      ${kitchenNames.length ? kitchenNames.join(', ') : 'Belum dipetakan'}
     </div>
-
-    <div class="account-status">
-      ${
-        account.is_active
-          ? '<span class="badge badge-income">Aktif</span>'
-          : '<span class="badge badge-expense">Nonaktif</span>'
-      }
-    </div>
-
-    <small>
-      ${totalKitchens} dapur
-    </small>
 
   </div>
 
@@ -133,12 +150,12 @@ function renderSupplierAccounts(accounts) {
         </button>
 
         <button
-  class="deleteAccountButton"
-  data-id="${account.id}"
-  ${totalKitchens > 0 ? 'disabled' : ''}
->
-  🗑 Hapus
-</button>
+          class="deleteAccountButton"
+          data-id="${account.id}"
+          ${kitchenNames.length > 0 ? 'disabled' : ''}
+        >
+          🗑 Hapus
+        </button>
 
       </div>
       `
@@ -165,6 +182,24 @@ function renderSupplierAccounts(accounts) {
   document.querySelectorAll('.deleteAccountButton').forEach((button) => {
     button.addEventListener('click', () => {
       deleteAccount(button.dataset.id)
+    })
+  })
+
+  document.querySelectorAll('.copyAccountNumber').forEach((item) => {
+    item.addEventListener('click', async () => {
+      const number = item.dataset.number
+
+      if (!number) return
+
+      try {
+        await navigator.clipboard.writeText(number)
+
+        showToast('Nomor rekening disalin.')
+      } catch (err) {
+        console.error(err)
+
+        alert('Gagal menyalin nomor rekening.')
+      }
     })
   })
 }
@@ -207,13 +242,11 @@ async function saveKitchenMapping() {
     }
   }
 
-  alert('Mapping berhasil disimpan.')
+  showToast('Mapping berhasil disimpan.')
 
   await loadSupplierMaster()
 
   openAccountManager(currentSupplierId)
-
-  mappingEditor.style.display = 'none'
 }
 
 function resetAccountEditor() {
@@ -310,15 +343,18 @@ async function loadSupplierMaster() {
     .select(
       `
       *,
-      accounts (
-        id,
-        bank,
-        account_number,
-        is_active,
-        kitchen_account_rules (
-          kitchen_id
-        )
-      )
+accounts (
+  id,
+  bank,
+  account_number,
+  is_active,
+  kitchen_account_rules (
+    kitchen_id,
+    kitchens (
+      name
+    )
+  )
+)
     `
     )
     .order('business_name')
@@ -353,6 +389,168 @@ function openAccountManager(id) {
   accountModal.style.display = 'flex'
 
   resetModalScroll(accountModal)
+}
+
+function openAccountPreview(supplierId) {
+  const supplier = supplierMaster.find((item) => item.id === supplierId)
+
+  if (!supplier) return
+
+  const activeAccounts = supplier.accounts.filter(
+    (account) => account.is_active
+  ).length
+
+  accountPreviewTitle.textContent = supplier.business_name
+
+  accountPreviewSubtitle.textContent = `${supplier.accounts.length} Rekening • ${activeAccounts} Aktif`
+
+  accountPreviewContent.innerHTML = supplier.accounts
+    .slice()
+    .sort((a, b) => {
+      const bank = a.bank.localeCompare(b.bank, 'id')
+
+      if (bank !== 0) return bank
+
+      return (a.account_number ?? '').localeCompare(
+        b.account_number ?? '',
+        'id'
+      )
+    })
+    .map((account) => {
+      const kitchenNames = [
+        ...new Map(
+          account.kitchen_account_rules.map((rule) => [
+            rule.kitchen_id,
+            rule.kitchens?.name
+          ])
+        ).values()
+      ]
+        .filter(Boolean)
+        .sort((a, b) => a.localeCompare(b, 'id'))
+
+      return `
+<div class="preview-account-item">
+
+  <div class="preview-account-top">
+
+    <div class="preview-account-bank">
+      🏦 ${account.bank}
+    </div>
+
+    ${
+      account.is_active
+        ? '<span class="badge badge-income">Aktif</span>'
+        : '<span class="badge badge-expense">Nonaktif</span>'
+    }
+
+  </div>
+
+<div
+  class="preview-account-number copyPreviewAccountNumber"
+  data-number="${account.account_number ?? ''}"
+  title="Klik untuk menyalin"
+>
+  ${account.account_number ?? '-'}
+</div>
+
+  <div class="preview-account-kitchens">
+    🏠 ${kitchenNames.length ? kitchenNames.join(', ') : 'Belum dipetakan'}
+  </div>
+
+</div>
+`
+    })
+    .join('')
+
+  document.querySelectorAll('.copyPreviewAccountNumber').forEach((item) => {
+    item.addEventListener('click', async () => {
+      const number = item.dataset.number
+
+      if (!number) return
+
+      try {
+        await navigator.clipboard.writeText(number)
+
+        showToast('Nomor rekening disalin.')
+      } catch (err) {
+        console.error(err)
+
+        alert('Gagal menyalin nomor rekening.')
+      }
+    })
+  })
+
+  accountPreviewModal.style.display = 'flex'
+
+  resetModalScroll(accountPreviewModal)
+}
+
+function openKitchenPreview(supplierId) {
+  const supplier = supplierMaster.find((item) => item.id === supplierId)
+
+  if (!supplier) return
+
+  accountPreviewTitle.textContent = `Dapur • ${supplier.business_name}`
+
+  const kitchenMap = new Map()
+
+  supplier.accounts.forEach((account) => {
+    account.kitchen_account_rules.forEach((rule) => {
+      const kitchenId = rule.kitchen_id
+      const kitchenName = rule.kitchens?.name
+
+      if (!kitchenName) return
+
+      if (!kitchenMap.has(kitchenId)) {
+        kitchenMap.set(kitchenId, {
+          name: kitchenName,
+          banks: []
+        })
+      }
+
+      kitchenMap.get(kitchenId).banks.push(account.bank)
+    })
+  })
+
+  const kitchens = [...kitchenMap.values()]
+    .map((item) => ({
+      ...item,
+      banks: [...new Set(item.banks)].sort((a, b) => a.localeCompare(b, 'id'))
+    }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'id'))
+
+  accountPreviewContent.innerHTML =
+    kitchens.length > 0
+      ? kitchens
+          .map(
+            (item) => `
+<div class="preview-account-item">
+
+  <div class="preview-account-bank">
+    ${item.name}
+  </div>
+
+  <div class="preview-account-number">
+    🏦 ${item.banks.join(', ')}
+  </div>
+
+</div>
+`
+          )
+          .join('')
+      : `
+<div class="empty-state">
+  Belum digunakan oleh dapur mana pun.
+</div>
+`
+
+  accountPreviewTitle.textContent = supplier.business_name
+
+  accountPreviewSubtitle.textContent = `${kitchens.length} Dapur • ${supplier.accounts.length} Rekening`
+
+  accountPreviewModal.style.display = 'flex'
+
+  resetModalScroll(accountPreviewModal)
 }
 
 function renderSupplierMaster() {
@@ -402,13 +600,25 @@ function renderSupplierMaster() {
     ${supplier.address ?? '-'}
   </td>
 
-  <td class="text-center">
+<td class="text-center">
+<span
+  class="supplierAccountPreview"
+  data-id="${supplier.id}"
+  title="Klik untuk melihat daftar rekening"
+>
     ${activeAccounts}/${totalAccounts}
-  </td>
+  </span>
+</td>
 
-  <td class="text-center">
+<td class="text-center">
+<span
+  class="supplierKitchenPreview"
+  data-id="${supplier.id}"
+  title="Klik untuk melihat daftar dapur"
+>
     ${totalKitchens}
-  </td>
+  </span>
+</td>
 
   <td>
     ${
@@ -475,6 +685,18 @@ function renderSupplierMaster() {
       openAccountManager(button.dataset.id)
     })
   })
+
+  document.querySelectorAll('.supplierAccountPreview').forEach((item) => {
+    item.addEventListener('click', () => {
+      openAccountPreview(item.dataset.id)
+    })
+  })
+
+  document.querySelectorAll('.supplierKitchenPreview').forEach((item) => {
+    item.addEventListener('click', () => {
+      openKitchenPreview(item.dataset.id)
+    })
+  })
 }
 
 function openSupplierModal(id) {
@@ -529,6 +751,10 @@ function closeAccountManager() {
 
 closeAccountModal.addEventListener('click', closeAccountManager)
 
+closeAccountPreview.addEventListener('click', () => {
+  accountPreviewModal.style.display = 'none'
+})
+
 window.addEventListener('click', (e) => {
   if (e.target === supplierModal) {
     closeModal()
@@ -536,6 +762,10 @@ window.addEventListener('click', (e) => {
 
   if (e.target === accountModal) {
     closeAccountManager()
+  }
+
+  if (e.target === accountPreviewModal) {
+    accountPreviewModal.style.display = 'none'
   }
 })
 
@@ -590,7 +820,7 @@ async function deleteSupplier() {
 
   await loadSupplierMaster()
 
-  alert('Supplier berhasil dihapus.')
+  showToast('Supplier berhasil dihapus.')
 }
 
 async function updateSupplier() {
@@ -642,6 +872,8 @@ async function updateSupplier() {
   closeModal()
 
   await loadSupplierMaster()
+
+  showToast('Supplier berhasil diperbarui.')
 }
 
 async function insertSupplier() {
@@ -673,7 +905,7 @@ async function insertSupplier() {
 
   await loadSupplierMaster()
 
-  alert('Supplier berhasil ditambahkan.')
+  showToast('Supplier berhasil ditambahkan.')
 }
 
 async function saveAccount() {
@@ -714,6 +946,8 @@ async function saveAccount() {
     return
   }
 
+  const isEdit = !!currentAccountId
+
   let error
 
   if (currentAccountId) {
@@ -745,11 +979,13 @@ async function saveAccount() {
     return
   }
 
-  resetAccountEditor()
-
   await loadSupplierMaster()
 
   openAccountManager(currentSupplierId)
+
+  showToast(
+    isEdit ? 'Rekening berhasil diperbarui.' : 'Rekening berhasil ditambahkan.'
+  )
 }
 
 async function deleteAccount(accountId) {
@@ -837,7 +1073,7 @@ async function deleteAccount(accountId) {
 
   openAccountManager(currentSupplierId)
 
-  alert('Rekening berhasil dihapus.')
+  showToast('Rekening berhasil dihapus.')
 }
 
 saveKitchenMappingButton.addEventListener('click', saveKitchenMapping)

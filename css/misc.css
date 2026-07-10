@@ -126,18 +126,20 @@
 
 #toast {
   position: fixed;
+
   right: 24px;
   bottom: 24px;
-  z-index: 9999;
+
+  z-index: 100100;
 
   padding: 14px 18px;
 
   font-size: 14px;
   font-weight: 500;
 
-  color: var(--white);
+  color: var(--black);
 
-  background: var(--navy);
+  background: transparent;
 
   border: 1px solid var(--border);
 

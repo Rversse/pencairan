@@ -154,18 +154,76 @@
   margin: 0 0 16px;
 }
 
+.copyAccountNumber {
+  cursor: pointer;
+
+  transition: var(--transition);
+}
+
+.copyAccountNumber:hover {
+  color: var(--primary);
+
+  text-decoration: underline;
+}
+
 .modal-content::-webkit-scrollbar {
   width: 8px;
 }
+
 .modal-content::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .modal-content::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 8px;
 }
+
 .modal-content::-webkit-scrollbar-thumb:hover {
   background: var(--navy-soft);
+}
+
+.preview-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+#accountPreviewSubtitle {
+  font-size: 13px;
+  color: var(--navy-soft);
+}
+
+.preview-account-top {
+  display: flex;
+
+  justify-content: space-between;
+
+  align-items: center;
+
+  margin-bottom: 10px;
+}
+
+.preview-account-kitchens {
+  margin-top: 10px;
+
+  font-size: 13px;
+
+  color: var(--navy-soft);
+
+  line-height: 1.5;
+}
+
+.copyPreviewAccountNumber {
+  cursor: pointer;
+
+  transition: var(--transition);
+}
+
+.copyPreviewAccountNumber:hover {
+  color: var(--primary);
+
+  text-decoration: underline;
 }
 
 .supplier-account-card {
@@ -183,9 +241,11 @@
 }
 
 .supplier-account-card:hover {
-  transform: translateY(-2px);
+  transform: translateY(-3px);
+
+  border-color: var(--primary);
+
   box-shadow: var(--shadow-hover);
-  border-color: var(--gold-soft);
 }
 
 .account-info {
@@ -200,7 +260,14 @@
 }
 
 .account-number {
-  font-size: 13px;
+  margin: 6px 0;
+
+  font-size: 14px;
+
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+
+  letter-spacing: 0.4px;
+
   color: var(--navy-soft);
 }
 
@@ -240,8 +307,32 @@
 
 .account-actions button {
   min-height: 40px;
-  font-size: 13px;
-  white-space: nowrap;
+
+  border-radius: 12px;
+
+  transition: var(--transition);
+
+  font-weight: 600;
+
+  box-shadow: none;
+}
+
+.account-actions button:hover {
+  transform: translateY(-2px);
+
+  box-shadow: var(--shadow);
+}
+
+.supplier-account-card strong {
+  display: inline-flex;
+
+  align-items: center;
+
+  gap: 6px;
+
+  font-size: 18px;
+
+  color: var(--navy);
 }
 
 /* ==========================
@@ -351,6 +442,125 @@
   flex: 1;
 
   width: auto;
+}
+
+/* ==========================
+   ACCOUNT PREVIEW
+========================== */
+
+.preview-modal {
+  width: min(520px, 92vw);
+
+  max-height: 80vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: var(--card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 24px;
+
+  overflow: hidden;
+
+  box-shadow: var(--shadow);
+}
+
+.preview-content {
+  padding: 20px;
+
+  overflow-y: auto;
+}
+
+.preview-account-item {
+  padding: 14px 16px;
+
+  border: 1px solid var(--border);
+
+  border-radius: 16px;
+
+  background: var(--card);
+
+  margin-bottom: 12px;
+}
+
+.preview-account-item:last-child {
+  margin-bottom: 0;
+}
+
+.preview-account-bank {
+  font-size: 16px;
+
+  font-weight: 700;
+
+  color: var(--navy);
+}
+
+.preview-account-number {
+  margin-top: 6px;
+
+  color: var(--navy-soft);
+
+  font-size: 14px;
+}
+
+.preview-account-status {
+  margin-top: 10px;
+}
+
+.supplierAccountPreview {
+  cursor: pointer;
+
+  font-weight: 700;
+
+  color: var(--primary);
+
+  transition: var(--transition);
+}
+
+.supplierAccountPreview:hover {
+  text-decoration: underline;
+
+  opacity: 0.85;
+}
+
+.supplierKitchenPreview {
+  cursor: pointer;
+
+  font-weight: 700;
+
+  color: var(--primary);
+
+  transition: var(--transition);
+}
+
+.supplierKitchenPreview:hover {
+  text-decoration: underline;
+
+  opacity: 0.85;
+}
+
+.account-kitchens {
+  margin-top: 8px;
+
+  font-size: 14px;
+
+  color: var(--navy-soft);
+
+  line-height: 1.5;
+}
+
+.supplier-account-card.inactive {
+  opacity: 0.78;
+
+  background: #f8fafc;
+
+  border-style: dashed;
+}
+
+.supplier-account-card.inactive:hover {
+  opacity: 1;
 }
 
 /* ==========================

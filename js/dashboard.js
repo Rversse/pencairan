@@ -383,6 +383,8 @@ async function loadDisbursementTable() {
 `
 
   container.innerHTML = `
+<div class="supplier-summary">
+
   <table class="disbursement-table">
 
     <thead>
@@ -464,8 +466,10 @@ ${kitchens
 >
 </td>
 
-<td class="${progressClass}">
-  ${progress === 100 ? '✓ Selesai' : `${progress}%`}
+<td>
+  <span class="progress-badge ${progressClass}">
+    ${progress === 100 ? '✓ Selesai' : `${progress}%`}
+  </span>
 </td>
 
             </tr>
@@ -476,6 +480,8 @@ ${kitchens
     </tbody>
 
   </table>
+
+  </div>
   
 `
 

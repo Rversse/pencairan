@@ -27,18 +27,18 @@ async function startApp() {
     kitchenMasterSection.style.display = 'none'
 
     if (currentUser?.role === 'viewer') {
-      incomeSection.style.display = 'block'
+      kitchenMasterSection.style.display = 'block'
 
       dashboardTab?.classList.remove('active')
       supplierMasterTab?.classList.remove('active')
       supplierReportTab?.classList.remove('active')
+      incomeReportTab?.classList.remove('active')
       reportTab?.classList.remove('active')
       disbursementTab?.classList.remove('active')
 
-      incomeReportTab?.classList.add('active')
+      kitchenMasterTab?.classList.add('active')
 
-      await loadIncomeReport()
-      await loadSupplierReport()
+      await loadKitchenMaster()
     } else {
       dashboardSection.style.display = 'block'
 
@@ -104,7 +104,7 @@ function applyViewerBadge() {
     window.currentUser?.role === 'viewer'
       ? `
       <div class="viewer-badge">
-        Viewer Mode
+        Guest Mode
       </div>
     `
       : ''

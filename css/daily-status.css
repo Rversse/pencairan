@@ -307,16 +307,19 @@
 .progress-empty {
   color: #ef4444;
   font-weight: 600;
+  background: #fee2e2;
 }
 
 .progress-low {
   color: #f97316;
   font-weight: 600;
+  background: #ffedd5;
 }
 
 .progress-medium {
   color: #facc15;
   font-weight: 600;
+  background: #fef3c7;
 }
 
 .progress-high {
@@ -327,6 +330,30 @@
 .progress-complete {
   color: #10b981;
   font-weight: 700;
+}
+
+.progress-high,
+.progress-complete {
+  background: #dcfce7;
+}
+
+.progress-badge {
+  display: inline-flex;
+
+  align-items: center;
+  justify-content: center;
+
+  min-width: 86px;
+
+  padding: 6px 12px;
+
+  border-radius: 999px;
+
+  font-size: 12px;
+
+  font-weight: 700;
+
+  background: var(--bg-soft);
 }
 
 .disbursement-status-summary {

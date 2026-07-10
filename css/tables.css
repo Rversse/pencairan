@@ -69,6 +69,16 @@
   border-right: 1px solid var(--border);
 }
 
+.disbursement-table th,
+.disbursement-table td {
+  border-right: 1px solid var(--border);
+}
+
+.disbursement-table th:last-child,
+.disbursement-table td:last-child {
+  border-right: none;
+}
+
 .kitchen-action-column {
   width: 140px;
 }
@@ -142,14 +152,50 @@
 .disbursement-table {
   width: 100%;
 
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+
+  overflow: hidden;
+
+  border-radius: 18px;
+
+  border: 1px solid var(--border);
 }
 
-.disbursement-table th,
-.disbursement-table td {
-  padding: 14px;
+.disbursement-table th {
+  padding: 15px 16px;
 
   text-align: center;
+
+  background: var(--bg-soft);
+
+  color: var(--navy);
+
+  font-size: 13px;
+
+  font-weight: 700;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.disbursement-table td {
+  padding: 15px 16px;
+
+  text-align: center;
+
+  font-weight: 500;
+
+  border-bottom: 1px solid var(--border);
+}
+
+.disbursement-table tbody tr {
+  transition: var(--transition);
+
+  background: var(--card);
+}
+
+.disbursement-table tbody tr:hover {
+  background: var(--bg-soft);
 }
 
 .disbursement-table th:first-child,
