@@ -77,27 +77,30 @@ body {
 
 .login-logo {
   display: flex;
+
   align-items: center;
   justify-content: center;
 
-  width: 72px;
-  height: 72px;
-  margin: 0 auto 22px;
+  width: 240px;
+  height: 140px;
 
-  border-radius: 22px;
-  background: var(--gold);
-  color: var(--white);
+  margin: 0 auto 12px;
+}
 
-  font-size: 24px;
-  font-weight: 700;
+.login-logo img {
+  width: 100%;
+  height: 100%;
 
-  box-shadow: 0 12px 28px var(--gold-soft);
+  object-fit: contain;
 }
 
 h1 {
-  margin: 0;
-  font-size: 30px;
+  margin: 0 0 24px;
+
+  font-size: 26px;
+
   font-weight: 700;
+
   color: var(--navy);
 }
 
@@ -111,18 +114,26 @@ p {
 
 .login-label {
   display: block;
-  margin: 0 0 8px;
+
+  margin: 18px 0 10px;
+
   text-align: left;
+
   color: var(--navy);
+
   font-size: 13px;
+
   font-weight: 600;
 }
 
 .account-options {
   display: grid;
+
   grid-template-columns: repeat(2, 1fr);
+
   gap: 10px;
-  margin-bottom: 22px;
+
+  margin-bottom: 28px;
 }
 
 .account-option {

@@ -47,22 +47,23 @@
 
 .logo {
   display: flex;
+
   align-items: center;
   justify-content: center;
 
-  width: 42px;
-  height: 42px;
+  width: 54px;
+  height: 54px;
 
-  font-size: 16px;
-  font-weight: bold;
+  flex-shrink: 0;
+}
 
-  color: var(--navy);
+.logo img {
+  width: 100%;
+  height: 100%;
 
-  background: linear-gradient(135deg, var(--gold), #f6c453);
+  object-fit: contain;
 
-  border-radius: 12px;
-
-  box-shadow: 0 12px 24px rgba(251, 191, 36, 0.18);
+  display: block;
 }
 
 .navbar-brand h2 {
