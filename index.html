@@ -7,12 +7,21 @@
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <title>Sistem Informasi Manajemen SPPG</title>
+    <title>SIM - SPPG</title>
 
     <link rel="stylesheet" href="css/app.css" />
   </head>
 
   <body>
+    <div id="appSplash">
+      <div class="app-splash-content">
+        <img src="assets/favicon.png" alt="SIM SPPG" class="app-splash-logo" />
+
+        <h2>Sistem Informasi Manajemen SPPG</h2>
+
+        <p>Memuat aplikasi...</p>
+      </div>
+    </div>
     <nav class="navbar">
       <div class="navbar-left">
         <div class="logo">
@@ -64,8 +73,8 @@
               <small id="dailyStatusDate"> - </small>
 
               <div class="daily-status-legend">
-                <span class="legend-belanja">B</span>
-                <span class="legend-koperasi">K</span>
+                <span class="legend-bgn">B</span>
+                <span class="legend-supplier">S</span>
                 <span class="legend-gas">G</span>
               </div>
             </div>
@@ -91,7 +100,7 @@
           <div class="dashboard-card">
             <div class="dashboard-card-top">
               <div>
-                <small class="transaction-date"> Total Belanja Koperasi </small>
+                <small class="transaction-date"> Total Belanja Supplier </small>
 
                 <h2 id="totalExpense">Rp 0</h2>
               </div>
@@ -207,7 +216,15 @@
 
       <div id="kitchenMasterSection" style="display: none">
         <div class="supplier-master-header">
-          <h2>Data Dapur</h2>
+          <div class="section-header">
+            <div>
+              <h2>Data Dapur</h2>
+
+              <div id="kitchenCount" class="section-subtitle">
+                Total Dapur: 0
+              </div>
+            </div>
+          </div>
 
           <div class="supplier-master-actions">
             <input
@@ -275,7 +292,15 @@
 
       <div id="supplierMasterSection" style="display: none">
         <div class="supplier-master-header">
-          <h2>Data Supplier</h2>
+          <div class="section-header">
+            <div>
+              <h2>Data Supplier</h2>
+
+              <div id="supplierCount" class="section-subtitle">
+                Total Supplier: 0
+              </div>
+            </div>
+          </div>
 
           <div class="supplier-master-actions">
             <input
@@ -398,17 +423,7 @@
           <input type="text" id="amount" placeholder="Nominal" required />
 
           <div class="form-actions-row">
-            <button
-              type="button"
-              id="nextTransactionButton"
-              class="secondary-button form-next-btn"
-            >
-              Next
-            </button>
-
-            <div class="form-submit-row">
-              <button type="submit" id="saveTransactionButton">Simpan</button>
-            </div>
+            <button type="submit" id="saveTransactionButton">Simpan</button>
           </div>
         </form>
       </div>

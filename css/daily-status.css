@@ -226,22 +226,27 @@
   background: #ef4444;
 }
 
-.legend-belanja {
-  color: #4ade80;
-
-  background: rgba(74, 222, 128, 0.12);
+.legend-bgn {
+  color: #15803d;
+  background: #dcfce7;
 }
 
-.legend-koperasi {
-  color: #60a5fa;
-
-  background: rgba(96, 165, 250, 0.12);
+.legend-supplier {
+  color: #dc2626;
+  background: #fee2e2;
 }
 
 .legend-gas {
-  color: #facc15;
+  color: #d97706;
+  background: #fef3c7;
+}
 
-  background: rgba(250, 204, 21, 0.12);
+.legend-bgn,
+.legend-supplier,
+.legend-gas {
+  color: #111827;
+
+  font-weight: 700;
 }
 
 #dailyStatusWidget:hover .status-hover {
@@ -290,8 +295,12 @@
 
 .daily-kitchen-name {
   flex: 1;
-  font-weight: 600;
+
   font-size: 14px;
+
+  font-weight: 500;
+
+  color: #1f2937;
 }
 
 .daily-kitchen-status {

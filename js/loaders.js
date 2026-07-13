@@ -99,14 +99,17 @@ async function loadAccountsFiltered(flow) {
     .from('kitchen_account_rules')
     .select(
       `
-      account_id,
-accounts (
-  id,
-  name,
-  bank,
-  is_active
-)
-    `
+  account_id,
+  accounts (
+    id,
+    name,
+    bank,
+    is_active,
+    income_suppliers!accounts_supplier_id_fkey (
+      owner_name
+    )
+  )
+`
     )
     .eq('kitchen_id', kitchenId)
     .eq('flow_type', dbFlow)
@@ -156,10 +159,14 @@ accounts (
 
   uniqueAccounts.forEach((account) => {
     options += `
-      <option value="${account.id}">
-        ${account.name} (${account.bank})
-      </option>
-    `
+  <option value="${account.id}">
+    ${account.name}${
+      account.income_suppliers?.owner_name
+        ? ` / ${account.income_suppliers.owner_name}`
+        : ''
+    } (${account.bank})
+  </option>
+`
   })
 
   accountSelect.innerHTML += options

@@ -27,3 +27,21 @@
   width: auto;
   white-space: nowrap;
 }
+
+.section-subtitle {
+  margin-top: 4px;
+
+  font-size: 16px;
+
+  color: var(--navy-soft);
+
+  font-weight: 500;
+}
+
+.preview-kitchen-list {
+  margin-top: 6px;
+
+  color: var(--navy-soft);
+
+  line-height: 1.5;
+}

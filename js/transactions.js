@@ -17,7 +17,13 @@ async function loadTransactions(showLoading = true) {
   let query = supabaseClient.from('transactions').select(`
       *,
       kitchens(name),
-      accounts(name, bank),
+      accounts(
+  name,
+  bank,
+  income_suppliers!accounts_supplier_id_fkey(
+    owner_name
+  )
+),
       suppliers(name)
     `)
 
@@ -64,22 +70,26 @@ async function loadTransactions(showLoading = true) {
   data.forEach((transaction) => {
     let badgeClass = 'badge-income'
 
-    let label = 'BELANJA BGN'
+    let label = 'BGN'
 
     if (transaction.flow_type === 'expense') {
       badgeClass = 'badge-expense'
 
-      label = 'BELANJA SUPPLIER'
+      label = 'SUPPLIER'
     }
 
     if (transaction.flow_type === 'neutral') {
       badgeClass = 'badge-gas'
 
-      label = 'BELANJA GAS'
+      label = 'GAS'
     }
 
     const target = transaction.accounts
-      ? `${transaction.accounts.name} (${transaction.accounts.bank})`
+      ? `${transaction.accounts.name}${
+          transaction.accounts.income_suppliers?.owner_name
+            ? ` / ${transaction.accounts.income_suppliers.owner_name}`
+            : ''
+        } (${transaction.accounts.bank})`
       : transaction.suppliers?.name || '-'
 
     const isLocked = isTransactionLocked(transaction.transaction_date)
@@ -144,7 +154,8 @@ async function loadTransactions(showLoading = true) {
             <div class="transaction-actions">
 
 <button
-  onclick='editTransaction(${JSON.stringify(transaction)})'
+  class="editTransactionButton"
+  data-id="${transaction.id}"
 >
   <i data-lucide="pencil"></i>
 </button>
@@ -168,6 +179,16 @@ async function loadTransactions(showLoading = true) {
 `
   })
   lucide.createIcons()
+
+  document.querySelectorAll('.editTransactionButton').forEach((button) => {
+    button.addEventListener('click', () => {
+      const transaction = data.find((item) => item.id === button.dataset.id)
+
+      if (transaction) {
+        editTransaction(transaction)
+      }
+    })
+  })
 }
 
 loadMoreButton.addEventListener(

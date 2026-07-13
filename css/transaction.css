@@ -200,7 +200,7 @@
 
   font-size: 14px;
 
-  font-weight: 500;
+  font-weight: 550;
 
   line-height: 1.45;
 }
@@ -229,13 +229,13 @@
 }
 
 .target-income {
-  color: #2563eb;
+  color: #15803d;
 }
 
 .target-expense {
-  color: var(--success);
+  color: #dc2626;
 }
 
 .target-gas {
-  color: #ca8a04;
+  color: #d97706;
 }

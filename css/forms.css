@@ -143,19 +143,8 @@ button.large {
   transition: var(--transition);
 }
 
-.form-submit-row button {
+#saveTransactionButton {
   width: 100%;
-}
-
-.form-actions-row {
-  display: flex;
-  gap: 12px;
-}
-
-.form-next-btn,
-.form-submit-row {
-  flex: 1;
-  margin-top: 0;
 }
 
 .supplier-form {

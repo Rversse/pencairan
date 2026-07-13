@@ -6,6 +6,8 @@ const kitchenMasterTable = document.getElementById('kitchenMasterTable')
 
 const kitchenMasterSearch = document.getElementById('kitchenMasterSearch')
 
+const kitchenCount = document.getElementById('kitchenCount')
+
 const addKitchenButton = document.getElementById('addKitchenButton')
 
 const kitchenModal = document.getElementById('kitchenModal')
@@ -70,6 +72,8 @@ function renderKitchenMaster() {
       (kitchen.foundation ?? '').toLowerCase().includes(keyword)
     )
   })
+
+  kitchenCount.textContent = `Total Dapur: ${filtered.length}`
 
   let rows = ''
 

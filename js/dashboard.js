@@ -552,9 +552,15 @@ async function loadIncomeReport() {
     .select(
       `
   amount,
+  created_at,
+  transaction_date,
   accounts (
     name,
-    bank
+    bank,
+    account_number,
+    income_suppliers (
+      owner_name
+    )
   )
 `
     )
@@ -719,11 +725,7 @@ async function renderSupplierSummary(data) {
   })
 
   supplierSummary.innerHTML = `
-      <div class="supplier-summary-top">
-
-        <h3>
-          Rekap Supplier
-        </h3>
+      <div class="supplier-summary-top"
 
         <span id="lastUpdated">
 
@@ -849,6 +851,10 @@ ${new Date(latestTransaction.created_at)
 async function renderIncomeSummary(data) {
   const incomeSummary = document.getElementById('incomeSummary')
 
+  const latestTransaction = [...data].sort(
+    (a, b) => new Date(b.created_at) - new Date(a.created_at)
+  )[0]
+
   if (!incomeSummary) return
 
   if (!data.length) {
@@ -867,7 +873,11 @@ async function renderIncomeSummary(data) {
 
   data.forEach((item) => {
     const account = item.accounts
-      ? [item.accounts.name, item.accounts.bank].filter(Boolean).join(' ')
+      ? `
+<strong>${item.accounts.name}</strong> -
+${item.accounts.income_suppliers?.owner_name ?? '-'} -
+${item.accounts.bank} ( ${item.accounts.account_number ?? '-'} )
+`
       : 'Lainnya'
 
     if (!grouped[account]) {
@@ -893,13 +903,38 @@ async function renderIncomeSummary(data) {
     })
 
   incomeSummary.innerHTML = `
-  <div class="supplier-summary-top">
+<div class="supplier-summary-top">
 
-    <h3>
-      Rekap Pemasukan
-    </h3>
+  <span id="lastUpdated">
 
-  </div>
+${
+  latestTransaction
+    ? `
+      Update Data Terakhir :
+      ${new Date(latestTransaction.transaction_date)
+        .toLocaleDateString('id-ID', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        })
+        .replace(/\//g, '-')}
+
+      •
+
+      ${new Date(latestTransaction.created_at)
+        .toLocaleTimeString('id-ID', {
+          hour: '2-digit',
+          minute: '2-digit',
+          timeZone: 'Asia/Jakarta'
+        })
+        .replace(/\./g, ':')}
+    `
+    : 'Belum ada data'
+}
+
+  </span>
+
+</div>
 
   <table class="summary-table">
 

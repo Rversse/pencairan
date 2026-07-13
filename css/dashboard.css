@@ -70,11 +70,11 @@
 
   text-transform: uppercase;
 
-  font-weight: 500;
+  font-weight: 700;
 
-  color: var(--navy-soft);
+  color: #1f2937;
 
-  opacity: 0.9;
+  opacity: 1;
 }
 
 .dashboard-card h2 {
@@ -157,18 +157,6 @@
   margin: 0;
 }
 
-@media (max-width: 640px) {
-  .recap-header {
-    align-items: stretch;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .recap-header .dashboard-filters {
-    margin: 0;
-  }
-}
-
 .dashboard-icon {
   width: 48px;
 
@@ -187,6 +175,18 @@
   justify-content: center;
 
   color: var(--navy);
+}
+
+.dashboard-card:nth-child(1) .dashboard-icon {
+  color: #15803d;
+}
+
+.dashboard-card:nth-child(2) .dashboard-icon {
+  color: #dc2626;
+}
+
+.dashboard-card:nth-child(3) .dashboard-icon {
+  color: #d97706;
 }
 
 .dashboard-icon svg {
@@ -256,35 +256,54 @@
   margin-top: 28px;
 }
 
+.dashboard-card:nth-child(1) h2,
+.dashboard-card:nth-child(2) h2,
+.dashboard-card:nth-child(3) h2 {
+  color: #111827;
+}
+
 .dashboard-card:nth-child(1) {
-  background: linear-gradient(135deg, #eff6ff, #dbeafe);
-  border-color: rgba(37, 99, 235, 0.15);
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+
+  border-color: rgba(22, 163, 74, 0.18);
 }
-.dashboard-card:nth-child(1) h2 {
-  color: #2563eb;
-}
+
 .dashboard-card:nth-child(1)::before {
-  background: radial-gradient(circle, rgba(37, 99, 235, 0.14), transparent 72%);
+  background: radial-gradient(circle, rgba(22, 163, 74, 0.14), transparent 72%);
 }
 
 .dashboard-card:nth-child(2) {
-  background: linear-gradient(135deg, #fffbeb, #fef3c7);
-  border-color: rgba(217, 119, 6, 0.15);
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+
+  border-color: rgba(220, 38, 38, 0.18);
 }
-.dashboard-card:nth-child(2) h2 {
-  color: #d97706;
-}
+
 .dashboard-card:nth-child(2)::before {
-  background: radial-gradient(circle, rgba(217, 119, 6, 0.14), transparent 72%);
+  background: radial-gradient(circle, rgba(220, 38, 38, 0.14), transparent 72%);
 }
 
 .dashboard-card:nth-child(3) {
-  background: linear-gradient(135deg, #fef2f2, #fee2e2);
-  border-color: rgba(220, 38, 38, 0.15);
+  background: linear-gradient(135deg, #fffbeb, #fef3c7);
+
+  border-color: rgba(245, 158, 11, 0.18);
 }
-.dashboard-card:nth-child(3) h2 {
-  color: #dc2626;
-}
+
 .dashboard-card:nth-child(3)::before {
-  background: radial-gradient(circle, rgba(220, 38, 38, 0.14), transparent 72%);
+  background: radial-gradient(
+    circle,
+    rgba(245, 158, 11, 0.14),
+    transparent 72%
+  );
+}
+
+@media (max-width: 640px) {
+  .recap-header {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .recap-header .dashboard-filters {
+    margin: 0;
+  }
 }

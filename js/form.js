@@ -1,5 +1,3 @@
-let keepModalOpen = false
-
 function updateFlowOptions() {
   const selectedKitchen =
     kitchenSelect.options[kitchenSelect.selectedIndex]?.text || ''
@@ -181,11 +179,13 @@ async function toggleFields() {
 }
 
 function resetFormState() {
+  console.trace('resetFormState')
+
   const currentKitchen = kitchenSelect.value
 
   const currentFlow = flowType.value
 
-  const today = new Date().toISOString().split('T')[0]
+  const currentDate = transactionDate.value
 
   const currentAccount = accountSelect.value
 
@@ -199,15 +199,13 @@ function resetFormState() {
 
   transactionForm.reset()
 
-  transactionDate.value = new Date().toISOString().split('T')[0]
-
   kitchenSelect.value = currentKitchen
 
   updateFlowOptions()
 
   flowType.value = currentFlow
 
-  transactionDate.value = today
+  transactionDate.value = currentDate
 
   toggleFields().then(() => {
     if (flowType.value === 'pengeluaran') {
@@ -314,6 +312,12 @@ async function editTransaction(transaction) {
   lockTransactionFields(true)
 
   openModal()
+
+  // Fokus & blok seluruh nominal
+  setTimeout(() => {
+    amountInput.focus()
+    amountInput.select()
+  }, 50)
 }
 
 transactionForm.addEventListener('submit', async (event) => {
@@ -436,10 +440,13 @@ transactionForm.addEventListener('submit', async (event) => {
       }
     }
 
+    const isEditing = Boolean(editingTransactionId)
+    const transactionId = editingTransactionId
+
     let query = supabaseClient.from('transactions')
 
-    if (editingTransactionId) {
-      query = query.update(payload).eq('id', editingTransactionId)
+    if (isEditing) {
+      query = query.update(payload).eq('id', transactionId)
     } else {
       query = query.insert(payload)
     }
@@ -456,16 +463,14 @@ transactionForm.addEventListener('submit', async (event) => {
 
     showToast('Transaksi berhasil disimpan')
 
-    if (!editingTransactionId) {
+    if (!isEditing) {
       resetFormState()
 
       amountInput.value = ''
 
       amountInput.focus()
     } else {
-      closeModal()
-
-      resetFormState()
+      hideTransactionModal()
     }
 
     await loadTransactions()
@@ -479,10 +484,7 @@ transactionForm.addEventListener('submit', async (event) => {
     showToast('Terjadi kesalahan')
   } finally {
     submitButton.disabled = false
-
-    submitButton.textContent = originalText
-
-    keepModalOpen = false
+    submitButton.textContent = 'Simpan'
   }
 })
 
@@ -492,8 +494,6 @@ transactionForm.addEventListener('keydown', (event) => {
   if (event.target !== amountInput) return
 
   event.preventDefault()
-
-  keepModalOpen = true
 
   transactionForm.requestSubmit()
 })

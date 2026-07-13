@@ -26,7 +26,7 @@ function openModal() {
   updateFormFlow()
 }
 
-function closeModal() {
+function hideTransactionModal() {
   transactionModal.classList.remove('show')
 
   document.body.style.overflow = ''
@@ -36,11 +36,11 @@ function closeModal() {
 
 openTransactionModal.addEventListener('click', openModal)
 
-closeTransactionModal.addEventListener('click', closeModal)
+closeTransactionModal.addEventListener('click', hideTransactionModal)
 
 transactionModal.addEventListener('click', (event) => {
   if (event.target === transactionModal) {
-    closeModal()
+    hideTransactionModal()
   }
 })
 
@@ -49,7 +49,7 @@ window.addEventListener(
 
   (event) => {
     if (event.key === 'Escape') {
-      closeModal()
+      hideTransactionModal()
 
       closeDeleteModal?.()
     }

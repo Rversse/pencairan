@@ -453,9 +453,17 @@ function openAccountPreview(supplierId) {
   ${account.account_number ?? '-'}
 </div>
 
-  <div class="preview-account-kitchens">
-    🏠 ${kitchenNames.length ? kitchenNames.join(', ') : 'Belum dipetakan'}
-  </div>
+<div class="preview-account-kitchens">
+
+<strong>
+🏠 ${kitchenNames.length} Dapur
+</strong>
+
+<div class="preview-kitchen-list">
+  ${kitchenNames.length ? kitchenNames.join(', ') : 'Belum dipetakan'}
+</div>
+
+</div>
 
 </div>
 `
@@ -558,30 +566,26 @@ function renderSupplierMaster() {
 
   const keyword = supplierMasterSearch.value.trim().toLowerCase()
 
+  const filteredSuppliers = supplierMaster.filter((supplier) => {
+    return (
+      supplier.business_name.toLowerCase().includes(keyword) ||
+      (supplier.owner_name ?? '').toLowerCase().includes(keyword) ||
+      (supplier.product_type ?? '').toLowerCase().includes(keyword)
+    )
+  })
+
+  supplierCount.textContent = `Total Supplier: ${filteredSuppliers.length}`
+
   let rows = ''
 
-  supplierMaster
-    .filter((supplier) => {
-      return (
-        supplier.business_name.toLowerCase().includes(keyword) ||
-        (supplier.owner_name ?? '').toLowerCase().includes(keyword) ||
-        (supplier.product_type ?? '').toLowerCase().includes(keyword)
-      )
-    })
-    .forEach((supplier) => {
-      const activeAccounts = supplier.accounts.filter(
-        (account) => account.is_active
-      ).length
+  filteredSuppliers.forEach((supplier) => {
+    const activeAccounts = supplier.accounts.filter(
+      (account) => account.is_active
+    ).length
 
-      const totalAccounts = supplier.accounts.length
+    const totalAccounts = supplier.accounts.length
 
-      const totalKitchens = new Set(
-        supplier.accounts.flatMap((account) =>
-          account.kitchen_account_rules.map((rule) => rule.kitchen_id)
-        )
-      ).size
-
-      rows += `
+    rows += `
 <tr>
   <td>${supplier.business_name}</td>
 
@@ -611,16 +615,6 @@ function renderSupplierMaster() {
   </span>
 </td>
 
-<td class="text-center">
-<span
-  class="supplierKitchenPreview"
-  data-id="${supplier.id}"
-  title="Klik untuk melihat daftar dapur"
->
-    ${totalKitchens}
-  </span>
-</td>
-
   <td>
     ${
       supplier.is_active
@@ -641,7 +635,7 @@ function renderSupplierMaster() {
   }
 </tr>
     `
-    })
+  })
 
   supplierMasterTable.innerHTML = `
     <div class="supplier-summary">
@@ -654,10 +648,9 @@ function renderSupplierMaster() {
   <th>SUPPLIER</th>
   <th>PEMILIK</th>
   <th>PRODUK</th>
-  <th>NO HP</th>
+  <th>NO HANDPHONE</th>
   <th>ALAMAT</th>
   <th>REKENING</th>
-  <th>DAPUR</th>
   <th>STATUS</th>
   ${isAdmin ? '<th class="supplier-action-column">AKSI</th>' : ''}
 </tr>
@@ -690,12 +683,6 @@ function renderSupplierMaster() {
   document.querySelectorAll('.supplierAccountPreview').forEach((item) => {
     item.addEventListener('click', () => {
       openAccountPreview(item.dataset.id)
-    })
-  })
-
-  document.querySelectorAll('.supplierKitchenPreview').forEach((item) => {
-    item.addEventListener('click', () => {
-      openKitchenPreview(item.dataset.id)
     })
   })
 }
@@ -735,7 +722,7 @@ supplierMasterSearch?.addEventListener('input', () => {
   renderSupplierMaster()
 })
 
-function closeModal() {
+function hideSupplierModal() {
   supplierMode = 'edit'
 
   supplierModal.style.display = 'none'
@@ -743,7 +730,7 @@ function closeModal() {
   closeAccountManager()
 }
 
-closeSupplierModal.addEventListener('click', closeModal)
+closeSupplierModal.addEventListener('click', hideSupplierModal)
 
 function closeAccountManager() {
   resetAccountEditor()
@@ -758,7 +745,7 @@ closeAccountPreview.addEventListener('click', () => {
 
 window.addEventListener('click', (e) => {
   if (e.target === supplierModal) {
-    closeModal()
+    hideSupplierModal()
   }
 
   if (e.target === accountModal) {
@@ -817,7 +804,7 @@ async function deleteSupplier() {
     return
   }
 
-  closeModal()
+  hideSupplierModal()
 
   await loadSupplierMaster()
 
@@ -870,7 +857,7 @@ async function updateSupplier() {
     )
   }
 
-  closeModal()
+  hideSupplierModal()
 
   await loadSupplierMaster()
 
@@ -902,7 +889,7 @@ async function insertSupplier() {
     return
   }
 
-  closeModal()
+  hideSupplierModal()
 
   await loadSupplierMaster()
 

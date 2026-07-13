@@ -1,3 +1,13 @@
+function hideSplash() {
+  const splash = document.getElementById('appSplash')
+
+  if (!splash) return
+
+  splash.style.opacity = '0'
+
+  setTimeout(() => splash.remove(), 250)
+}
+
 async function initAuth() {
   const {
     data: { session }
@@ -27,6 +37,8 @@ async function initAuth() {
     ...session.user,
     role: profile.role
   }
+
+  hideSplash()
 
   return true
 }
