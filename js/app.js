@@ -72,34 +72,41 @@ async function startApp() {
 function applyRoleAccess() {
   const isViewer = window.currentUser?.role === 'viewer'
 
-  // Tabs
-  dashboardTab?.style.setProperty('display', isViewer ? 'none' : '')
-  reportTab?.style.setProperty('display', isViewer ? 'none' : '')
-  disbursementTab?.style.setProperty('display', isViewer ? 'none' : '')
-  supplierMasterTab?.style.setProperty('display', '')
-  kitchenMasterTab?.style.setProperty('display', '')
+  document.querySelectorAll('[data-role]').forEach((element) => {
+    const role = element.dataset.role
 
-  // Dashboard
+    const visible =
+      role === 'both' ||
+      (role === 'admin' && !isViewer) ||
+      (role === 'viewer' && isViewer)
+
+    element.style.display = visible ? '' : 'none'
+  })
+
   document
     .querySelector('.dashboard')
     ?.style.setProperty('display', isViewer ? 'none' : '')
 
-  // Transaksi
   document
     .getElementById('adminTransactionsSection')
     ?.style.setProperty('display', isViewer ? 'none' : '')
 
-  // Floating Action Button
   document
     .querySelector('.fab-button')
     ?.style.setProperty('display', isViewer ? 'none' : '')
 
-  // Supplier Master
   addSupplierButton?.style.setProperty('display', isViewer ? 'none' : '')
 
-  // Kitchen Master
   addKitchenButton?.style.setProperty('display', isViewer ? 'none' : '')
 }
+
+document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
+  const hasVisibleChild = [...dropdown.querySelectorAll('.nav-link')].some(
+    (link) => getComputedStyle(link).display !== 'none'
+  )
+
+  dropdown.style.display = hasVisibleChild ? '' : 'none'
+})
 
 function applyViewerBadge() {
   viewerBadge.innerHTML =

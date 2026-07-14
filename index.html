@@ -35,21 +35,62 @@
 
       <div class="navbar-right">
         <div id="viewerBadge"></div>
-        <a href="#" id="dashboardTab" class="nav-link active"> Dashboard </a>
 
-        <a href="#" id="disbursementTab" class="nav-link"> Pencairan </a>
-
-        <a href="#" id="kitchenMasterTab" class="nav-link"> Data Dapur </a>
-
-        <a href="#" id="supplierMasterTab" class="nav-link"> Data Supplier </a>
-
-        <a href="#" id="incomeReportTab" class="nav-link"> Rekap Pemasukan </a>
-
-        <a href="#" id="supplierReportTab" class="nav-link">
-          Rekap Pengeluaran
+        <a href="#" id="dashboardTab" class="nav-link active" data-role="admin">
+          Dashboard
         </a>
 
-        <a href="#" id="reportTab" class="nav-link"> Laporan </a>
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle">
+            Master
+            <i data-lucide="chevron-down"></i>
+          </button>
+
+          <div class="nav-dropdown-menu">
+            <a href="#" id="kitchenMasterTab" class="nav-link" data-role="both">
+              Data Dapur
+            </a>
+
+            <a
+              href="#"
+              id="supplierMasterTab"
+              class="nav-link"
+              data-role="both"
+            >
+              Data Supplier
+            </a>
+          </div>
+        </div>
+
+        <div class="nav-dropdown">
+          <button class="nav-dropdown-toggle">
+            Rekap
+            <i data-lucide="chevron-down"></i>
+          </button>
+
+          <div class="nav-dropdown-menu">
+            <a href="#" id="disbursementTab" class="nav-link" data-role="admin">
+              Pencairan 2 Periode
+            </a>
+
+            <a href="#" id="reportTab" class="nav-link" data-role="admin">
+              Laporan
+            </a>
+
+            <a href="#" id="incomeReportTab" class="nav-link" data-role="both">
+              Rekap Pemasukan
+            </a>
+
+            <a
+              href="#"
+              id="supplierReportTab"
+              class="nav-link"
+              data-role="both"
+            >
+              Rekap Pengeluaran
+            </a>
+          </div>
+        </div>
 
         <button id="logoutButton" class="logout-button">Logout</button>
       </div>

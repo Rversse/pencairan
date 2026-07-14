@@ -151,6 +151,18 @@ function resetActiveTabs() {
   document.querySelectorAll('.nav-link').forEach((link) => {
     link.classList.remove('active')
   })
+
+  document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
+    dropdown.classList.remove('active')
+  })
+}
+
+function updateActiveDropdown() {
+  document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
+    const hasActive = dropdown.querySelector('.nav-link.active')
+
+    dropdown.classList.toggle('active', !!hasActive)
+  })
 }
 
 // ============================================================
@@ -1367,6 +1379,8 @@ dashboardTab?.addEventListener('click', async (event) => {
 
   dashboardTab.classList.add('active')
 
+  updateActiveDropdown()
+
   await loadDashboard()
   await loadTransactions()
   await loadDailyStatus()
@@ -1383,6 +1397,44 @@ dashboardStartDate?.addEventListener(
     await loadDailyStatus()
   }
 )
+
+document.querySelectorAll('.nav-dropdown-toggle').forEach((button) => {
+  button.addEventListener('click', (e) => {
+    e.stopPropagation()
+
+    const dropdown = button.parentElement
+
+    document.querySelectorAll('.nav-dropdown').forEach((item) => {
+      if (item !== dropdown) {
+        item.classList.remove('open')
+      }
+    })
+
+    dropdown.classList.toggle('open')
+  })
+})
+
+document.addEventListener('click', () => {
+  document.querySelectorAll('.nav-dropdown').forEach((item) => {
+    item.classList.remove('open')
+  })
+})
+
+document.querySelectorAll('.nav-dropdown-menu .nav-link').forEach((link) => {
+  link.addEventListener('click', () => {
+    document.querySelectorAll('.nav-dropdown').forEach((item) => {
+      item.classList.remove('open')
+    })
+  })
+})
+
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return
+
+  document.querySelectorAll('.nav-dropdown').forEach((item) => {
+    item.classList.remove('open')
+  })
+})
 
 supplierStartDate?.addEventListener(
   'change',
@@ -1455,6 +1507,8 @@ supplierMasterTab?.addEventListener('click', async (e) => {
   supplierMasterSection.style.display = 'block'
   supplierMasterTab.classList.add('active')
 
+  updateActiveDropdown()
+
   await loadSupplierMaster()
 })
 
@@ -1467,6 +1521,8 @@ supplierReportTab?.addEventListener('click', async (event) => {
   supplierSection.style.display = 'block'
   supplierReportTab.classList.add('active')
 
+  updateActiveDropdown()
+
   await loadSupplierReport()
 })
 
@@ -1478,6 +1534,8 @@ incomeReportTab?.addEventListener('click', async (event) => {
 
   incomeSection.style.display = 'block'
   incomeReportTab.classList.add('active')
+
+  updateActiveDropdown()
 
   await loadIncomeReport()
 })
@@ -1499,6 +1557,8 @@ disbursementTab?.addEventListener('click', async (event) => {
   disbursementSection.style.display = 'block'
   disbursementTab.classList.add('active')
 
+  updateActiveDropdown()
+
   await loadDisbursementTable()
 })
 
@@ -1512,6 +1572,8 @@ reportTab?.addEventListener('click', (event) => {
 
   reportSection.style.display = 'block'
   reportTab.classList.add('active')
+
+  updateActiveDropdown()
 })
 
 applyIncomeFilter?.addEventListener('click', async () => {
@@ -1527,3 +1589,5 @@ applySupplierFilter?.addEventListener('click', async () => {
 // ============================================================
 
 initializeDates()
+
+updateActiveDropdown()

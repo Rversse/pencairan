@@ -147,6 +147,13 @@
 
     <style>
 
+    .report-filters,
+#generateButton,
+#printButton,
+#exportExcelButton {
+  display: none !important;
+}
+
       * {
 
         box-sizing:
@@ -237,16 +244,35 @@
         margin-bottom: 14px;
       }
 
-      .summary-card {
+.summary-card {
+  background: #fff;
 
-background:rgba(255,255,255,.05);
+  border: 1.5px solid #d2daea;
 
-        border-radius:
-          8px;
+  border-radius: 10px;
 
-        padding:
-          14px 16px;
-      }
+  padding: 14px 16px;
+}
+
+.summary-card:nth-child(1) {
+  border-left: 5px solid #16a34a;
+}
+
+.summary-card:nth-child(2) {
+  border-left: 5px solid #dc2626;
+}
+
+.summary-card:nth-child(3) {
+  border-left: 5px solid #d97706;
+}
+
+.summary-card:nth-child(4) {
+  border-left: 5px solid #2563eb;
+}
+
+.summary-card.is-negative {
+  border-left-color: #dc2626 !important;
+}
 
       .summary-card small {
 
