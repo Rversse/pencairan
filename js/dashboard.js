@@ -158,26 +158,6 @@ function resetActiveTabs() {
 // ============================================================
 
 async function loadDashboard() {
-  let summaryQuery = supabaseClient.from('transactions').select(`
-    *,
-    kitchens (
-      name
-    ),
-    suppliers (
-      name
-    )
-  `)
-
-  if (filterKitchen.value) {
-    summaryQuery = summaryQuery.eq('kitchen_id', filterKitchen.value)
-  }
-
-  if (window.currentUser?.role === 'viewer') {
-    summaryQuery = summaryQuery.in('flow_type', ['expense', 'neutral'])
-  } else if (filterFlow.value) {
-    summaryQuery = summaryQuery.eq('flow_type', filterFlow.value)
-  }
-
   const today = getTodayLocal()
 
   if (!dashboardStartDate.value) {
@@ -188,35 +168,39 @@ async function loadDashboard() {
     dashboardEndDate.value = dashboardStartDate.value
   }
 
-  summaryQuery = summaryQuery
-    .gte('transaction_date', dashboardStartDate.value)
-    .lte('transaction_date', dashboardEndDate.value)
+  const kitchenUuid = filterKitchen.value || null
 
-  const { data: summaryData, error: summaryError } = await summaryQuery
+  let flowTypes = null
 
-  if (summaryError) {
-    console.error(summaryError)
+  if (window.currentUser?.role === 'viewer') {
+    flowTypes = ['expense', 'neutral']
+  } else if (filterFlow.value) {
+    flowTypes = [filterFlow.value]
+  }
 
+  const { data, error } = await supabaseClient.rpc('get_dashboard_summary', {
+    start_date: dashboardStartDate.value,
+    end_date: dashboardEndDate.value,
+    kitchen_uuid: kitchenUuid,
+    flow_types: flowTypes
+  })
+
+  if (error) {
+    console.error(error)
     return
   }
 
-  const income = summaryData
-    .filter((item) => item.flow_type === 'income')
-    .reduce((sum, item) => sum + Number(item.amount), 0)
+  const summary = data?.[0] ?? {
+    income: 0,
+    expense: 0,
+    gas: 0
+  }
 
-  const expense = summaryData
-    .filter((item) => item.flow_type === 'expense')
-    .reduce((sum, item) => sum + Number(item.amount), 0)
+  surplusAmount.textContent = formatRupiah(summary.income)
 
-  const gas = summaryData
-    .filter((item) => item.flow_type === 'neutral')
-    .reduce((sum, item) => sum + Number(item.amount), 0)
+  totalExpense.textContent = formatRupiah(summary.expense)
 
-  surplusAmount.textContent = income ? formatRupiah(income) : 'Rp 0'
-
-  totalGas.textContent = gas ? formatRupiah(gas) : 'Rp 0'
-
-  totalExpense.textContent = expense ? formatRupiah(expense) : 'Rp 0'
+  totalGas.textContent = formatRupiah(summary.gas)
 }
 
 async function saveDisbursementCheckbox(kitchenId, field, value) {
@@ -541,9 +525,11 @@ async function loadSupplierReport() {
     return
   }
 
-  await renderSupplierSummary(data)
+  const reportData = buildSupplierData(data)
 
-  await renderSupplierDailySummary(data)
+  await renderSupplierSummary(reportData)
+
+  await renderSupplierDailySummary(reportData)
 }
 
 async function loadIncomeReport() {
@@ -587,46 +573,51 @@ async function loadIncomeReport() {
     return
   }
 
-  await renderIncomeSummary(data)
+  const reportData = buildIncomeData(data)
+
+  await renderIncomeSummary(reportData)
 }
 
-async function renderSupplierSummary(data) {
-  const latestTransaction = [...data].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-  )[0]
+function getLatestTransaction(data) {
+  return data.reduce((latest, item) => {
+    if (
+      !latest ||
+      Date.parse(item.created_at) > Date.parse(latest.created_at)
+    ) {
+      return item
+    }
 
-  const supplierSummary = document.getElementById('supplierSummary')
+    return latest
+  }, null)
+}
 
-  if (!supplierSummary) {
-    return
+function buildSupplierData(data) {
+  const summaryTotals = {
+    Arutala: 0,
+    Sukalarang: 0,
+    Aris: 0,
+    Babinsa: 0,
+    Gas: 0,
+    Total: 0
   }
 
-  supplierSummary.innerHTML = `
-    <div class="empty-state">
-      Memuat data...
-    </div>
-  `
+  const dailyTotals = {}
 
-  if (!data.length) {
-    supplierSummary.innerHTML = `
-      <div class="empty-state">
-        Belum ada transaksi
-        pada periode ini
-      </div>
-    `
+  const latestTransaction = getLatestTransaction(data)
 
-    return
-  }
+  const summary = {}
 
-  const grouped = {}
+  const daily = {}
 
   data.forEach((item) => {
     const kitchen = item.kitchens?.name || 'Tidak diketahui'
 
     const supplier = item.suppliers?.name || '-'
 
-    if (!grouped[kitchen]) {
-      grouped[kitchen] = {
+    const date = item.transaction_date
+
+    if (!summary[kitchen]) {
+      summary[kitchen] = {
         Arutala: 0,
         Sukalarang: 0,
         Aris: 0,
@@ -636,30 +627,96 @@ async function renderSupplierSummary(data) {
       }
     }
 
+    if (!daily[date]) {
+      daily[date] = {}
+    }
+
+    if (!daily[date][kitchen]) {
+      daily[date][kitchen] = {
+        Arutala: 0,
+        Sukalarang: 0,
+        Aris: 0,
+        Babinsa: 0,
+        Gas: 0,
+        Total: 0
+      }
+    }
+
+    if (!dailyTotals[date]) {
+      dailyTotals[date] = {
+        Arutala: 0,
+        Sukalarang: 0,
+        Aris: 0,
+        Babinsa: 0,
+        Gas: 0,
+        Total: 0
+      }
+    }
+
+    const targetSummary = summary[kitchen]
+
+    const targetDaily = daily[date][kitchen]
+
     if (item.flow_type === 'expense') {
+      const amount = Number(item.amount)
+
       if (supplier.includes('Arutala')) {
-        grouped[kitchen].Arutala += Number(item.amount)
+        targetSummary.Arutala += amount
+        summaryTotals.Arutala += amount
+        dailyTotals[date].Arutala += amount
+        targetDaily.Arutala += amount
       }
 
       if (supplier.includes('Sukalarang')) {
-        grouped[kitchen].Sukalarang += Number(item.amount)
+        targetSummary.Sukalarang += amount
+        targetDaily.Sukalarang += amount
+        summaryTotals.Sukalarang += amount
+        dailyTotals[date].Sukalarang += amount
       }
 
       if (supplier.includes('Aris')) {
-        grouped[kitchen].Aris += Number(item.amount)
+        targetSummary.Aris += amount
+        targetDaily.Aris += amount
+        summaryTotals.Aris += amount
+        dailyTotals[date].Aris += amount
       }
 
       if (supplier.includes('Babinsa')) {
-        grouped[kitchen].Babinsa += Number(item.amount)
+        targetSummary.Babinsa += amount
+        targetDaily.Babinsa += amount
+        summaryTotals.Babinsa += amount
+        dailyTotals[date].Babinsa += amount
       }
 
-      grouped[kitchen].Total += Number(item.amount)
+      targetSummary.Total += amount
+      targetDaily.Total += amount
+      summaryTotals.Total += amount
+      dailyTotals[date].Total += amount
     }
 
     if (item.flow_type === 'neutral') {
-      grouped[kitchen].Gas += Number(item.amount)
+      const amount = Number(item.amount)
+
+      targetSummary.Gas += amount
+      targetDaily.Gas += amount
+      summaryTotals.Gas += amount
+      dailyTotals[date].Gas += amount
     }
   })
+
+  return {
+    latestTransaction,
+    summary,
+    daily,
+    summaryTotals,
+    dailyTotals
+  }
+}
+
+async function renderSupplierSummary(reportData) {
+  const latestTransaction = reportData.latestTransaction
+
+  const grouped = reportData.summary
 
   let rows = ''
 
@@ -701,31 +758,10 @@ async function renderSupplierSummary(data) {
         `
   })
 
-  const totals = {
-    Arutala: 0,
-    Sukalarang: 0,
-    Aris: 0,
-    Babinsa: 0,
-    Gas: 0,
-    Total: 0
-  }
-
-  Object.values(grouped).forEach((item) => {
-    totals.Arutala += item.Arutala
-
-    totals.Sukalarang += item.Sukalarang
-
-    totals.Aris += item.Aris
-
-    totals.Babinsa += item.Babinsa
-
-    totals.Gas += item.Gas
-
-    totals.Total += item.Total
-  })
+  const totals = reportData.summaryTotals
 
   supplierSummary.innerHTML = `
-      <div class="supplier-summary-top"
+      <div class="supplier-summary-top">
 
         <span id="lastUpdated">
 
@@ -733,23 +769,11 @@ ${
   latestTransaction
     ? `
       Update Data Terakhir :
-      ${new Date(latestTransaction.transaction_date)
-        .toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        })
-        .replace(/\//g, '-')}
+      ${formatDateID(latestTransaction.transaction_date)}
 
-•
+      •
 
-${new Date(latestTransaction.created_at)
-  .toLocaleTimeString('id-ID', {
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'Asia/Jakarta'
-  })
-  .replace(/\./g, ':')}
+      ${formatTimeID(latestTransaction.created_at)}
     `
     : 'Belum ada data'
 }
@@ -848,24 +872,8 @@ ${new Date(latestTransaction.created_at)
   `
 }
 
-async function renderIncomeSummary(data) {
-  const incomeSummary = document.getElementById('incomeSummary')
-
-  const latestTransaction = [...data].sort(
-    (a, b) => new Date(b.created_at) - new Date(a.created_at)
-  )[0]
-
-  if (!incomeSummary) return
-
-  if (!data.length) {
-    incomeSummary.innerHTML = `
-      <div class="empty-state">
-        Belum ada transaksi
-        pada periode ini
-      </div>
-    `
-    return
-  }
+function buildIncomeData(data) {
+  const latestTransaction = getLatestTransaction(data)
 
   const grouped = {}
 
@@ -876,18 +884,46 @@ async function renderIncomeSummary(data) {
       ? `
 <strong>${item.accounts.name}</strong> -
 ${item.accounts.income_suppliers?.owner_name ?? '-'} -
-${item.accounts.bank} ( ${item.accounts.account_number ?? '-'} )
+${item.accounts.bank} (${item.accounts.account_number ?? '-'})
 `
       : 'Lainnya'
+
+    const amount = Number(item.amount || 0)
 
     if (!grouped[account]) {
       grouped[account] = 0
     }
 
-    grouped[account] += Number(item.amount || 0)
+    grouped[account] += amount
 
-    grandTotal += Number(item.amount || 0)
+    grandTotal += amount
   })
+
+  return {
+    latestTransaction,
+    grouped,
+    grandTotal
+  }
+}
+
+async function renderIncomeSummary(reportData) {
+  const incomeSummary = document.getElementById('incomeSummary')
+
+  if (!incomeSummary) return
+
+  const latestTransaction = reportData.latestTransaction
+  const grouped = reportData.grouped
+  const grandTotal = reportData.grandTotal
+
+  if (!Object.keys(grouped).length) {
+    incomeSummary.innerHTML = `
+      <div class="empty-state">
+        Belum ada transaksi
+        pada periode ini
+      </div>
+    `
+    return
+  }
 
   let rows = ''
 
@@ -911,23 +947,11 @@ ${
   latestTransaction
     ? `
       Update Data Terakhir :
-      ${new Date(latestTransaction.transaction_date)
-        .toLocaleDateString('id-ID', {
-          day: '2-digit',
-          month: '2-digit',
-          year: 'numeric'
-        })
-        .replace(/\//g, '-')}
+      ${formatDateID(latestTransaction.transaction_date)}
 
       •
 
-      ${new Date(latestTransaction.created_at)
-        .toLocaleTimeString('id-ID', {
-          hour: '2-digit',
-          minute: '2-digit',
-          timeZone: 'Asia/Jakarta'
-        })
-        .replace(/\./g, ':')}
+      ${formatTimeID(latestTransaction.created_at)}
     `
     : 'Belum ada data'
 }
@@ -936,59 +960,45 @@ ${
 
 </div>
 
-  <table class="summary-table">
+<table class="summary-table">
 
-    <thead>
-      <tr>
-        <th>REKENING</th>
-        <th>TOTAL</th>
-      </tr>
-    </thead>
+  <thead>
+    <tr>
+      <th>REKENING</th>
+      <th>TOTAL</th>
+    </tr>
+  </thead>
 
-    <tbody>
+  <tbody>
 
-      ${rows}
+    ${rows}
 
-      <tr class="summary-total-row">
+    <tr class="summary-total-row">
 
-        <td>
-          <strong>
-            GRAND TOTAL
-          </strong>
-        </td>
+      <td>
+        <strong>GRAND TOTAL</strong>
+      </td>
 
-        <td>
-          <strong>
-            ${formatRupiah(grandTotal)}
-          </strong>
-        </td>
+      <td>
+        <strong>${formatRupiah(grandTotal)}</strong>
+      </td>
 
-      </tr>
+    </tr>
 
-    </tbody>
+  </tbody>
 
-  </table>
+</table>
 `
 }
 
-async function renderSupplierDailySummary(data) {
+async function renderSupplierDailySummary(reportData) {
   const container = document.getElementById('supplierDailySummary')
 
   if (!container) {
     return
   }
 
-  const groupedByDate = {}
-
-  data.forEach((item) => {
-    const date = item.transaction_date
-
-    if (!groupedByDate[date]) {
-      groupedByDate[date] = []
-    }
-
-    groupedByDate[date].push(item)
-  })
+  const groupedByDate = reportData.daily
 
   const sortedDates = Object.keys(groupedByDate).sort()
 
@@ -1001,73 +1011,9 @@ async function renderSupplierDailySummary(data) {
   let html = ''
 
   sortedDates.forEach((date) => {
-    const items = groupedByDate[date]
+    const grouped = groupedByDate[date]
 
-    const grouped = {}
-
-    items.forEach((item) => {
-      const kitchen = item.kitchens?.name || 'Tidak diketahui'
-
-      const supplier = item.suppliers?.name || '-'
-
-      if (!grouped[kitchen]) {
-        grouped[kitchen] = {
-          Arutala: 0,
-          Sukalarang: 0,
-          Aris: 0,
-          Babinsa: 0,
-          Gas: 0,
-          Total: 0
-        }
-      }
-
-      if (item.flow_type === 'expense') {
-        if (supplier.includes('Arutala')) {
-          grouped[kitchen].Arutala += Number(item.amount)
-        }
-
-        if (supplier.includes('Sukalarang')) {
-          grouped[kitchen].Sukalarang += Number(item.amount)
-        }
-
-        if (supplier.includes('Aris')) {
-          grouped[kitchen].Aris += Number(item.amount)
-        }
-
-        if (supplier.includes('Babinsa')) {
-          grouped[kitchen].Babinsa += Number(item.amount)
-        }
-
-        grouped[kitchen].Total += Number(item.amount)
-      }
-
-      if (item.flow_type === 'neutral') {
-        grouped[kitchen].Gas += Number(item.amount)
-      }
-    })
-
-    const totals = {
-      Arutala: 0,
-      Sukalarang: 0,
-      Aris: 0,
-      Babinsa: 0,
-      Gas: 0,
-      Total: 0
-    }
-
-    Object.values(grouped).forEach((item) => {
-      totals.Arutala += item.Arutala
-
-      totals.Sukalarang += item.Sukalarang
-
-      totals.Aris += item.Aris
-
-      totals.Babinsa += item.Babinsa
-
-      totals.Gas += item.Gas
-
-      totals.Total += item.Total
-    })
+    const totals = reportData.dailyTotals[date]
 
     let rows = ''
 
@@ -1119,13 +1065,7 @@ async function renderSupplierDailySummary(data) {
             <span>
 
               Detail Pengeluaran —
-              ${new Date(date)
-                .toLocaleDateString('id-ID', {
-                  day: '2-digit',
-                  month: '2-digit',
-                  year: 'numeric'
-                })
-                .replace(/\//g, '-')}
+${formatDateID(date)}
 
             </span>
 
@@ -1235,25 +1175,19 @@ async function renderSupplierDailySummary(data) {
 
   container.innerHTML = html
 
-  document.querySelectorAll('.daily-summary-toggle').forEach((button) => {
-    button.addEventListener(
-      'click',
+  container.onclick = (event) => {
+    const button = event.target.closest('.daily-summary-toggle')
 
-      () => {
-        const content = button.nextElementSibling
+    if (!button) return
 
-        const arrow = button.querySelector('.daily-arrow')
+    const content = button.nextElementSibling
 
-        content.classList.toggle('open')
+    const arrow = button.querySelector('.daily-arrow')
 
-        if (content.classList.contains('open')) {
-          arrow.textContent = '▼'
-        } else {
-          arrow.textContent = '▶'
-        }
-      }
-    )
-  })
+    content.classList.toggle('open')
+
+    arrow.textContent = content.classList.contains('open') ? '▼' : '▶'
+  }
 }
 
 async function loadDailyStatus() {
@@ -1270,30 +1204,31 @@ async function loadDailyStatus() {
   const selectedDate = filterDate?.value || today
 
   if (dailyStatusDate) {
-    dailyStatusDate.textContent = new Date(selectedDate)
-      .toLocaleDateString('id-ID', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-      })
-      .replace(/\//g, '-')
+    dailyStatusDate.textContent = formatDateID(selectedDate)
   }
 
-  const { data: kitchens } = await supabaseClient
-    .from('kitchens')
-    .select('id,name')
-    .eq('is_active', true)
-    .order('name')
+  const [{ data: kitchens }, { data: transactions }] = await Promise.all([
+    supabaseClient
+      .from('kitchens')
+      .select('id,name')
+      .eq('is_active', true)
+      .order('name'),
 
-  const { data: transactions } = await supabaseClient
-    .from('transactions')
-    .select(
-      `
-        kitchen_id,
-        flow_type
-      `
-    )
-    .eq('transaction_date', selectedDate)
+    supabaseClient
+      .from('transactions')
+      .select('kitchen_id,flow_type')
+      .eq('transaction_date', selectedDate)
+  ])
+
+  const transactionMap = new Map()
+
+  transactions.forEach((item) => {
+    if (!transactionMap.has(item.kitchen_id)) {
+      transactionMap.set(item.kitchen_id, [])
+    }
+
+    transactionMap.get(item.kitchen_id).push(item)
+  })
 
   if (!kitchens || !transactions) {
     return
@@ -1308,23 +1243,23 @@ async function loadDailyStatus() {
   const statusRows = []
 
   kitchens.forEach((kitchen) => {
-    const kitchenTransactions = transactions.filter(
-      (item) => item.kitchen_id === kitchen.id
-    )
-
-    const hasIncome = kitchenTransactions.some(
-      (item) => item.flow_type === 'income'
-    )
-
-    const hasExpense = kitchenTransactions.some(
-      (item) => item.flow_type === 'expense'
-    )
-
-    const hasGas = kitchenTransactions.some(
-      (item) => item.flow_type === 'neutral'
-    )
+    const kitchenTransactions = transactionMap.get(kitchen.id) ?? []
 
     const needsGas = !['Sukaraja', 'Cihaur'].includes(kitchen.name)
+
+    let hasIncome = false
+    let hasExpense = false
+    let hasGas = false
+
+    for (const item of kitchenTransactions) {
+      if (item.flow_type === 'income') hasIncome = true
+      else if (item.flow_type === 'expense') hasExpense = true
+      else if (item.flow_type === 'neutral') hasGas = true
+
+      if (hasIncome && hasExpense && (needsGas ? hasGas : true)) {
+        break
+      }
+    }
 
     let completed = 0
     let required = needsGas ? 3 : 2

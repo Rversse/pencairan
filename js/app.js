@@ -51,10 +51,12 @@ async function startApp() {
       reportTab?.classList.remove('active')
       disbursementTab?.classList.remove('active')
 
-      await loadTransactions()
-      await loadDashboard()
-      await loadDailyStatus()
-      await loadSupplierReport()
+      await Promise.all([
+        loadTransactions(),
+        loadDashboard(),
+        loadDailyStatus(),
+        loadSupplierReport()
+      ])
     }
 
     toggleFields()

@@ -179,8 +179,6 @@ async function toggleFields() {
 }
 
 function resetFormState() {
-  console.trace('resetFormState')
-
   const currentKitchen = kitchenSelect.value
 
   const currentFlow = flowType.value

@@ -244,7 +244,7 @@ async function saveKitchenMapping() {
 
   showToast('Mapping berhasil disimpan.')
 
-  await loadSupplierMaster()
+  await loadSupplierMaster(true)
 
   openAccountManager(currentSupplierId)
 }
@@ -337,7 +337,12 @@ function openAccountModal(id) {
   resetModalScroll(accountModal)
 }
 
-async function loadSupplierMaster() {
+async function loadSupplierMaster(forceReload = false) {
+  if (supplierMaster.length && !forceReload) {
+    renderSupplierMaster()
+    return
+  }
+
   const { data, error } = await supabaseClient
     .from('income_suppliers')
     .select(
@@ -806,7 +811,7 @@ async function deleteSupplier() {
 
   hideSupplierModal()
 
-  await loadSupplierMaster()
+  await loadSupplierMaster(true)
 
   showToast('Supplier berhasil dihapus.')
 }
@@ -859,7 +864,7 @@ async function updateSupplier() {
 
   hideSupplierModal()
 
-  await loadSupplierMaster()
+  await loadSupplierMaster(true)
 
   showToast('Supplier berhasil diperbarui.')
 }
@@ -891,7 +896,7 @@ async function insertSupplier() {
 
   hideSupplierModal()
 
-  await loadSupplierMaster()
+  await loadSupplierMaster(true)
 
   showToast('Supplier berhasil ditambahkan.')
 }
@@ -967,7 +972,7 @@ async function saveAccount() {
     return
   }
 
-  await loadSupplierMaster()
+  await loadSupplierMaster(true)
 
   openAccountManager(currentSupplierId)
 
@@ -1057,7 +1062,7 @@ async function deleteAccount(accountId) {
     return
   }
 
-  await loadSupplierMaster()
+  await loadSupplierMaster(true)
 
   openAccountManager(currentSupplierId)
 

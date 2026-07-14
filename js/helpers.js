@@ -1,17 +1,35 @@
 function formatRupiah(number) {
   const value = Number(number)
 
-  if (!value) {
+  if (Number.isNaN(value)) {
     return '-'
   }
 
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
-
     currency: 'IDR',
-
     maximumFractionDigits: 0
   }).format(value)
+}
+
+function formatDateID(date) {
+  return new Date(date)
+    .toLocaleDateString('id-ID', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+    .replace(/\//g, '-')
+}
+
+function formatTimeID(date) {
+  return new Date(date)
+    .toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Asia/Jakarta'
+    })
+    .replace(/\./g, ':')
 }
 
 function formatNumber(value) {

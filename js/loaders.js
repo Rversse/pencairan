@@ -1,12 +1,64 @@
+let kitchenOptionsCache = null
+
+let supplierOptionsCache = null
+
+let accountRulesCache = []
+
+let supplierRulesCache = []
+
 async function init() {
   await loadKitchens()
 
   await loadSuppliers()
 
+  await preloadMappings()
+
   await loadAccountsFiltered('pemasukan')
 }
 
+async function preloadMappings() {
+  const [accountsResult, suppliersResult] = await Promise.all([
+    supabaseClient.from('kitchen_account_rules').select(`
+        kitchen_id,
+        flow_type,
+        account_id,
+        accounts (
+          id,
+          name,
+          bank,
+          is_active,
+          income_suppliers!accounts_supplier_id_fkey (
+            owner_name
+          )
+        )
+      `),
+
+    supabaseClient.from('kitchen_supplier_rules').select(`
+        kitchen_id,
+        supplier_id,
+        suppliers (
+          id,
+          name,
+          is_active
+        )
+      `)
+  ])
+
+  if (!accountsResult.error) {
+    accountRulesCache = accountsResult.data
+  }
+
+  if (!suppliersResult.error) {
+    supplierRulesCache = suppliersResult.data
+  }
+}
+
 async function loadKitchens() {
+  if (kitchenOptionsCache) {
+    renderKitchenOptions(kitchenOptionsCache)
+    return
+  }
+
   const { data, error } = await supabaseClient
     .from('kitchens')
     .select('*')
@@ -19,6 +71,12 @@ async function loadKitchens() {
     return
   }
 
+  kitchenOptionsCache = data
+
+  renderKitchenOptions(data)
+}
+
+function renderKitchenOptions(data) {
   kitchenSelect.innerHTML = `
     <option
       value=""
@@ -28,13 +86,13 @@ async function loadKitchens() {
     >
       Pilih Dapur
     </option>
-    `
+  `
 
   filterKitchen.innerHTML = `
     <option value="">
       Semua Dapur
     </option>
-    `
+  `
 
   data.forEach((kitchen) => {
     filterKitchen.innerHTML += `
@@ -52,6 +110,11 @@ async function loadKitchens() {
 }
 
 async function loadSuppliers() {
+  if (supplierOptionsCache) {
+    renderSupplierOptions(supplierOptionsCache)
+    return
+  }
+
   const { data, error } = await supabaseClient
     .from('suppliers')
     .select('*')
@@ -64,11 +127,17 @@ async function loadSuppliers() {
     return
   }
 
+  supplierOptionsCache = data
+
+  renderSupplierOptions(data)
+}
+
+function renderSupplierOptions(data) {
   supplierSelect.innerHTML = `
     <option value="">
       Pilih Supplier
     </option>
-    `
+  `
 
   data.forEach((supplier) => {
     supplierSelect.innerHTML += `
@@ -95,34 +164,9 @@ async function loadAccountsFiltered(flow) {
 
   const dbFlow = flowMap[flow]
 
-  const { data, error } = await supabaseClient
-    .from('kitchen_account_rules')
-    .select(
-      `
-  account_id,
-  accounts (
-    id,
-    name,
-    bank,
-    is_active,
-    income_suppliers!accounts_supplier_id_fkey (
-      owner_name
-    )
-  )
-`
-    )
-    .eq('kitchen_id', kitchenId)
-    .eq('flow_type', dbFlow)
-    .order('name', {
-      foreignTable: 'accounts',
-      ascending: true
-    })
-
-  if (error) {
-    console.error(error)
-
-    return
-  }
+  const data = accountRulesCache.filter((item) => {
+    return item.kitchen_id === kitchenId && item.flow_type === dbFlow
+  })
 
   const uniqueAccounts = [
     ...new Map(
@@ -189,29 +233,9 @@ async function loadSuppliersFiltered() {
     return
   }
 
-  const { data, error } = await supabaseClient
-    .from('kitchen_supplier_rules')
-    .select(
-      `
-      supplier_id,
-suppliers (
-  id,
-  name,
-  is_active
-)
-    `
-    )
-    .eq('kitchen_id', kitchenId)
-    .order('name', {
-      foreignTable: 'suppliers',
-      ascending: true
-    })
-
-  if (error) {
-    console.error(error)
-
-    return
-  }
+  const data = supplierRulesCache.filter((item) => {
+    return item.kitchen_id === kitchenId
+  })
 
   const uniqueSuppliers = [
     ...new Map(

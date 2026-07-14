@@ -44,7 +44,12 @@ kitchenMasterTab?.addEventListener('click', async (e) => {
 
 let kitchenMaster = []
 
-async function loadKitchenMaster() {
+async function loadKitchenMaster(forceReload = false) {
+  if (kitchenMaster.length && !forceReload) {
+    renderKitchenMaster()
+    return
+  }
+
   const { data, error } = await supabaseClient
     .from('kitchens')
     .select('*')
@@ -88,11 +93,11 @@ function renderKitchenMaster() {
 </td>
 
 <td>
-  ${kitchen.pic ?? '-'}
+  ${kitchen.foundation ?? '-'}
 </td>
 
 <td>
-  ${kitchen.foundation ?? '-'}
+  ${kitchen.pic ?? '-'}
 </td>
 
 <td>
@@ -138,8 +143,8 @@ ${
 <tr>
   <th>DAPUR</th>
   <th>TOTAL PM</th>
-  <th>PIC</th>
   <th>YAYASAN</th>
+  <th>PERWAKILAN YAYASAN</th>
   <th>ALAMAT</th>
   <th>STATUS</th>
 
@@ -269,7 +274,7 @@ async function insertKitchen() {
 
   closeKitchenManager()
 
-  await loadKitchenMaster()
+  await loadKitchenMaster(true)
 }
 
 async function updateKitchen() {
@@ -308,7 +313,7 @@ async function updateKitchen() {
 
   closeKitchenManager()
 
-  await loadKitchenMaster()
+  await loadKitchenMaster(true)
 }
 
 saveKitchenButton.addEventListener('click', saveKitchen)

@@ -48,6 +48,8 @@ async function loadTransactions(showLoading = true) {
 
   transactionsContainer.innerHTML = ''
 
+  let html = ''
+
   if (!data.length) {
     transactionsContainer.innerHTML = `
 <div class="empty-state">
@@ -96,7 +98,8 @@ async function loadTransactions(showLoading = true) {
 
     const canManage = currentUser.role === 'admin' && !isLocked
 
-    transactionsContainer.innerHTML += `
+    html += `
+
   <div class="transaction-card">
 
     <div class="transaction-layout">
@@ -178,6 +181,9 @@ async function loadTransactions(showLoading = true) {
   </div>
 `
   })
+
+  transactionsContainer.innerHTML = html
+
   lucide.createIcons()
 
   document.querySelectorAll('.editTransactionButton').forEach((button) => {
