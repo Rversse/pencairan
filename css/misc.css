@@ -38,6 +38,16 @@
   border-color: rgba(245, 158, 11, 0.15);
 }
 
+.supplier-name {
+  color: #15803d;
+  font-weight: 700;
+}
+
+.owner-name {
+  color: #1f2937;
+  font-weight: 600;
+}
+
 .viewer-badge {
   display: flex;
 

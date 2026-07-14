@@ -87,12 +87,31 @@ async function loadTransactions(showLoading = true) {
     }
 
     const target = transaction.accounts
-      ? `${transaction.accounts.name}${
-          transaction.accounts.income_suppliers?.owner_name
-            ? ` / ${transaction.accounts.income_suppliers.owner_name}`
-            : ''
-        } (${transaction.accounts.bank})`
-      : transaction.suppliers?.name || '-'
+      ? `
+      <span class="supplier-name">
+        ${transaction.accounts.name}
+      </span>
+
+      ${
+        transaction.accounts.income_suppliers?.owner_name
+          ? `
+            /
+            <span class="owner-name">
+              ${transaction.accounts.income_suppliers.owner_name}
+            </span>
+          `
+          : ''
+      }
+
+      <span class="owner-name">
+        (${transaction.accounts.bank})
+      </span>
+    `
+      : `
+      <span class="supplier-name">
+        ${transaction.suppliers?.name || '-'}
+      </span>
+    `
 
     const isLocked = isTransactionLocked(transaction.transaction_date)
 

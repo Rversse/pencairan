@@ -1290,13 +1290,13 @@ async function loadDailyStatus() {
     if (needsGas) {
       statusText = `
   B${hasIncome ? '🟢' : '🔴'}
-  K${hasExpense ? '🟢' : '🔴'}
+  S${hasExpense ? '🟢' : '🔴'}
   G${hasGas ? '🟢' : '🔴'}
 `
     } else {
       statusText = `
   B${hasIncome ? '🟢' : '🔴'}
-  K${hasExpense ? '🟢' : '🔴'}
+  S${hasExpense ? '🟢' : '🔴'}
 `
     }
 
