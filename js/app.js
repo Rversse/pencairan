@@ -37,6 +37,7 @@ async function startApp() {
       disbursementTab?.classList.remove('active')
 
       kitchenMasterTab?.classList.add('active')
+      updateActiveDropdown()
 
       await loadKitchenMaster()
     } else {

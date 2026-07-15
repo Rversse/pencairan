@@ -36,6 +36,8 @@ kitchenMasterTab?.addEventListener('click', async (e) => {
   kitchenMasterSection.style.display = 'block'
   kitchenMasterTab.classList.add('active')
 
+  updateActiveDropdown() // <-- tambahkan ini
+
   addKitchenButton.style.display =
     currentUser?.role === 'admin' ? 'inline-flex' : 'none'
 

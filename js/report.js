@@ -29,10 +29,9 @@
   // DEFAULT DATE
   // ======================
 
-  const today = new Date().toISOString().split('T')[0]
+  const today = getTodayLocal()
 
   startDate.value = today
-
   endDate.value = today
 
   startDate.addEventListener('change', () => {
