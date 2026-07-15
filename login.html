@@ -22,33 +22,42 @@
 
       <h1>Sistem Informasi Manajemen SPPG</h1>
 
-      <span class="login-label">Masuk sebagai</span>
+      <span class="login-label"> Masuk sebagai </span>
+
       <div class="account-options" role="group" aria-label="Pilih akun">
-        <button type="button" class="account-option" data-username="admin">
-          Admin
+        <button
+          type="button"
+          class="account-option selected"
+          data-username="admin"
+        >
+          Administrator
         </button>
+
         <button type="button" class="account-option" data-username="guest">
           Guest
         </button>
       </div>
 
-      <label class="login-label" for="pinInput">PIN</label>
-      <div class="pin-wrapper">
-        <input
-          type="password"
-          id="pinInput"
-          inputmode="numeric"
-          autocomplete="off"
-          autofocus
-        />
+      <div id="pinSection">
+        <label class="login-label" for="pinInput"> PIN </label>
 
-        <div class="pin-dots">
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
-          <span class="dot"></span>
+        <div class="pin-wrapper">
+          <input
+            type="password"
+            id="pinInput"
+            inputmode="numeric"
+            autocomplete="off"
+            autofocus
+          />
+
+          <div class="pin-dots">
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+          </div>
         </div>
       </div>
 

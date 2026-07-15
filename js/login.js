@@ -9,30 +9,50 @@ async function initLogin() {
   }
 
   const accountOptions = document.querySelectorAll('.account-option')
+  const pinSection = document.getElementById('pinSection')
   const pinInput = document.getElementById('pinInput')
   const dots = document.querySelectorAll('.dot')
   const errorText = document.getElementById('errorText')
   const loginCard = document.querySelector('.login-card')
 
   let isLoggingIn = false
-  let selectedUsername = ''
+  let selectedUsername = 'admin'
 
-  pinInput.disabled = true
+  accountOptions[0]?.classList.add('selected')
 
-  window.addEventListener('load', () => {
-    accountOptions[0]?.focus()
-  })
+  pinSection.style.display = ''
+  pinInput.disabled = false
+
+  setTimeout(() => pinInput.focus(), 100)
 
   accountOptions.forEach((option) => {
-    option.addEventListener('click', () => {
+    option.addEventListener('click', async () => {
+      if (isLoggingIn) return
+
       selectedUsername = option.dataset.username
 
-      accountOptions.forEach((item) => {
+      accountOptions.forEach((item) =>
         item.classList.toggle('selected', item === option)
-      })
+      )
 
       errorText.textContent = ''
+
+      if (selectedUsername === 'guest') {
+        pinSection.style.display = 'none'
+
+        pinInput.value = ''
+
+        updateDots()
+
+        await loginAsGuest()
+
+        return
+      }
+
+      pinSection.style.display = ''
+
       pinInput.disabled = false
+
       pinInput.focus()
     })
   })
@@ -47,27 +67,54 @@ async function initLogin() {
     }
   })
 
+  document.querySelector('.pin-dots')?.addEventListener('click', () => {
+    pinInput.focus()
+  })
+
   function updateDots() {
     dots.forEach((dot, index) => {
       dot.classList.toggle('active', index < pinInput.value.length)
     })
   }
 
+  async function loginAsGuest() {
+    isLoggingIn = true
+
+    try {
+      const { error } = await supabaseClient.auth.signInWithPassword({
+        email: 'viewer@internal.local',
+        password: '123456'
+      })
+
+      if (error) {
+        invalidLogin()
+        return
+      }
+
+      window.location.href = 'index.html'
+    } catch (err) {
+      console.error(err)
+      invalidLogin()
+    } finally {
+      isLoggingIn = false
+    }
+  }
+
   async function validatePin() {
-    if (isLoggingIn) return
+    if (isLoggingIn || selectedUsername !== 'admin') return
 
     isLoggingIn = true
 
     errorText.textContent = ''
 
-    const username = selectedUsername
-    const pin = pinInput.value.trim()
-
     try {
       const { data, error } = await supabaseClient.functions.invoke(
         'login-with-username',
         {
-          body: { username, pin }
+          body: {
+            username: 'admin',
+            pin: pinInput.value.trim()
+          }
         }
       )
 
@@ -89,7 +136,6 @@ async function initLogin() {
       window.location.href = 'index.html'
     } catch (err) {
       console.error(err)
-
       invalidLogin()
     } finally {
       isLoggingIn = false
@@ -99,13 +145,16 @@ async function initLogin() {
   function invalidLogin() {
     loginCard.classList.add('shake')
 
-    errorText.textContent = 'Username atau PIN salah'
+    errorText.textContent =
+      selectedUsername === 'admin' ? 'PIN salah' : 'Login Guest gagal'
 
     pinInput.value = ''
 
     updateDots()
 
-    pinInput.focus()
+    if (selectedUsername === 'admin') {
+      pinInput.focus()
+    }
 
     setTimeout(() => {
       loginCard.classList.remove('shake')
