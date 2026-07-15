@@ -14,8 +14,10 @@ async function startApp() {
     })
 
     resetInactivityTimer()
+
     applyRoleAccess()
     applyViewerBadge()
+
     await init()
 
     dashboardSection.style.display = 'none'
@@ -26,31 +28,34 @@ async function startApp() {
     supplierMasterSection.style.display = 'none'
     kitchenMasterSection.style.display = 'none'
 
-    if (currentUser?.role === 'viewer') {
+    const role = currentUser?.role
+
+    if (role === 'viewer') {
       kitchenMasterSection.style.display = 'block'
 
-      dashboardTab?.classList.remove('active')
-      supplierMasterTab?.classList.remove('active')
-      supplierReportTab?.classList.remove('active')
-      incomeReportTab?.classList.remove('active')
-      reportTab?.classList.remove('active')
-      disbursementTab?.classList.remove('active')
+      resetActiveTabs()
 
-      kitchenMasterTab?.classList.add('active')
+      kitchenMasterTab.classList.add('active')
+
       updateActiveDropdown()
 
       await loadKitchenMaster()
+    } else if (role === 'operator') {
+      incomeSection.style.display = 'block'
+
+      resetActiveTabs()
+
+      incomeReportTab.classList.add('active')
+
+      updateActiveDropdown()
+
+      await loadIncomeReport()
     } else {
       dashboardSection.style.display = 'block'
 
-      transactionFab.style.display = 'flex'
+      resetActiveTabs()
 
-      dashboardTab?.classList.add('active')
-      supplierMasterTab?.classList.remove('active')
-      supplierReportTab?.classList.remove('active')
-      incomeReportTab?.classList.remove('active')
-      reportTab?.classList.remove('active')
-      disbursementTab?.classList.remove('active')
+      dashboardTab.classList.add('active')
 
       await Promise.all([
         loadTransactions(),
@@ -61,9 +66,11 @@ async function startApp() {
     }
 
     toggleFields()
+
     lucide.createIcons()
   } catch (err) {
     console.error('startApp gagal:', err)
+
     alert('Terjadi kesalahan saat memuat aplikasi. Coba refresh halaman.')
   } finally {
     document.body.style.visibility = 'visible'
@@ -71,34 +78,64 @@ async function startApp() {
 }
 
 function applyRoleAccess() {
-  const isViewer = window.currentUser?.role === 'viewer'
+  const role = window.currentUser?.role
+
+  const isAdmin = role === 'admin'
+  const isOperator = role === 'operator'
+  const isViewer = role === 'viewer'
 
   document.querySelectorAll('[data-role]').forEach((element) => {
-    const role = element.dataset.role
+    const targetRole = element.dataset.role
 
-    const visible =
-      role === 'both' ||
-      (role === 'admin' && !isViewer) ||
-      (role === 'viewer' && isViewer)
+    let visible = false
+
+    switch (targetRole) {
+      case 'admin':
+        visible = isAdmin
+        break
+
+      case 'operator':
+        visible = isOperator
+        break
+
+      case 'viewer':
+        visible = isViewer
+        break
+
+      case 'admin-operator':
+        visible = isAdmin || isOperator
+        break
+
+      case 'operator-viewer':
+        visible = isOperator || isViewer
+        break
+
+      case 'all':
+        visible = true
+        break
+    }
 
     element.style.display = visible ? '' : 'none'
   })
 
+  // Dashboard
   document
     .querySelector('.dashboard')
-    ?.style.setProperty('display', isViewer ? 'none' : '')
+    ?.style.setProperty('display', isAdmin ? '' : 'none')
 
+  // Input transaksi operasional (FAB)
   document
     .getElementById('adminTransactionsSection')
-    ?.style.setProperty('display', isViewer ? 'none' : '')
+    ?.style.setProperty('display', isAdmin ? '' : 'none')
 
   document
     .querySelector('.fab-button')
-    ?.style.setProperty('display', isViewer ? 'none' : '')
+    ?.style.setProperty('display', isAdmin ? '' : 'none')
 
-  addSupplierButton?.style.setProperty('display', isViewer ? 'none' : '')
+  // CRUD Master
+  addSupplierButton?.style.setProperty('display', isAdmin ? '' : 'none')
 
-  addKitchenButton?.style.setProperty('display', isViewer ? 'none' : '')
+  addKitchenButton?.style.setProperty('display', isAdmin ? '' : 'none')
 }
 
 document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
@@ -110,14 +147,31 @@ document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
 })
 
 function applyViewerBadge() {
-  viewerBadge.innerHTML =
-    window.currentUser?.role === 'viewer'
-      ? `
+  const role = window.currentUser?.role
+
+  let label = ''
+
+  switch (role) {
+    case 'admin':
+      label = 'Administrator'
+      break
+
+    case 'operator':
+      label = 'Operator'
+      break
+
+    case 'viewer':
+      label = 'Guest'
+      break
+  }
+
+  viewerBadge.innerHTML = label
+    ? `
       <div class="viewer-badge">
-        Guest Mode
+        ${label}
       </div>
     `
-      : ''
+    : ''
 }
 
 startApp()

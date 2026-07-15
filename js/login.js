@@ -1,4 +1,4 @@
-const PIN_LENGTH = 6
+const PIN_LENGTH = 8
 
 async function initLogin() {
   const { data } = await supabaseClient.auth.getSession()
@@ -19,11 +19,12 @@ async function initLogin() {
   let selectedUsername = 'admin'
 
   accountOptions[0]?.classList.add('selected')
-
   pinSection.style.display = ''
   pinInput.disabled = false
 
-  setTimeout(() => pinInput.focus(), 100)
+  requestAnimationFrame(() => {
+    pinInput.focus()
+  })
 
   accountOptions.forEach((option) => {
     option.addEventListener('click', async () => {
@@ -39,20 +40,14 @@ async function initLogin() {
 
       if (selectedUsername === 'guest') {
         pinSection.style.display = 'none'
-
         pinInput.value = ''
-
         updateDots()
-
         await loginAsGuest()
-
         return
       }
 
       pinSection.style.display = ''
-
       pinInput.disabled = false
-
       pinInput.focus()
     })
   })
@@ -80,31 +75,6 @@ async function initLogin() {
   async function loginAsGuest() {
     isLoggingIn = true
 
-    try {
-      const { error } = await supabaseClient.auth.signInWithPassword({
-        email: 'viewer@internal.local',
-        password: '123456'
-      })
-
-      if (error) {
-        invalidLogin()
-        return
-      }
-
-      window.location.href = 'index.html'
-    } catch (err) {
-      console.error(err)
-      invalidLogin()
-    } finally {
-      isLoggingIn = false
-    }
-  }
-
-  async function validatePin() {
-    if (isLoggingIn || selectedUsername !== 'admin') return
-
-    isLoggingIn = true
-
     errorText.textContent = ''
 
     try {
@@ -112,7 +82,48 @@ async function initLogin() {
         'login-with-username',
         {
           body: {
-            username: 'admin',
+            username: 'guest'
+          }
+        }
+      )
+
+      if (error || !data?.access_token || !data?.refresh_token) {
+        invalidLogin()
+        return
+      }
+
+      const { error: sessionError } = await supabaseClient.auth.setSession({
+        access_token: data.access_token,
+        refresh_token: data.refresh_token
+      })
+
+      if (sessionError) {
+        invalidLogin()
+        return
+      }
+
+      window.location.href = 'index.html'
+    } catch (err) {
+      console.error(err)
+
+      invalidLogin()
+    } finally {
+      isLoggingIn = false
+    }
+  }
+
+  async function validatePin() {
+    if (isLoggingIn || !['admin', 'operator'].includes(selectedUsername)) return
+
+    isLoggingIn = true
+    errorText.textContent = ''
+
+    try {
+      const { data, error } = await supabaseClient.functions.invoke(
+        'login-with-username',
+        {
+          body: {
+            username: selectedUsername,
             pin: pinInput.value.trim()
           }
         }
@@ -146,10 +157,11 @@ async function initLogin() {
     loginCard.classList.add('shake')
 
     errorText.textContent =
-      selectedUsername === 'admin' ? 'PIN salah' : 'Login Guest gagal'
+      selectedUsername === 'guest'
+        ? 'Login Guest gagal'
+        : 'Username atau PIN salah'
 
     pinInput.value = ''
-
     updateDots()
 
     if (selectedUsername === 'admin') {

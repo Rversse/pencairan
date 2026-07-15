@@ -77,12 +77,11 @@ body {
 
 .login-logo {
   display: flex;
-
   align-items: center;
   justify-content: center;
 
-  width: 240px;
-  height: 140px;
+  width: 300px;
+  height: 180px;
 
   margin: 0 auto 12px;
 }
@@ -129,7 +128,7 @@ p {
 .account-options {
   display: grid;
 
-  grid-template-columns: repeat(2, 1fr);
+  grid-template-columns: repeat(3, 1fr);
 
   gap: 10px;
 
@@ -179,7 +178,7 @@ p {
 .pin-dots {
   display: flex;
   justify-content: center;
-  gap: 14px;
+  gap: 10px;
   cursor: text;
 }
 
@@ -235,8 +234,9 @@ p {
     padding: 36px 24px;
   }
 
-  h1 {
-    font-size: 26px;
+  .login-logo {
+    width: 260px;
+    height: 150px;
   }
 
   .dot {
