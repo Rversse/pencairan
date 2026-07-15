@@ -30,17 +30,7 @@ async function startApp() {
 
     const role = currentUser?.role
 
-    if (role === 'viewer') {
-      kitchenMasterSection.style.display = 'block'
-
-      resetActiveTabs()
-
-      kitchenMasterTab.classList.add('active')
-
-      updateActiveDropdown()
-
-      await loadKitchenMaster()
-    } else if (role === 'operator') {
+    if (role === 'viewer' || role === 'operator') {
       incomeSection.style.display = 'block'
 
       resetActiveTabs()
