@@ -563,6 +563,38 @@
   opacity: 1;
 }
 
+.history-card {
+  padding: 18px;
+  margin-bottom: 16px;
+
+  border: 1px solid var(--border);
+  border-radius: 16px;
+
+  background: var(--card);
+}
+
+.history-header {
+  margin-bottom: 14px;
+
+  font-size: 15px;
+}
+
+.history-table {
+  width: 100%;
+
+  border-collapse: collapse;
+}
+
+.history-table td {
+  padding: 6px 0;
+}
+
+.history-table td:first-child {
+  width: 120px;
+
+  color: var(--navy-soft);
+}
+
 /* ==========================
    ANIMATION
 ========================== */
@@ -578,5 +610,26 @@
     opacity: 1;
 
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    height: 100%;
+    border-radius: 0;
+  }
+
+  .modal-content form {
+    grid-template-columns: 1fr;
+    padding: 18px;
+  }
+
+  .modal-header {
+    padding: 18px;
   }
 }

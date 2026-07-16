@@ -23,3 +23,9 @@
 
   border-radius: 14px;
 }
+
+@media (max-width: 768px) {
+  .filters {
+    position: static;
+  }
+}

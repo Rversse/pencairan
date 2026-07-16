@@ -1,6 +1,11 @@
 // ============================================================
 // DOM REFERENCES
 // ============================================================
+let currentBankIncomes = []
+
+let currentBankExpenses = []
+
+const applyBankFilter = document.getElementById('applyBankFilter')
 
 const dashboardSection = document.getElementById('dashboardSection')
 const supplierSection = document.getElementById('supplierSection')
@@ -19,6 +24,41 @@ const supplierReportTab = document.getElementById('supplierReportTab')
 const incomeReportTab = document.getElementById('incomeReportTab')
 const reportTab = document.getElementById('reportTab')
 const disbursementTab = document.getElementById('disbursementTab')
+const bankTransactionTab = document.getElementById('bankTransactionTab')
+const bankTransactionSection = document.getElementById('bankTransactionSection')
+
+const bankHistoryModal = document.getElementById('bankHistoryModal')
+
+const bankHistoryTitle = document.getElementById('bankHistoryTitle')
+
+const bankHistoryContent = document.getElementById('bankHistoryContent')
+
+const closeBankHistory = document.getElementById('closeBankHistory')
+
+const bankAccountSelect = document.getElementById('bankAccountSelect')
+
+const bankStartDate = document.getElementById('bankStartDate')
+const bankEndDate = document.getElementById('bankEndDate')
+
+const addBankTransactionButton = document.getElementById(
+  'addBankTransactionButton'
+)
+
+const bankTransactionModal = document.getElementById('bankTransactionModal')
+
+const bankTransactionForm = document.getElementById('bankTransactionForm')
+
+const bankTransactionDate = document.getElementById('bankTransactionDate')
+
+const destinationName = document.getElementById('destinationName')
+
+const transferAmount = document.getElementById('transferAmount')
+
+const adminFee = document.getElementById('adminFee')
+
+const paymentFor = document.getElementById('paymentFor')
+
+const cancelBankTransaction = document.getElementById('cancelBankTransaction')
 
 const applySupplierFilter = document.getElementById('applySupplierFilter')
 const applyIncomeFilter = document.getElementById('applyIncomeFilter')
@@ -153,12 +193,21 @@ function initializeDates() {
 
 function hideAllSections() {
   dashboardSection.style.display = 'none'
+
   supplierSection.style.display = 'none'
+
   supplierMasterSection.style.display = 'none'
+
   reportSection.style.display = 'none'
+
   kitchenMasterSection.style.display = 'none'
+
   disbursementSection.style.display = 'none'
+
   incomeSection.style.display = 'none'
+
+  bankTransactionSection.style.display = 'none'
+
   transactionFab.style.display = 'none'
 }
 
@@ -1564,9 +1613,692 @@ async function loadDailyStatus() {
   dailyStatusList.innerHTML = html
 }
 
+let bankAccounts = []
+
+let editingBankTransactionId = null
+
+async function loadBankTransactions() {
+  if (!bankStartDate.value) {
+    bankStartDate.value = getTodayLocal()
+  }
+
+  if (!bankEndDate.value) {
+    bankEndDate.value = bankStartDate.value
+  }
+
+  const [accountsResult, incomeResult, expenseResult] = await Promise.all([
+    supabaseClient
+      .from('accounts')
+      .select(
+        `
+        id,
+        bank,
+        account_number,
+        supplier_id,
+        income_suppliers (
+          id,
+          owner_name
+        )
+      `
+      )
+      .eq('is_active', true),
+
+    supabaseClient
+      .from('transactions')
+      .select('account_id, amount')
+      .eq('flow_type', 'income')
+      .gte('transaction_date', bankStartDate.value)
+      .lte('transaction_date', bankEndDate.value),
+
+    supabaseClient
+      .from('bank_transactions')
+      .select(
+        `
+        id,
+        account_id,
+        transfer_amount,
+        admin_fee
+      `
+      )
+      .gte('transaction_date', bankStartDate.value)
+      .lte('transaction_date', bankEndDate.value)
+  ])
+
+  if (accountsResult.error) {
+    console.error(accountsResult.error)
+    return
+  }
+
+  if (incomeResult.error) {
+    console.error(incomeResult.error)
+    return
+  }
+
+  if (expenseResult.error) {
+    console.error(expenseResult.error)
+    return
+  }
+
+  bankAccounts = accountsResult.data ?? []
+
+  currentBankIncomes = incomeResult.data ?? []
+  currentBankExpenses = expenseResult.data ?? []
+
+  populateBankAccountDropdown()
+
+  renderBankTransactionSummary(
+    bankAccounts,
+    incomeResult.data ?? [],
+    expenseResult.data ?? []
+  )
+}
+
+function populateBankAccountDropdown() {
+  bankAccountSelect.innerHTML = `
+    <option value="">
+      Pilih Pengirim
+    </option>
+  `
+
+  bankAccounts.forEach((account) => {
+    if (
+      !account.income_suppliers?.owner_name ||
+      !account.account_number ||
+      account.account_number === '-'
+    ) {
+      return
+    }
+
+    const income = currentBankIncomes
+      .filter((item) => item.account_id === account.id)
+      .reduce((t, item) => t + Number(item.amount), 0)
+
+    const expense = currentBankExpenses
+      .filter((item) => item.account_id === account.id)
+      .reduce(
+        (t, item) => t + Number(item.transfer_amount) + Number(item.admin_fee),
+        0
+      )
+
+    const saldo = income - expense
+
+    bankAccountSelect.insertAdjacentHTML(
+      'beforeend',
+      `
+      <option value="${account.id}">
+        ${account.income_suppliers.owner_name}
+        • ${account.bank}
+        • ${getLastFiveDigits(account.account_number)}
+        • ${formatRupiah(saldo)}
+      </option>
+    `
+    )
+  })
+}
+
+function openBankTransactionModal() {
+  editingBankTransactionId = null
+
+  bankTransactionForm.reset()
+
+  bankTransactionDate.value = getTodayLocal()
+
+  populateBankAccountDropdown()
+
+  bankAccountSelect.selectedIndex = 0
+
+  transferAmount.value = ''
+
+  adminFee.value = ''
+
+  destinationName.value = ''
+
+  paymentFor.value = ''
+
+  bankTransactionModal.querySelector('button[type="submit"]').textContent =
+    'Simpan Transaksi'
+
+  bankTransactionModal.classList.add('show')
+
+  requestAnimationFrame(() => {
+    bankAccountSelect.focus()
+  })
+}
+
+function openEditBankTransaction(transaction) {
+  editingBankTransactionId = transaction.id
+
+  populateBankAccountDropdown()
+
+  bankTransactionDate.value = transaction.transaction_date
+
+  bankAccountSelect.value = transaction.account_id
+
+  destinationName.value = transaction.recipient_name
+
+  transferAmount.value = formatNumber(String(transaction.transfer_amount))
+
+  adminFee.value =
+    Number(transaction.admin_fee) === 0
+      ? ''
+      : formatNumber(String(transaction.admin_fee))
+
+  paymentFor.value = transaction.payment_for ?? ''
+
+  bankTransactionModal.querySelector('button[type="submit"]').textContent =
+    'Update Transaksi'
+
+  bankHistoryModal.classList.remove('show')
+
+  bankTransactionModal.classList.add('show')
+}
+
+function closeBankTransactionModal() {
+  bankTransactionForm.reset()
+
+  bankTransactionModal.classList.remove('show')
+}
+
+async function openBankHistory(accountId) {
+  bankHistoryModal.classList.add('show')
+
+  bankHistoryTitle.textContent = 'Memuat...'
+
+  bankHistoryContent.innerHTML = `
+    <div style="padding:32px;text-align:center">
+      Memuat history transaksi...
+    </div>
+  `
+
+  const [transactionResult, incomeResult] = await Promise.all([
+    supabaseClient
+      .from('bank_transactions')
+      .select(
+        `
+        *,
+        profiles(full_name),
+        accounts(
+          bank,
+          account_number,
+          income_suppliers(owner_name)
+        )
+      `
+      )
+      .eq('account_id', accountId)
+      .order('transaction_date', { ascending: true })
+      .order('created_at', { ascending: true }),
+
+    supabaseClient
+      .from('transactions')
+      .select('amount')
+      .eq('flow_type', 'income')
+      .eq('account_id', accountId)
+  ])
+
+  if (transactionResult.error) {
+    console.error(transactionResult.error)
+
+    bankHistoryTitle.textContent = 'History'
+
+    bankHistoryContent.innerHTML = `
+      <div style="padding:32px;text-align:center">
+        Gagal memuat history.
+      </div>
+    `
+
+    return
+  }
+
+  const transactions = transactionResult.data ?? []
+
+  if (!transactions.length) {
+    bankHistoryTitle.textContent = 'History'
+
+    bankHistoryContent.innerHTML = `
+      <div style="padding:32px;text-align:center">
+        Belum ada transaksi.
+      </div>
+    `
+
+    return
+  }
+
+  const account = transactions[0].accounts
+
+  const totalIncome = (incomeResult.data ?? []).reduce(
+    (t, x) => t + Number(x.amount),
+    0
+  )
+
+  let runningBalance = totalIncome
+
+  const cards = []
+
+  transactions.forEach((item) => {
+    const totalOut = Number(item.transfer_amount) + Number(item.admin_fee)
+
+    const balanceAfter = runningBalance - totalOut
+
+    cards.push(`
+  <div class="history-card">
+
+    <div class="history-date">
+      ${formatDateID(item.transaction_date)}
+    </div>
+
+    <div class="history-recipient">
+      ${item.recipient_name}
+    </div>
+
+    <div class="history-grid">
+
+      <span>Transfer</span>
+      <strong>${formatRupiah(item.transfer_amount)}</strong>
+
+      <span>Admin</span>
+      <strong>${formatRupiah(item.admin_fee)}</strong>
+
+      <span>Total Keluar</span>
+      <strong>${formatRupiah(totalOut)}</strong>
+
+      <span>Saldo Setelah</span>
+      <strong class="history-balance">
+        ${formatRupiah(balanceAfter)}
+      </strong>
+
+    </div>
+
+    ${
+      item.payment_for
+        ? `
+          <div class="history-purpose">
+            ${item.payment_for}
+          </div>
+        `
+        : ''
+    }
+
+    <div class="history-actions">
+
+      <button
+        class="secondary-button edit-bank-transaction"
+        data-id="${item.id}"
+      >
+        ✏ Edit
+      </button>
+
+      <button
+        class="danger-button delete-bank-transaction"
+        data-id="${item.id}"
+      >
+        🗑 Hapus
+      </button>
+
+    </div>
+
+  </div>
+`)
+
+    runningBalance = balanceAfter
+  })
+
+  bankHistoryTitle.innerHTML = `
+    <div class="history-account-title">
+      ${account.income_suppliers?.owner_name ?? '-'}
+    </div>
+
+    <div class="history-account-subtitle">
+      ${account.bank} • ${getLastFiveDigits(account.account_number)}
+    </div>
+  `
+
+  bankHistoryContent.innerHTML = `
+    <div class="history-summary">
+
+      <div>
+        <small>Saldo Saat Ini</small>
+
+        <h2>${formatRupiah(runningBalance)}</h2>
+      </div>
+
+    </div>
+
+    ${cards.reverse().join('')}
+  `
+
+  bankHistoryContent
+    .querySelectorAll('.edit-bank-transaction')
+    .forEach((button) => {
+      const transaction = transactions.find((t) => t.id === button.dataset.id)
+
+      button.addEventListener('click', () => {
+        openEditBankTransaction(transaction)
+      })
+    })
+
+  bankHistoryContent
+    .querySelectorAll('.delete-bank-transaction')
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        deleteBankTransaction(button.dataset.id)
+      })
+    })
+}
+
+async function deleteBankTransaction(id) {
+  if (!confirm('Hapus transaksi ini?')) return
+
+  const { error } = await supabaseClient
+    .from('bank_transactions')
+    .delete()
+    .eq('id', id)
+
+  if (error) {
+    console.error(error)
+    alert('Gagal menghapus transaksi.')
+    return
+  }
+
+  bankHistoryModal.classList.remove('show')
+
+  await loadBankTransactions()
+}
+
+async function saveBankTransaction() {
+  console.log('saveBankTransaction() terpanggil')
+
+  const transactionDate = bankTransactionDate.value
+
+  const accountId = bankAccountSelect.value
+
+  const recipientName = destinationName.value.trim()
+
+  const transfer = parseNumber(transferAmount.value)
+
+  const fee = parseNumber(adminFee.value)
+
+  const purpose = paymentFor.value.trim()
+
+  if (!transactionDate) {
+    alert('Tanggal wajib diisi.')
+    return
+  }
+
+  if (!accountId) {
+    alert('Pilih nama pengirim.')
+    return
+  }
+
+  if (!recipientName) {
+    alert('Nama penerima wajib diisi.')
+    return
+  }
+
+  if (transfer <= 0) {
+    alert('Nominal transfer harus lebih dari 0.')
+    return
+  }
+
+  const payload = {
+    transaction_date: transactionDate,
+    account_id: accountId,
+    recipient_name: recipientName,
+    transfer_amount: transfer,
+    admin_fee: fee,
+    payment_for: purpose,
+    created_by: window.currentUser.id
+  }
+
+  let result
+
+  if (editingBankTransactionId) {
+    result = await supabaseClient
+      .from('bank_transactions')
+      .update(payload)
+      .eq('id', editingBankTransactionId)
+  } else {
+    result = await supabaseClient.from('bank_transactions').insert(payload)
+  }
+
+  if (result.error) {
+    console.error(result.error)
+
+    alert(
+      editingBankTransactionId
+        ? 'Gagal mengubah transaksi.'
+        : 'Gagal menyimpan transaksi.'
+    )
+
+    return
+  }
+
+  editingBankTransactionId = null
+
+  closeBankTransactionModal()
+
+  await loadBankTransactions()
+}
+
+const bankTransactionTableContainer = document.getElementById(
+  'bankTransactionTableContainer'
+)
+
+function renderBankTransactionSummary(accounts, incomes, expenses) {
+  const summary = accounts
+    .filter((account) => {
+      return (
+        account.income_suppliers?.owner_name &&
+        account.bank &&
+        account.account_number &&
+        account.account_number !== '-'
+      )
+    })
+    .map((account) => {
+      const accountIncome = incomes.filter(
+        (item) => item.account_id === account.id
+      )
+
+      const accountExpense = expenses.filter(
+        (item) => item.account_id === account.id
+      )
+
+      const income = accountIncome.reduce(
+        (t, item) => t + Number(item.amount),
+        0
+      )
+
+      const expense = accountExpense.reduce(
+        (t, item) => t + Number(item.transfer_amount) + Number(item.admin_fee),
+        0
+      )
+
+      const balance = income - expense
+
+      return {
+        accountId: account.id,
+        ownerName: account.income_suppliers.owner_name,
+        rekening: `${account.bank} • ${getLastFiveDigits(
+          account.account_number
+        )}`,
+        income,
+        expense,
+        balance,
+        historyCount: accountExpense.length
+      }
+    })
+    .sort((a, b) => b.balance - a.balance)
+
+  const totalIncome = summary.reduce((t, x) => t + x.income, 0)
+
+  const totalExpense = summary.reduce((t, x) => t + x.expense, 0)
+
+  const totalBalance = summary.reduce((t, x) => t + x.balance, 0)
+
+  bankTransactionTableContainer.innerHTML = `
+    <div class="bank-summary-cards">
+
+      <div class="bank-summary-card">
+        <span>Total Masuk</span>
+        <h2>${formatRupiah(totalIncome)}</h2>
+      </div>
+
+      <div class="bank-summary-card">
+        <span>Total Keluar</span>
+        <h2>${formatRupiah(totalExpense)}</h2>
+      </div>
+
+      <div class="bank-summary-card">
+        <span>Total Saldo</span>
+        <h2>${formatRupiah(totalBalance)}</h2>
+      </div>
+
+    </div>
+
+    <table class="table">
+
+      <thead>
+
+        <tr>
+
+          <th style="width:34%">Rekening</th>
+
+          <th class="text-end">Masuk</th>
+
+          <th class="text-end">Keluar</th>
+
+          <th class="text-end">Saldo</th>
+
+          <th class="text-center" style="width:90px">Aksi</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody>
+
+      ${summary
+        .map((item) => {
+          const balanceClass =
+            item.balance > 0
+              ? 'positive'
+              : item.balance < 0
+                ? 'negative'
+                : 'zero'
+
+          return `
+            <tr class="bank-row">
+
+              <td>
+
+                <div class="bank-owner">
+                  ${item.ownerName}
+                </div>
+
+                <div class="bank-account">
+                  ${item.rekening}
+                </div>
+
+              </td>
+
+              <td class="text-end bank-income">
+                ${formatRupiah(item.income)}
+              </td>
+
+              <td class="text-end bank-expense">
+                ${formatRupiah(item.expense)}
+              </td>
+
+              <td class="text-end bank-balance ${balanceClass}">
+                ${formatRupiah(item.balance)}
+              </td>
+
+              <td class="text-center">
+
+                <button
+                  class="bank-history-button"
+                  data-account-id="${item.accountId}"
+                  title="Lihat History"
+                >
+                  📊 ${item.historyCount}
+                </button>
+
+              </td>
+
+            </tr>
+          `
+        })
+        .join('')}
+
+      </tbody>
+
+    </table>
+  `
+
+  bankTransactionTableContainer
+    .querySelectorAll('.bank-history-button')
+    .forEach((button) => {
+      button.addEventListener('click', () => {
+        openBankHistory(button.dataset.accountId)
+      })
+    })
+}
+
+function getLastFiveDigits(accountNumber) {
+  const digits = String(accountNumber ?? '').replace(/\D/g, '')
+
+  if (!digits) return 'Belum diisi'
+
+  return `•••••${digits.slice(-5)}`
+}
+
 // ============================================================
 // EVENT LISTENERS
 // ============================================================
+
+applyBankFilter?.addEventListener('click', async () => {
+  await loadBankTransactions()
+})
+
+closeBankHistory?.addEventListener('click', () => {
+  bankHistoryModal.classList.remove('show')
+})
+
+transferAmount?.addEventListener('input', (event) => {
+  event.target.value = formatNumber(event.target.value)
+})
+
+adminFee?.addEventListener('input', (event) => {
+  event.target.value = formatNumber(event.target.value)
+})
+
+function clearDefaultAdminFee() {
+  if (adminFee.value.replace(/\./g, '') === '0') {
+    adminFee.value = ''
+  }
+}
+
+adminFee?.addEventListener('focus', clearDefaultAdminFee)
+adminFee?.addEventListener('click', clearDefaultAdminFee)
+
+adminFee?.addEventListener('blur', () => {
+  if (!adminFee.value.trim()) {
+    adminFee.value = '0'
+  }
+})
+
+bankTransactionForm?.addEventListener('submit', async (event) => {
+  event.preventDefault()
+
+  await saveBankTransaction()
+})
+
+addBankTransactionButton?.addEventListener('click', () => {
+  openBankTransactionModal()
+})
+
+cancelBankTransaction?.addEventListener('click', () => {
+  closeBankTransactionModal()
+})
 
 dashboardTab?.addEventListener('click', async (event) => {
   if (currentUser?.role === 'viewer') return
@@ -1786,6 +2518,22 @@ applyIncomeFilter?.addEventListener('click', async () => {
 
 applySupplierFilter?.addEventListener('click', async () => {
   await loadSupplierReport()
+})
+
+bankTransactionTab?.addEventListener('click', async (event) => {
+  event.preventDefault()
+
+  hideAllSections()
+
+  resetActiveTabs()
+
+  bankTransactionTab.classList.add('active')
+
+  updateActiveDropdown()
+
+  bankTransactionSection.style.display = 'block'
+
+  await loadBankTransactions()
 })
 
 // ============================================================

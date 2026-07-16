@@ -253,3 +253,44 @@
 .action-button:hover {
   transform: translateY(-1px);
 }
+
+@media (max-width: 768px) {
+  .supplier-summary {
+    overflow-x: auto;
+    padding: 18px;
+  }
+
+  .supplier-summary-top {
+    margin-bottom: 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .supplier-summary-top h3 {
+    font-size: 16px;
+  }
+
+  .supplier-summary-top span {
+    font-size: 12px;
+  }
+
+  .summary-table {
+    min-width: 720px;
+  }
+
+  .summary-table tbody td:last-child {
+    font-weight: 700;
+    color: var(--navy);
+  }
+
+  .summary-table tbody td:first-child {
+    font-weight: 600;
+  }
+
+  .summary-table thead th,
+  .summary-table tbody td {
+    padding: 14px 12px;
+    font-size: 13px;
+  }
+}

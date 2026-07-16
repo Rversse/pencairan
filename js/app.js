@@ -113,19 +113,25 @@ function applyRoleAccess() {
     .querySelector('.dashboard')
     ?.style.setProperty('display', isAdmin ? '' : 'none')
 
-  // Input transaksi operasional (FAB)
+  // Input transaksi operasional Dashboard (FAB)
   document
-    .getElementById('adminTransactionsSection')
+    .querySelector('.fab-button')
     ?.style.setProperty('display', isAdmin ? '' : 'none')
 
   document
-    .querySelector('.fab-button')
+    .getElementById('adminTransactionsSection')
     ?.style.setProperty('display', isAdmin ? '' : 'none')
 
   // CRUD Master
   addSupplierButton?.style.setProperty('display', isAdmin ? '' : 'none')
 
   addKitchenButton?.style.setProperty('display', isAdmin ? '' : 'none')
+
+  // Tombol tambah Transaksi Bank
+  addBankTransactionButton?.style.setProperty(
+    'display',
+    isAdmin || isOperator ? '' : 'none'
+  )
 }
 
 document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {

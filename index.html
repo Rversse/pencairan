@@ -55,17 +55,14 @@
               Data Supplier
             </a>
 
-            <!-- Nanti Phase 4 -->
-            <!--
-        <a
-          href="#"
-          id="bankTransactionTab"
-          class="nav-link"
-          data-role="admin-operator"
-        >
-          Data Transaksi
-        </a>
-        -->
+            <a
+              href="#"
+              id="bankTransactionTab"
+              class="nav-link"
+              data-role="admin-operator"
+            >
+              Transaksi Bank
+            </a>
           </div>
         </div>
 
@@ -360,6 +357,32 @@
         <div id="supplierMasterTable"></div>
       </div>
 
+      <section id="bankTransactionSection" style="display: none">
+        <div class="page-header">
+          <h2>Transaksi Bank</h2>
+        </div>
+
+        <div class="bank-page">
+          <div class="bank-toolbar">
+            <div class="bank-filter">
+              <input type="date" id="bankStartDate" />
+
+              <span>s/d</span>
+
+              <input type="date" id="bankEndDate" />
+
+              <button id="applyBankFilter" class="primary-button">Apply</button>
+            </div>
+
+            <button id="addBankTransactionButton" class="primary-button">
+              + Tambah Transaksi
+            </button>
+          </div>
+
+          <div id="bankTransactionTableContainer"></div>
+        </div>
+      </section>
+
       <section id="reportSection" style="display: none">
         <div class="topbar">
           <div>
@@ -638,6 +661,85 @@
             </div>
           </div>
         </div>
+      </div>
+    </div>
+
+    <div id="bankTransactionModal" class="modal-overlay">
+      <div class="modal-content">
+        <h2>Tambah Transaksi Bank</h2>
+
+        <form id="bankTransactionForm">
+          <div class="bank-form-grid">
+            <div>
+              <label>Tanggal</label>
+              <input type="date" id="bankTransactionDate" />
+            </div>
+
+            <div>
+              <label>Nama Pengirim</label>
+              <select id="bankAccountSelect"></select>
+            </div>
+
+            <div class="bank-form-full">
+              <label>Nama Penerima</label>
+              <input id="destinationName" />
+            </div>
+
+            <div>
+              <label>Nominal Transfer</label>
+              <input
+                id="transferAmount"
+                inputmode="numeric"
+                autocomplete="off"
+              />
+            </div>
+
+            <div>
+              <label>Biaya Admin</label>
+              <input id="adminFee" inputmode="numeric" autocomplete="off" />
+            </div>
+
+            <div class="bank-form-full">
+              <label>Keperluan</label>
+              <textarea id="paymentFor" rows="3"></textarea>
+            </div>
+          </div>
+
+          <div class="bank-modal-footer">
+            <button
+              type="button"
+              id="cancelBankTransaction"
+              class="secondary-button"
+            >
+              Batal
+            </button>
+
+            <button type="submit" class="primary-button">
+              Simpan Transaksi
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div id="bankHistoryModal" class="modal-overlay">
+      <div class="modal-content" style="max-width: 720px">
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+          "
+        >
+          <h2 id="bankHistoryTitle">History Rekening</h2>
+
+          <button type="button" id="closeBankHistory" class="secondary-button">
+            Tutup
+          </button>
+        </div>
+
+        <div id="bankHistoryContent">Memuat...</div>
       </div>
     </div>
 
