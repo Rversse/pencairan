@@ -401,8 +401,6 @@ transactionForm.addEventListener('submit', async (event) => {
 
   submitButton.disabled = true
 
-  const originalText = submitButton.textContent
-
   submitButton.textContent = 'Menyimpan...'
 
   try {
@@ -482,7 +480,7 @@ transactionForm.addEventListener('submit', async (event) => {
     showToast('Terjadi kesalahan')
   } finally {
     submitButton.disabled = false
-    submitButton.textContent = 'Simpan'
+    submitButton.textContent = editingTransactionId ? 'Update' : 'Simpan'
   }
 })
 

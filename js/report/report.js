@@ -48,18 +48,6 @@
   // HELPERS
   // ======================
 
-  function formatRupiah(number) {
-    return `Rp. ${Number(number || 0).toLocaleString('id-ID')}`
-  }
-
-  function formatDate(date) {
-    return new Date(date).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-  }
-
   function hasTransaction(data) {
     return data.income > 0 || data.expense > 0 || data.gas > 0
   }
@@ -98,32 +86,7 @@
     return transactions
   }
 
-  async function loadKitchenOptions() {
-    const { data, error } = await supabaseClient
-      .from('kitchens')
-      .select('id,name')
-      .eq('is_active', true)
-      .order('name')
-
-    if (error) {
-      console.error(error)
-      return
-    }
-
-    let optionsHtml = ''
-
-    data.forEach((kitchen) => {
-      optionsHtml += `
-    <option value="${kitchen.id}">
-      ${kitchen.name}
-    </option>
-  `
-    })
-
-    exportKitchen.innerHTML += optionsHtml
-  }
-
-  loadKitchenOptions()
+  loadKitchenOptions(exportKitchen)
   // ======================
   // PRINT
   // ======================
@@ -466,8 +429,8 @@ ${new Date()
     const sameDate = startDate.value === endDate.value
 
     reportPeriod.textContent = sameDate
-      ? formatDate(startDate.value)
-      : `${formatDate(startDate.value)} — ${formatDate(endDate.value)}`
+      ? formatDateLong(startDate.value)
+      : `${formatDateLong(startDate.value)} — ${formatDateLong(endDate.value)}`
 
     let data = []
 
@@ -884,6 +847,205 @@ ${new Date()
     Ciranca: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA']
   }
 
+  function buildWorksheets(sheetData, detailRows, exportLayout) {
+    const worksheet = XLSX.utils.aoa_to_sheet(sheetData)
+
+    const detailWorksheet = XLSX.utils.aoa_to_sheet(detailRows)
+
+    Object.keys(worksheet).forEach((cell) => {
+      if (cell.startsWith('!')) {
+        return
+      }
+
+      const value = worksheet[cell]?.v
+
+      if (typeof value === 'number') {
+        worksheet[cell].z = '#,##0'
+      }
+    })
+
+    worksheet['!merges'] = []
+
+    worksheet['!merges'].push({
+      s: { r: 0, c: 0 },
+      e: { r: 1, c: 0 }
+    })
+
+    let currentCol = 1
+
+    Object.entries(exportLayout).forEach(([, columns]) => {
+      const startCol = currentCol
+      const endCol = currentCol + columns.length - 1
+
+      if (columns.length > 1) {
+        worksheet['!merges'].push({
+          s: {
+            r: 0,
+            c: startCol
+          },
+          e: {
+            r: 0,
+            c: endCol
+          }
+        })
+      }
+
+      currentCol = endCol + 1
+    })
+
+    worksheet['!cols'] = sheetData[0].map((_, colIndex) => {
+      let maxLength = 15
+
+      sheetData.forEach((row) => {
+        const value = row[colIndex]
+
+        if (value !== undefined && value !== null) {
+          maxLength = Math.max(maxLength, String(value).length + 2)
+        }
+      })
+
+      return {
+        wch: Math.min(maxLength, 25)
+      }
+    })
+
+    const workbook = XLSX.utils.book_new()
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pelaporan')
+
+    XLSX.utils.book_append_sheet(workbook, detailWorksheet, 'Detail Transaksi')
+
+    worksheet['!freeze'] = {
+      xSplit: 1,
+      ySplit: 2
+    }
+
+    return {
+      worksheet,
+      detailWorksheet,
+      workbook
+    }
+  }
+
+  function buildExportFileName(
+    selectedKitchen,
+    selectedFlowType,
+    startDate,
+    endDate
+  ) {
+    const kitchenPart = selectedKitchen
+      ? selectedKitchen.name.toLowerCase().replace(/\s+/g, '-')
+      : 'semua'
+
+    const flowLabelMap = {
+      income: 'bgn',
+      expense: 'supplier',
+      neutral: 'gas'
+    }
+
+    const flowPart = flowLabelMap[selectedFlowType] || 'semua'
+
+    return `pelaporan-${kitchenPart}-${flowPart}-${startDate}-${endDate}.xlsx`
+  }
+
+  function fillPivotRows(
+    transactions,
+    pivotMap,
+    kitchenMap,
+    accountMap,
+    supplierMap
+  ) {
+    transactions.forEach((transaction) => {
+      const row = pivotMap.get(transaction.transaction_date)
+
+      if (!row) return
+
+      const kitchen = kitchenMap.get(transaction.kitchen_id)
+
+      if (!kitchen) return
+
+      const amount = Number(transaction.amount) || 0
+
+      let columnName = null
+
+      if (transaction.flow_type === 'income') {
+        const account = accountMap.get(transaction.account_id)
+
+        if (!account) return
+
+        columnName = `${account.name} ${account.bank}`
+      }
+
+      if (transaction.flow_type === 'expense') {
+        const supplier = supplierMap.get(transaction.supplier_id)
+
+        if (!supplier) return
+
+        if (supplier.name === 'Koperasi Arutala') {
+          columnName = 'KOPERASI ARUTALA'
+        }
+
+        if (supplier.name === 'Sukalarang') {
+          columnName = 'KOPERASI SUKALARANG'
+        }
+
+        if (supplier.name === 'Aris') {
+          columnName = 'ARIS'
+        }
+
+        if (supplier.name === 'Babinsa') {
+          columnName = 'BABINSA'
+        }
+      }
+
+      if (!columnName) return
+
+      const key = `${kitchen.name}|${columnName}`
+
+      if (row[key] === undefined) return
+
+      row[key] += amount
+    })
+  }
+
+  function buildDetailRows(transactions, kitchenMap, accountMap, supplierMap) {
+    const detailRows = [['Tanggal', 'Dapur', 'Jenis', 'Nama', 'Nominal']]
+
+    transactions.forEach((transaction) => {
+      const kitchen = kitchenMap.get(transaction.kitchen_id)
+
+      if (!kitchen) return
+
+      let name = '-'
+
+      if (transaction.flow_type === 'income') {
+        const account = accountMap.get(transaction.account_id)
+
+        if (account) {
+          name = `${account.name} ${account.bank || ''}`.trim()
+        }
+      }
+
+      if (transaction.flow_type === 'expense') {
+        const supplier = supplierMap.get(transaction.supplier_id)
+
+        if (supplier) {
+          name = supplier.name
+        }
+      }
+
+      detailRows.push([
+        transaction.transaction_date,
+        kitchen.name,
+        transaction.flow_type,
+        name,
+        Number(transaction.amount) || 0
+      ])
+    })
+
+    return detailRows
+  }
+
   async function exportPelaporanExcel() {
     const startDate = document.getElementById('startDate').value
 
@@ -962,111 +1124,70 @@ ${new Date()
       }
     }
 
-    const headerRow1 = ['Tanggal']
-
-    const headerRow2 = ['']
-
-    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
-      columns.forEach(() => {
-        headerRow1.push(kitchenName)
-      })
-
-      headerRow2.push(...columns)
-    })
-
-    const uniqueDates = [
-      ...new Set(
-        transactions.map((transaction) => transaction.transaction_date)
-      )
-    ].sort()
-
-    const pivotRows = uniqueDates.map((date) => {
-      const row = {
-        Tanggal: date
-      }
+    function buildHeaders(exportLayout) {
+      const headerRow1 = ['Tanggal']
+      const headerRow2 = ['']
 
       Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
-        columns.forEach((column) => {
-          row[`${kitchenName}|${column}`] = 0
+        columns.forEach(() => {
+          headerRow1.push(kitchenName)
         })
+
+        headerRow2.push(...columns)
       })
 
-      return row
-    })
-
-    const pivotMap = new Map()
-
-    pivotRows.forEach((row) => {
-      pivotMap.set(row.Tanggal, row)
-    })
-
-    transactions.forEach((transaction) => {
-      const row = pivotMap.get(transaction.transaction_date)
-
-      if (!row) {
-        return
+      return {
+        headerRow1,
+        headerRow2
       }
+    }
 
-      const kitchen = kitchenMap.get(transaction.kitchen_id)
+    function buildPivotRows(transactions, exportLayout) {
+      const uniqueDates = [
+        ...new Set(
+          transactions.map((transaction) => transaction.transaction_date)
+        )
+      ].sort()
 
-      if (!kitchen) {
-        return
-      }
-
-      const amount = Number(transaction.amount) || 0
-
-      let columnName = null
-
-      if (transaction.flow_type === 'income') {
-        const account = accountMap.get(transaction.account_id)
-
-        if (!account) {
-          return
+      const pivotRows = uniqueDates.map((date) => {
+        const row = {
+          Tanggal: date
         }
 
-        columnName = `${account.name} ${account.bank}`
+        Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
+          columns.forEach((column) => {
+            row[`${kitchenName}|${column}`] = 0
+          })
+        })
+
+        return row
+      })
+
+      const pivotMap = new Map()
+
+      pivotRows.forEach((row) => {
+        pivotMap.set(row.Tanggal, row)
+      })
+      return {
+        pivotRows,
+        pivotMap
       }
+    }
 
-      if (transaction.flow_type === 'expense') {
-        const supplier = supplierMap.get(transaction.supplier_id)
+    const { headerRow1, headerRow2 } = buildHeaders(exportLayout)
 
-        if (!supplier) {
-          return
-        }
+    const { pivotRows, pivotMap } = buildPivotRows(transactions, exportLayout)
 
-        if (supplier.name === 'Koperasi Arutala') {
-          columnName = 'KOPERASI ARUTALA'
-        }
-
-        if (supplier.name === 'Sukalarang') {
-          columnName = 'KOPERASI SUKALARANG'
-        }
-
-        if (supplier.name === 'Aris') {
-          columnName = 'ARIS'
-        }
-
-        if (supplier.name === 'Babinsa') {
-          columnName = 'BABINSA'
-        }
-      }
-
-      if (!columnName) {
-        return
-      }
-
-      const key = `${kitchen.name}|${columnName}`
-
-      if (row[key] === undefined) {
-        return
-      }
-
-      row[key] += amount
-    })
+    fillPivotRows(transactions, pivotMap, kitchenMap, accountMap, supplierMap)
 
     const sheetData = [headerRow1, headerRow2]
 
-    const detailRows = [['Tanggal', 'Dapur', 'Jenis', 'Nama', 'Nominal']]
+    const detailRows = buildDetailRows(
+      transactions,
+      kitchenMap,
+      accountMap,
+      supplierMap
+    )
 
     pivotRows.forEach((row) => {
       const sheetRow = [row.Tanggal]
@@ -1098,125 +1219,22 @@ ${new Date()
 
     sheetData.push(totalRow)
 
-    transactions.forEach((transaction) => {
-      const kitchen = kitchenMap.get(transaction.kitchen_id)
+    // ======================
+    // BUILD WORKSHEETS
+    // ======================
 
-      if (!kitchen) return
+    const { worksheet, detailWorksheet, workbook } = buildWorksheets(
+      sheetData,
+      detailRows,
+      exportLayout
+    )
 
-      let name = '-'
-
-      if (transaction.flow_type === 'income') {
-        const account = accountMap.get(transaction.account_id)
-
-        if (account) {
-          name = `${account.name} ${account.bank || ''}`.trim()
-        }
-      }
-
-      if (transaction.flow_type === 'expense') {
-        const supplier = supplierMap.get(transaction.supplier_id)
-
-        if (supplier) {
-          name = supplier.name
-        }
-      }
-
-      const amount = Number(transaction.amount) || 0
-
-      detailRows.push([
-        transaction.transaction_date,
-        kitchen.name,
-        transaction.flow_type,
-        name,
-        amount
-      ])
-    })
-
-    const worksheet = XLSX.utils.aoa_to_sheet(sheetData)
-
-    const detailWorksheet = XLSX.utils.aoa_to_sheet(detailRows)
-
-    Object.keys(worksheet).forEach((cell) => {
-      if (cell.startsWith('!')) {
-        return
-      }
-
-      const value = worksheet[cell]?.v
-
-      if (typeof value === 'number') {
-        worksheet[cell].z = '#,##0'
-      }
-    })
-
-    worksheet['!merges'] = []
-
-    worksheet['!merges'].push({
-      s: { r: 0, c: 0 },
-      e: { r: 1, c: 0 }
-    })
-
-    let currentCol = 1
-
-    Object.entries(exportLayout).forEach(([, columns]) => {
-      const startCol = currentCol
-      const endCol = currentCol + columns.length - 1
-
-      if (columns.length > 1) {
-        worksheet['!merges'].push({
-          s: {
-            r: 0,
-            c: startCol
-          },
-          e: {
-            r: 0,
-            c: endCol
-          }
-        })
-      }
-
-      currentCol = endCol + 1
-    })
-
-    worksheet['!cols'] = sheetData[0].map((_, colIndex) => {
-      let maxLength = 15
-
-      sheetData.forEach((row) => {
-        const value = row[colIndex]
-
-        if (value !== undefined && value !== null) {
-          maxLength = Math.max(maxLength, String(value).length + 2)
-        }
-      })
-
-      return {
-        wch: Math.min(maxLength, 25)
-      }
-    })
-
-    const workbook = XLSX.utils.book_new()
-
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pelaporan')
-
-    XLSX.utils.book_append_sheet(workbook, detailWorksheet, 'Detail Transaksi')
-
-    worksheet['!freeze'] = {
-      xSplit: 1,
-      ySplit: 2
-    }
-
-    const kitchenPart = selectedKitchen
-      ? selectedKitchen.name.toLowerCase().replace(/\s+/g, '-')
-      : 'semua'
-
-    const flowLabelMap = {
-      income: 'bgn',
-      expense: 'supplier',
-      neutral: 'gas'
-    }
-
-    const flowPart = flowLabelMap[selectedFlowType] || 'semua'
-
-    const fileName = `pelaporan-${kitchenPart}-${flowPart}-${startDate}-${endDate}.xlsx`
+    const fileName = buildExportFileName(
+      selectedKitchen,
+      selectedFlowType,
+      startDate,
+      endDate
+    )
 
     XLSX.writeFile(workbook, fileName)
   }

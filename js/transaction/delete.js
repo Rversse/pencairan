@@ -95,6 +95,8 @@ confirmDeleteButton.addEventListener(
       await loadTransactions()
 
       await loadDashboard()
+
+      await loadDailyStatus()
     } catch (error) {
       console.error(error)
 

@@ -67,6 +67,31 @@ async function loadKitchenMaster(forceReload = false) {
   renderKitchenMaster()
 }
 
+async function loadKitchenOptions() {
+  const { data, error } = await supabaseClient
+    .from('kitchens')
+    .select('id,name')
+    .eq('is_active', true)
+    .order('name')
+
+  if (error) {
+    console.error(error)
+    return
+  }
+
+  let optionsHtml = ''
+
+  data.forEach((kitchen) => {
+    optionsHtml += `
+    <option value="${kitchen.id}">
+      ${kitchen.name}
+    </option>
+  `
+  })
+
+  exportKitchen.innerHTML += optionsHtml
+}
+
 function renderKitchenMaster() {
   const isAdmin = currentUser?.role === 'admin'
 

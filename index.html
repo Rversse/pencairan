@@ -374,9 +374,23 @@
               <button id="applyBankFilter" class="primary-button">Apply</button>
             </div>
 
-            <button id="addBankTransactionButton" class="primary-button">
+            <button
+              id="addBankTransactionButton"
+              type="button"
+              class="primary-button"
+            >
               + Tambah Transaksi
             </button>
+          </div>
+
+          <div class="bank-search">
+            <input
+              type="text"
+              id="bankSearch"
+              placeholder="Cari nama pemilik, bank, atau rekening..."
+              autocomplete="off"
+              spellcheck="false"
+            />
           </div>
 
           <div id="bankTransactionTableContainer"></div>
@@ -499,8 +513,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script src="supabase.js"></script>
-
-    <script src="js/date-picker.js"></script>
 
     <div id="deleteModal" class="modal-overlay">
       <div class="delete-modal-content">
@@ -723,23 +735,16 @@
     </div>
 
     <div id="bankHistoryModal" class="modal-overlay">
-      <div class="modal-content" style="max-width: 720px">
-        <div
-          style="
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-          "
-        >
-          <h2 id="bankHistoryTitle">History Rekening</h2>
+      <div class="modal-content bank-history-modal">
+        <div class="history-modal-header">
+          <div id="bankHistoryTitle"></div>
 
           <button type="button" id="closeBankHistory" class="secondary-button">
             Tutup
           </button>
         </div>
 
-        <div id="bankHistoryContent">Memuat...</div>
+        <div id="bankHistoryContent"></div>
       </div>
     </div>
 
@@ -761,27 +766,70 @@
       </div>
     </div>
 
-    <div id="toast"></div>
+    <div id="toast" class="toast"></div>
 
-    <script defer src="js/constants.js"></script>
-    <script defer src="js/helpers.js"></script>
-    <script defer src="js/loaders.js"></script>
-    <script defer src="js/modal.js"></script>
-    <script defer src="js/delete.js"></script>
-    <script defer src="js/dashboard.js"></script>
-    <script defer src="js/supplier-master.js"></script>
-    <script defer src="js/kitchen-master.js"></script>
-    <script defer src="js/transactions.js"></script>
-    <script defer src="js/filters.js"></script>
-    <script defer src="js/form.js"></script>
-    <script defer src="js/events.js"></script>
-    <script defer src="js/auth.js"></script>
+    <div id="confirmModal" class="modal hidden">
+      <div class="modal-content confirm-modal">
+        <h2>Konfirmasi</h2>
+
+        <p id="confirmMessage"></p>
+
+        <div class="modal-actions">
+          <button type="button" id="confirmCancel" class="secondary-button">
+            Batal
+          </button>
+
+          <button type="button" id="confirmOk" class="danger-button">
+            Hapus
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CORE -->
+    <script src="js/core/constants.js"></script>
+    <script src="js/core/helpers.js"></script>
+    <script src="js/core/loaders.js"></script>
+    <script src="js/core/modal.js"></script>
+    <script src="js/core/ui.js"></script>
+    <script src="js/core/navigation.js"></script>
+
+    <!-- COMPONENTS -->
+    <script src="js/components/date-picker.js"></script>
+
+    <!-- MASTER DATA -->
+    <script src="js/master/kitchen-master.js"></script>
+    <script src="js/master/supplier-master.js"></script>
+
+    <!-- TRANSACTION -->
+    <script src="js/transaction/transactions.js"></script>
+    <script src="js/transaction/form.js"></script>
+    <script src="js/transaction/delete.js"></script>
+    <script src="js/transaction/filters.js"></script>
+
+    <!-- REPORT -->
+    <script src="js/report/supplier-report.js"></script>
+    <script src="js/report/income-report.js"></script>
+    <script src="js/report/report.js"></script>
+
+    <!-- DASHBOARD -->
+    <script src="js/dashboard/disbursement.js"></script>
+    <script src="js/bank/bank-summary.js"></script>
+    <script src="js/bank/bank-history.js"></script>
+    <script src="js/bank/bank.js"></script>
+    <script src="js/dashboard/daily-status.js"></script>
+    <script src="js/dashboard/dashboard.js"></script>
+
+    <!-- EVENTS -->
+    <script src="js/events/events.js"></script>
+
+    <!-- AUTH -->
+    <script src="js/auth/auth.js"></script>
+
+    <!-- APP ENTRY -->
+    <script src="js/app.js"></script>
 
     <script defer src="https://unpkg.com/lucide@latest"></script>
-
-    <script defer src="js/report.js"></script>
-
-    <script defer src="js/app.js"></script>
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   </body>

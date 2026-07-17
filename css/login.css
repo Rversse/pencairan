@@ -1,6 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @import './variables.css';
-
 * {
   box-sizing: border-box;
 }
@@ -10,14 +9,11 @@ body {
   margin: 0;
   min-height: 100vh;
   overflow: hidden;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
   font-family: 'Inter', sans-serif;
   line-height: 1.5;
-
   background:
     radial-gradient(
       circle at top left,
@@ -30,7 +26,6 @@ body {
       transparent 24%
     ),
     var(--bg);
-
   color: var(--navy);
 }
 
@@ -48,19 +43,14 @@ body {
 .login-card {
   position: relative;
   z-index: 2;
-
   width: 100%;
   max-width: 420px;
-
   padding: 40px 36px;
   text-align: center;
-
   background: var(--card);
   border: 1px solid var(--border);
   border-radius: 30px;
-
   box-shadow: var(--shadow-hover);
-
   animation: fadeIn 0.35s ease;
 }
 
@@ -79,27 +69,21 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-
   width: 300px;
   height: 180px;
-
   margin: 0 auto 12px;
 }
 
 .login-logo img {
   width: 100%;
   height: 100%;
-
   object-fit: contain;
 }
 
 h1 {
   margin: 0 0 24px;
-
   font-size: 26px;
-
   font-weight: 700;
-
   color: var(--navy);
 }
 
@@ -113,25 +97,17 @@ p {
 
 .login-label {
   display: block;
-
   margin: 18px 0 10px;
-
   text-align: left;
-
   color: var(--navy);
-
   font-size: 13px;
-
   font-weight: 600;
 }
 
 .account-options {
   display: grid;
-
   grid-template-columns: repeat(3, 1fr);
-
   gap: 10px;
-
   margin-bottom: 28px;
 }
 
@@ -166,12 +142,9 @@ p {
 #pinInput {
   position: absolute;
   inset: 0;
-
   width: 100%;
   height: 100%;
-
   opacity: 0;
-
   cursor: text;
 }
 
@@ -233,12 +206,10 @@ p {
     margin: 18px;
     padding: 36px 24px;
   }
-
   .login-logo {
     width: 260px;
     height: 150px;
   }
-
   .dot {
     width: 16px;
     height: 16px;

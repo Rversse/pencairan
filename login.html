@@ -1,15 +1,13 @@
 <!doctype html>
+
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
-
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
 
     <title>Login · SIM SPPG</title>
-
-    <link rel="icon" type="image/png" href="./assets/favicon.png" />
-
-    <link rel="stylesheet" href="./css/login.css" />
+    <link href="./assets/favicon.png" rel="icon" type="image/png" />
+    <link href="./css/login.css" rel="stylesheet" />
   </head>
 
   <body>
@@ -17,66 +15,55 @@
 
     <div class="login-card">
       <div class="login-logo">
-        <img src="./assets/favicon.png" alt="SPPG Logo" />
+        <img alt="SPPG Logo" src="./assets/favicon.png" />
       </div>
 
       <h1>Sistem Informasi Manajemen SPPG</h1>
+      <span class="login-label">Masuk sebagai</span>
 
-      <span class="login-label"> Masuk sebagai </span>
-
-      <div class="account-options" role="group" aria-label="Pilih akun">
+      <div aria-label="Pilih akun" class="account-options" role="group">
         <button
-          type="button"
           class="account-option selected"
           data-username="admin"
+          type="button"
         >
           Administrator
         </button>
-
-        <button type="button" class="account-option" data-username="operator">
+        <button class="account-option" data-username="operator" type="button">
           Operator
         </button>
-
-        <button type="button" class="account-option" data-username="guest">
+        <button class="account-option" data-username="guest" type="button">
           Guest
         </button>
       </div>
 
       <div id="pinSection">
-        <label class="login-label" for="pinInput"> PIN </label>
+        <label class="login-label" for="pinInput">PIN</label>
 
         <div class="pin-wrapper">
           <input
-            type="password"
+            autocomplete="off"
+            autofocus=""
             id="pinInput"
             inputmode="numeric"
-            autocomplete="off"
-            autofocus
+            type="password"
           />
 
           <div class="pin-dots">
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
-            <span class="dot"></span>
+            <span class="dot"></span> <span class="dot"></span>
+            <span class="dot"></span> <span class="dot"></span>
+            <span class="dot"></span> <span class="dot"></span>
+            <span class="dot"></span> <span class="dot"></span>
           </div>
         </div>
       </div>
-
       <small id="errorText"></small>
     </div>
-
     <script
       defer
       src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
     ></script>
-
     <script defer src="supabase.js"></script>
-
-    <script defer src="js/login.js"></script>
+    <script defer src="js/auth/login.js"></script>
   </body>
 </html>

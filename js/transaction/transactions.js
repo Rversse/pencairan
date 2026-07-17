@@ -153,14 +153,8 @@ async function loadTransactions(showLoading = true) {
 </div>
 
 <small class="transaction-date">
-          ${new Date(transaction.transaction_date)
-            .toLocaleDateString('id-ID', {
-              day: '2-digit',
-              month: '2-digit',
-              year: 'numeric'
-            })
-            .replace(/\//g, '-')}
-        </small>
+  ${formatDateShort(transaction.transaction_date)}
+</small>
 
       </div>
 

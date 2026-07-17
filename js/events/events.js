@@ -71,21 +71,3 @@ logoutButton?.addEventListener(
     }
   }
 )
-
-dashboardStartDate?.addEventListener(
-  'change',
-
-  () => {
-    if (!dashboardEndDate.dataset.modified) {
-      dashboardEndDate.value = dashboardStartDate.value
-    }
-  }
-)
-
-dashboardEndDate?.addEventListener(
-  'change',
-
-  () => {
-    dashboardEndDate.dataset.modified = 'true'
-  }
-)
