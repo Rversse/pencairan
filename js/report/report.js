@@ -1046,6 +1046,76 @@ ${new Date()
     return detailRows
   }
 
+  function buildHeaders(exportLayout) {
+    const headerRow1 = ['Tanggal']
+    const headerRow2 = ['']
+
+    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
+      columns.forEach(() => {
+        headerRow1.push(kitchenName)
+      })
+
+      headerRow2.push(...columns)
+    })
+
+    return {
+      headerRow1,
+      headerRow2
+    }
+  }
+
+  function buildPivotRows(transactions, exportLayout) {
+    const uniqueDates = [
+      ...new Set(
+        transactions.map((transaction) => transaction.transaction_date)
+      )
+    ].sort()
+
+    const pivotRows = uniqueDates.map((date) => {
+      const row = {
+        Tanggal: date
+      }
+
+      Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
+        columns.forEach((column) => {
+          row[`${kitchenName}|${column}`] = 0
+        })
+      })
+
+      return row
+    })
+
+    const pivotMap = new Map()
+
+    pivotRows.forEach((row) => {
+      pivotMap.set(row.Tanggal, row)
+    })
+    return {
+      pivotRows,
+      pivotMap
+    }
+  }
+
+  async function loadExportMasterData() {
+    const [{ data: kitchens }, { data: accounts }, { data: suppliers }] =
+      await Promise.all([
+        supabaseClient.from('kitchens').select('id,name').eq('is_active', true),
+
+        supabaseClient
+          .from('accounts')
+          .select('id,name,bank')
+          .eq('is_active', true),
+
+        supabaseClient.from('suppliers').select('id,name').eq('is_active', true)
+      ])
+
+    return {
+      kitchens,
+      accounts,
+      suppliers
+    }
+  }
+
   async function exportPelaporanExcel() {
     const startDate = document.getElementById('startDate').value
 
@@ -1088,20 +1158,7 @@ ${new Date()
       )
     }
 
-    const { data: kitchens } = await supabaseClient
-      .from('kitchens')
-      .select('id,name')
-      .eq('is_active', true)
-
-    const { data: accounts } = await supabaseClient
-      .from('accounts')
-      .select('id,name,bank')
-      .eq('is_active', true)
-
-    const { data: suppliers } = await supabaseClient
-      .from('suppliers')
-      .select('id,name')
-      .eq('is_active', true)
+    const { kitchens, accounts, suppliers } = await loadExportMasterData()
 
     const selectedKitchen =
       kitchens.find((k) => k.id === selectedKitchenId) || null
@@ -1121,56 +1178,6 @@ ${new Date()
         exportLayout = {
           [selectedKitchen.name]: layout
         }
-      }
-    }
-
-    function buildHeaders(exportLayout) {
-      const headerRow1 = ['Tanggal']
-      const headerRow2 = ['']
-
-      Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
-        columns.forEach(() => {
-          headerRow1.push(kitchenName)
-        })
-
-        headerRow2.push(...columns)
-      })
-
-      return {
-        headerRow1,
-        headerRow2
-      }
-    }
-
-    function buildPivotRows(transactions, exportLayout) {
-      const uniqueDates = [
-        ...new Set(
-          transactions.map((transaction) => transaction.transaction_date)
-        )
-      ].sort()
-
-      const pivotRows = uniqueDates.map((date) => {
-        const row = {
-          Tanggal: date
-        }
-
-        Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
-          columns.forEach((column) => {
-            row[`${kitchenName}|${column}`] = 0
-          })
-        })
-
-        return row
-      })
-
-      const pivotMap = new Map()
-
-      pivotRows.forEach((row) => {
-        pivotMap.set(row.Tanggal, row)
-      })
-      return {
-        pivotRows,
-        pivotMap
       }
     }
 
