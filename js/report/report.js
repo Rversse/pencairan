@@ -847,6 +847,35 @@ ${new Date()
     Ciranca: ['ARUTALA BNI', 'CV KRAMAT BNI', 'KOPERASI ARUTALA']
   }
 
+  function buildTotalRow(pivotRows, exportLayout) {
+    const totalRow = ['TOTAL']
+
+    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
+      columns.forEach((column) => {
+        let total = 0
+
+        pivotRows.forEach((row) => {
+          total += Number(row[`${kitchenName}|${column}`]) || 0
+        })
+
+        totalRow.push(total)
+      })
+    })
+
+    return totalRow
+  }
+
+  function buildSheetData(pivotRows, exportLayout, headerRow1, headerRow2) {
+    const sheetData = buildSheetData(
+      pivotRows,
+      exportLayout,
+      headerRow1,
+      headerRow2
+    )
+
+    return sheetData
+  }
+
   function buildWorksheets(sheetData, detailRows, exportLayout) {
     const worksheet = XLSX.utils.aoa_to_sheet(sheetData)
 
@@ -1116,6 +1145,40 @@ ${new Date()
     }
   }
 
+  async function loadExportTransactions(
+    startDate,
+    endDate,
+    selectedKitchenId,
+    selectedFlowType
+  ) {
+    let transactions = await fetchAllTransactions({
+      startDate,
+      endDate,
+      select: `
+      transaction_date,
+      kitchen_id,
+      account_id,
+      supplier_id,
+      flow_type,
+      amount
+    `
+    })
+
+    if (selectedKitchenId) {
+      transactions = transactions.filter(
+        (t) => t.kitchen_id === selectedKitchenId
+      )
+    }
+
+    if (selectedFlowType) {
+      transactions = transactions.filter(
+        (t) => t.flow_type === selectedFlowType
+      )
+    }
+
+    return transactions
+  }
+
   async function exportPelaporanExcel() {
     const startDate = document.getElementById('startDate').value
 
@@ -1128,34 +1191,15 @@ ${new Date()
     let transactions = []
 
     try {
-      transactions = await fetchAllTransactions({
+      transactions = await loadExportTransactions(
         startDate,
         endDate,
-        select: `
-      transaction_date,
-      kitchen_id,
-      account_id,
-      supplier_id,
-      flow_type,
-      amount
-    `
-      })
+        selectedKitchenId,
+        selectedFlowType
+      )
     } catch (error) {
       console.error(error)
-
       return
-    }
-
-    if (selectedKitchenId) {
-      transactions = transactions.filter(
-        (transaction) => transaction.kitchen_id === selectedKitchenId
-      )
-    }
-
-    if (selectedFlowType) {
-      transactions = transactions.filter(
-        (transaction) => transaction.flow_type === selectedFlowType
-      )
     }
 
     const { kitchens, accounts, suppliers } = await loadExportMasterData()
@@ -1210,21 +1254,7 @@ ${new Date()
       sheetData.push(sheetRow)
     })
 
-    const totalRow = ['TOTAL']
-
-    Object.entries(exportLayout).forEach(([kitchenName, columns]) => {
-      columns.forEach((column) => {
-        let total = 0
-
-        pivotRows.forEach((row) => {
-          total += Number(row[`${kitchenName}|${column}`]) || 0
-        })
-
-        totalRow.push(total)
-      })
-    })
-
-    sheetData.push(totalRow)
+    sheetData.push(buildTotalRow(pivotRows, exportLayout))
 
     // ======================
     // BUILD WORKSHEETS
