@@ -248,6 +248,22 @@ function lockTransactionFields(isEditing) {
   }
 }
 
+function setTransactionFlow(flowTypeValue) {
+  switch (flowTypeValue) {
+    case 'income':
+      flowType.value = 'pemasukan'
+      break
+
+    case 'expense':
+      flowType.value = 'pengeluaran'
+      break
+
+    case 'neutral':
+      flowType.value = 'gas'
+      break
+  }
+}
+
 async function editTransaction(transaction) {
   submitButton.disabled = true
   if (window.currentUser?.role !== 'admin') {
@@ -267,17 +283,7 @@ async function editTransaction(transaction) {
 
   updateFlowOptions()
 
-  if (transaction.flow_type === 'income') {
-    flowType.value = 'pemasukan'
-  }
-
-  if (transaction.flow_type === 'expense') {
-    flowType.value = 'pengeluaran'
-  }
-
-  if (transaction.flow_type === 'neutral') {
-    flowType.value = 'gas'
-  }
+  setTransactionFlow(transaction.flow_type)
 
   await toggleFields()
 
@@ -318,6 +324,152 @@ async function editTransaction(transaction) {
   }, 50)
 }
 
+function getTransactionType(flow) {
+  switch (flow) {
+    case 'pemasukan':
+      return {
+        flow_type: 'income',
+        category: 'RAB',
+        account_id: accountSelect.value,
+        supplier_id: null
+      }
+
+    case 'pengeluaran':
+      return {
+        flow_type: 'expense',
+        category: 'Supplier',
+        account_id: null,
+        supplier_id: supplierSelect.value
+      }
+
+    case 'gas':
+      return {
+        flow_type: 'neutral',
+        category: 'GAS',
+        account_id: accountSelect.value,
+        supplier_id: null
+      }
+  }
+}
+
+function getTransactionPayload(flow, amount) {
+  const payload = {
+    transaction_date: transactionDate.value,
+    kitchen_id: kitchenSelect.value,
+    amount: amount
+  }
+
+  const transactionType = getTransactionType(flow)
+
+  payload.flow_type = transactionType.flow_type
+  payload.category = transactionType.category
+  payload.account_id = transactionType.account_id
+  payload.supplier_id = transactionType.supplier_id
+
+  return payload
+}
+
+function getTransactionAmount() {
+  return Number(amountInput.value.replace(/\./g, ''))
+}
+
+function validateTransaction(flow, amount) {
+  if (!kitchenSelect.value) {
+    showToast('Pilih dapur')
+    return false
+  }
+
+  if (amount <= 0) {
+    showToast('Nominal harus lebih dari 0')
+    return false
+  }
+
+  if ((flow === 'pemasukan' || flow === 'gas') && !accountSelect.value) {
+    showToast('Rekening wajib dipilih')
+    return false
+  }
+
+  if (flow === 'pengeluaran' && !supplierSelect.value) {
+    showToast('Supplier wajib dipilih')
+    return false
+  }
+
+  return true
+}
+
+async function hasDuplicateTransaction(payload) {
+  let query = supabaseClient
+    .from('transactions')
+    .select('id')
+    .eq('transaction_date', payload.transaction_date)
+    .eq('kitchen_id', payload.kitchen_id)
+    .eq('flow_type', payload.flow_type)
+    .eq('amount', payload.amount)
+
+  if (payload.flow_type === 'expense') {
+    query = query.eq('supplier_id', payload.supplier_id)
+  }
+
+  if (payload.flow_type === 'income' || payload.flow_type === 'neutral') {
+    query = query.eq('account_id', payload.account_id)
+  }
+
+  const { data } = await query.limit(1)
+
+  return data?.length > 0
+}
+
+async function confirmDuplicateTransaction(payload) {
+  if (editingTransactionId) {
+    return true
+  }
+
+  if (!(await hasDuplicateTransaction(payload))) {
+    return true
+  }
+
+  return confirm('Kemungkinan transaksi duplikat. Tetap simpan?')
+}
+
+async function persistTransaction(payload) {
+  if (editingTransactionId) {
+    return await supabaseClient
+      .from('transactions')
+      .update(payload)
+      .eq('id', editingTransactionId)
+  }
+
+  return await supabaseClient.from('transactions').insert(payload)
+}
+
+async function handleTransactionSuccess(isEditing) {
+  showToast('Transaksi berhasil disimpan')
+
+  if (!isEditing) {
+    resetFormState()
+
+    amountInput.value = ''
+
+    amountInput.focus()
+  } else {
+    hideTransactionModal()
+  }
+
+  await loadTransactions()
+  await loadDashboard()
+  await loadDailyStatus()
+}
+
+function setTransactionSubmitState(disabled, text) {
+  submitButton.disabled = disabled
+  submitButton.textContent = text
+}
+
+function handleTransactionError(error) {
+  console.error(error)
+  showToast('Terjadi kesalahan')
+}
+
 transactionForm.addEventListener('submit', async (event) => {
   if (window.currentUser?.role !== 'admin') {
     showToast('Akses ditolak')
@@ -332,155 +484,36 @@ transactionForm.addEventListener('submit', async (event) => {
 
   const flow = flowType.value
 
-  if (!kitchenSelect.value) {
-    showToast('Pilih dapur')
+  const amount = getTransactionAmount()
 
+  if (!validateTransaction(flow, amount)) {
     return
   }
 
-  const amount = Number(amountInput.value.replace(/\./g, ''))
+  const payload = getTransactionPayload(flow, amount)
 
-  if (amount <= 0) {
-    showToast('Nominal harus lebih dari 0')
-    return
-  }
-
-  if (flow === 'pemasukan' || flow === 'gas') {
-    if (!accountSelect.value) {
-      showToast('Rekening wajib dipilih')
-
-      return
-    }
-  }
-
-  if (flow === 'pengeluaran') {
-    if (!supplierSelect.value) {
-      showToast('Supplier wajib dipilih')
-
-      return
-    }
-  }
-
-  const payload = {
-    transaction_date: transactionDate.value,
-
-    kitchen_id: kitchenSelect.value,
-
-    amount: amount
-  }
-
-  if (flow === 'pemasukan') {
-    payload.flow_type = 'income'
-
-    payload.category = 'RAB'
-
-    payload.account_id = accountSelect.value
-
-    payload.supplier_id = null
-  }
-
-  if (flow === 'pengeluaran') {
-    payload.flow_type = 'expense'
-
-    payload.category = 'Supplier'
-
-    payload.account_id = null
-
-    payload.supplier_id = supplierSelect.value
-  }
-
-  if (flow === 'gas') {
-    payload.flow_type = 'neutral'
-
-    payload.category = 'GAS'
-
-    payload.account_id = accountSelect.value
-
-    payload.supplier_id = null
-  }
-
-  submitButton.disabled = true
-
-  submitButton.textContent = 'Menyimpan...'
+  setTransactionSubmitState(true, 'Menyimpan...')
 
   try {
-    let duplicateCheckQuery = supabaseClient
-      .from('transactions')
-      .select('id')
-      .eq('transaction_date', payload.transaction_date)
-      .eq('kitchen_id', payload.kitchen_id)
-      .eq('flow_type', payload.flow_type)
-      .eq('amount', payload.amount)
-
-    if (payload.flow_type === 'expense') {
-      duplicateCheckQuery = duplicateCheckQuery.eq(
-        'supplier_id',
-        payload.supplier_id
-      )
-    }
-
-    if (payload.flow_type === 'income' || payload.flow_type === 'neutral') {
-      duplicateCheckQuery = duplicateCheckQuery.eq(
-        'account_id',
-        payload.account_id
-      )
-    }
-
-    const duplicateCheck = await duplicateCheckQuery.limit(1)
-
-    if (duplicateCheck.data?.length && !editingTransactionId) {
-      const proceed = confirm('Kemungkinan transaksi duplikat. Tetap simpan?')
-
-      if (!proceed) {
-        return
-      }
+    if (!(await confirmDuplicateTransaction(payload))) {
+      return
     }
 
     const isEditing = Boolean(editingTransactionId)
-    const transactionId = editingTransactionId
 
-    let query = supabaseClient.from('transactions')
-
-    if (isEditing) {
-      query = query.update(payload).eq('id', transactionId)
-    } else {
-      query = query.insert(payload)
-    }
-
-    const { error } = await query
+    const { error } = await persistTransaction(payload)
 
     if (error) {
-      console.error(error)
-
-      showToast('Gagal simpan transaksi')
+      handleTransactionError(error)
 
       return
     }
 
-    showToast('Transaksi berhasil disimpan')
-
-    if (!isEditing) {
-      resetFormState()
-
-      amountInput.value = ''
-
-      amountInput.focus()
-    } else {
-      hideTransactionModal()
-    }
-
-    await loadTransactions()
-
-    await loadDashboard()
-
-    await loadDailyStatus()
+    await handleTransactionSuccess(isEditing)
   } catch (error) {
-    console.error(error)
-
-    showToast('Terjadi kesalahan')
+    handleTransactionError(error)
   } finally {
-    submitButton.disabled = false
-    submitButton.textContent = editingTransactionId ? 'Update' : 'Simpan'
+    setTransactionSubmitState(false, editingTransactionId ? 'Update' : 'Simpan')
   }
 })
 

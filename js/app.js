@@ -3,61 +3,87 @@ function resetModalScroll(modalEl) {
   if (scrollable) scrollable.scrollTop = 0
 }
 
+function registerActivityListeners() {
+  ;['click', 'keydown', 'mousemove', 'touchstart'].forEach((event) => {
+    window.addEventListener(event, resetInactivityTimer)
+  })
+
+  resetInactivityTimer()
+}
+
+async function initializeAdminView() {
+  dashboardSection.style.display = 'block'
+
+  resetActiveTabs()
+
+  dashboardTab.classList.add('active')
+
+  await Promise.all([
+    loadTransactions(),
+    loadDashboard(),
+    loadDailyStatus(),
+    loadSupplierReport()
+  ])
+}
+
+async function initializeOperatorView() {
+  incomeSection.style.display = 'block'
+
+  resetActiveTabs()
+
+  incomeReportTab.classList.add('active')
+
+  updateActiveDropdown()
+
+  await loadIncomeReport()
+}
+
+function hideAllSections() {
+  dashboardSection.style.display = 'none'
+  supplierSection.style.display = 'none'
+  reportSection.style.display = 'none'
+  disbursementSection.style.display = 'none'
+  incomeSection.style.display = 'none'
+  supplierMasterSection.style.display = 'none'
+  kitchenMasterSection.style.display = 'none'
+}
+
+async function initializeUserView() {
+  const role = currentUser?.role
+
+  if (role === 'viewer' || role === 'operator') {
+    await initializeOperatorView()
+    return
+  }
+
+  await initializeAdminView()
+}
+
+async function initializeApplication() {
+  applyRoleAccess()
+  applyViewerBadge()
+
+  await init()
+
+  hideAllSections()
+
+  await initializeUserView()
+
+  toggleFields()
+
+  lucide.createIcons()
+}
+
 async function startApp() {
   document.body.style.visibility = 'hidden'
 
   try {
     const authenticated = await initAuth()
     if (!authenticated) return
-    ;['click', 'keydown', 'mousemove', 'touchstart'].forEach((event) => {
-      window.addEventListener(event, resetInactivityTimer)
-    })
 
-    resetInactivityTimer()
+    registerActivityListeners()
 
-    applyRoleAccess()
-    applyViewerBadge()
-
-    await init()
-
-    dashboardSection.style.display = 'none'
-    supplierSection.style.display = 'none'
-    reportSection.style.display = 'none'
-    disbursementSection.style.display = 'none'
-    incomeSection.style.display = 'none'
-    supplierMasterSection.style.display = 'none'
-    kitchenMasterSection.style.display = 'none'
-
-    const role = currentUser?.role
-
-    if (role === 'viewer' || role === 'operator') {
-      incomeSection.style.display = 'block'
-
-      resetActiveTabs()
-
-      incomeReportTab.classList.add('active')
-
-      updateActiveDropdown()
-
-      await loadIncomeReport()
-    } else {
-      dashboardSection.style.display = 'block'
-
-      resetActiveTabs()
-
-      dashboardTab.classList.add('active')
-
-      await Promise.all([
-        loadTransactions(),
-        loadDashboard(),
-        loadDailyStatus(),
-        loadSupplierReport()
-      ])
-    }
-
-    toggleFields()
-
-    lucide.createIcons()
+    await initializeApplication()
   } catch (err) {
     console.error('startApp gagal:', err)
 

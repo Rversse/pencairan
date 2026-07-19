@@ -16,6 +16,16 @@ async function init() {
   await loadAccountsFiltered('pemasukan')
 }
 
+function cacheMappings(accountsResult, suppliersResult) {
+  if (!accountsResult.error) {
+    accountRulesCache = accountsResult.data
+  }
+
+  if (!suppliersResult.error) {
+    supplierRulesCache = suppliersResult.data
+  }
+}
+
 async function preloadMappings() {
   const [accountsResult, suppliersResult] = await Promise.all([
     supabaseClient.from('kitchen_account_rules').select(`
@@ -44,26 +54,37 @@ async function preloadMappings() {
       `)
   ])
 
-  if (!accountsResult.error) {
-    accountRulesCache = accountsResult.data
-  }
-
-  if (!suppliersResult.error) {
-    supplierRulesCache = suppliersResult.data
-  }
+  cacheMappings(accountsResult, suppliersResult)
 }
 
-async function loadKitchens() {
-  if (kitchenOptionsCache) {
-    renderKitchenOptions(kitchenOptionsCache)
-    return
-  }
-
-  const { data, error } = await supabaseClient
+async function fetchKitchens() {
+  return await supabaseClient
     .from('kitchens')
     .select('*')
     .eq('is_active', true)
     .order('name')
+}
+
+function useKitchenCache() {
+  if (!kitchenOptionsCache) {
+    return false
+  }
+
+  renderKitchenOptions(kitchenOptionsCache)
+
+  return true
+}
+
+function handleKitchenLoadError(error) {
+  console.error(error)
+}
+
+async function loadKitchens() {
+  if (useKitchenCache()) {
+    return
+  }
+
+  const { data, error } = await fetchKitchens()
 
   if (error) {
     console.error(error)
@@ -109,20 +130,33 @@ function renderKitchenOptions(data) {
   })
 }
 
-async function loadSuppliers() {
-  if (supplierOptionsCache) {
-    renderSupplierOptions(supplierOptionsCache)
-    return
-  }
-
-  const { data, error } = await supabaseClient
+async function fetchSuppliers() {
+  return await supabaseClient
     .from('suppliers')
     .select('*')
     .eq('is_active', true)
     .order('name')
+}
+
+function useSupplierCache() {
+  if (!supplierOptionsCache) {
+    return false
+  }
+
+  renderSupplierOptions(supplierOptionsCache)
+
+  return true
+}
+
+async function loadSuppliers() {
+  if (useSupplierCache()) {
+    return
+  }
+
+  const { data, error } = await fetchSuppliers()
 
   if (error) {
-    console.error(error)
+    handleKitchenLoadError(error)
 
     return
   }
@@ -146,6 +180,19 @@ function renderSupplierOptions(data) {
       </option>
     `
   })
+}
+
+function renderAccountPlaceholder() {
+  accountSelect.innerHTML = `
+    <option
+      value=""
+      disabled
+      selected
+      hidden
+    >
+      Pilih Rekening
+    </option>
+  `
 }
 
 async function loadAccountsFiltered(flow) {
@@ -176,16 +223,7 @@ async function loadAccountsFiltered(flow) {
     ).values()
   ]
 
-  accountSelect.innerHTML = `
-    <option
-      value=""
-      disabled
-      selected
-      hidden
-    >
-      Pilih Rekening
-    </option>
-  `
+  renderAccountPlaceholder()
 
   if (!uniqueAccounts.length) {
     accountSelect.innerHTML = `
