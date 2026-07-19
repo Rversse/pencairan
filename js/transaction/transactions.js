@@ -1,19 +1,18 @@
-async function loadTransactions(showLoading = true) {
-  let loadingTimer = null
+function showTransactionLoading(showLoading) {
+  if (!showLoading) return null
 
-  if (showLoading) {
-    loadMoreButton.style.display = 'none'
+  loadMoreButton.style.display = 'none'
 
-    // baru tampilin "Memuat..." kalau fetch lebih dari 250ms
-    loadingTimer = setTimeout(() => {
-      transactionsContainer.innerHTML = `
-        <div class="transaction-card">
-          Memuat transaksi...
-        </div>
-      `
-    }, 250)
-  }
+  return setTimeout(() => {
+    transactionsContainer.innerHTML = `
+    <div class="transaction-card">
+      Memuat transaksi...
+    </div>
+  `
+  }, 250)
+}
 
+async function fetchTransactions() {
   let query = supabaseClient.from('transactions').select(`
       *,
       kitchens(name),
@@ -30,45 +29,24 @@ async function loadTransactions(showLoading = true) {
   if (currentUser?.role === 'viewer') {
     query = query.eq('flow_type', 'expense')
   }
-  if (filterKitchen.value) query = query.eq('kitchen_id', filterKitchen.value)
-  if (filterFlow.value) query = query.eq('flow_type', filterFlow.value)
-  if (filterDate.value) query = query.eq('transaction_date', filterDate.value)
 
-  const { data, error } = await query
-    .order('created_at', { ascending: false })
-    .limit(transactionLimit)
-
-  clearTimeout(loadingTimer) // batalin placeholder kalau belum sempat muncul
-
-  if (error) {
-    console.error(error)
-    transactionsContainer.innerHTML = `<div class="transaction-card">Gagal memuat transaksi</div>`
-    return
+  if (filterKitchen.value) {
+    query = query.eq('kitchen_id', filterKitchen.value)
   }
 
-  transactionsContainer.innerHTML = ''
+  if (filterFlow.value) {
+    query = query.eq('flow_type', filterFlow.value)
+  }
 
+  if (filterDate.value) {
+    query = query.eq('transaction_date', filterDate.value)
+  }
+
+  return query.order('created_at', { ascending: false }).limit(transactionLimit)
+}
+
+function renderTransactionCards(data) {
   let html = ''
-
-  if (!data.length) {
-    transactionsContainer.innerHTML = `
-<div class="empty-state">
-  Tidak ada transaksi
-  untuk filter ini
-</div>
-      `
-
-    loadMoreButton.style.display = 'none'
-
-    return
-  }
-
-  if (data.length < transactionLimit) {
-    loadMoreButton.style.display = 'none'
-  } else {
-    loadMoreButton.style.display = 'block'
-  }
-
   data.forEach((transaction) => {
     let badgeClass = 'badge-income'
 
@@ -194,11 +172,10 @@ async function loadTransactions(showLoading = true) {
   </div>
 `
   })
+  return html
+}
 
-  transactionsContainer.innerHTML = html
-
-  lucide.createIcons()
-
+function bindEditButtons(data) {
   document.querySelectorAll('.editTransactionButton').forEach((button) => {
     button.addEventListener('click', () => {
       const transaction = data.find((item) => item.id === button.dataset.id)
@@ -208,6 +185,47 @@ async function loadTransactions(showLoading = true) {
       }
     })
   })
+}
+
+async function loadTransactions(showLoading = true) {
+  const loadingTimer = showTransactionLoading(showLoading)
+
+  const { data, error } = await fetchTransactions()
+
+  clearTimeout(loadingTimer)
+
+  if (error) {
+    console.error(error)
+    transactionsContainer.innerHTML = `<div class="transaction-card">Gagal memuat transaksi</div>`
+    return
+  }
+
+  transactionsContainer.innerHTML = ''
+
+  if (!data.length) {
+    transactionsContainer.innerHTML = `
+<div class="empty-state">
+  Tidak ada transaksi
+  untuk filter ini
+</div>
+      `
+
+    loadMoreButton.style.display = 'none'
+
+    return
+  }
+
+  if (data.length < transactionLimit) {
+    loadMoreButton.style.display = 'none'
+  } else {
+    loadMoreButton.style.display = 'block'
+  }
+
+  transactionsContainer.innerHTML = renderTransactionCards(data)
+
+  lucide.createIcons()
+
+  bindEditButtons(data)
 }
 
 loadMoreButton.addEventListener(

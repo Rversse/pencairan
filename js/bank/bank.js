@@ -26,16 +26,8 @@ const bankTransactionTableContainer = document.getElementById(
   'bankTransactionTableContainer'
 )
 
-async function loadBankTransactions() {
-  if (!bankStartDate.value) {
-    bankStartDate.value = getTodayLocal()
-  }
-
-  if (!bankEndDate.value) {
-    bankEndDate.value = bankStartDate.value
-  }
-
-  const [accountsResult, incomeResult, expenseResult] = await Promise.all([
+async function fetchBankTransactions() {
+  return await Promise.all([
     supabaseClient
       .from('accounts')
       .select(
@@ -72,24 +64,36 @@ async function loadBankTransactions() {
       .gte('transaction_date', bankStartDate.value)
       .lte('transaction_date', bankEndDate.value)
   ])
+}
 
-  if (accountsResult.error) {
-    console.error(accountsResult.error)
-    return
+function checkBankQueryError(...results) {
+  for (const result of results) {
+    if (result.error) {
+      console.error(result.error)
+      return true
+    }
   }
 
-  if (incomeResult.error) {
-    console.error(incomeResult.error)
-    return
+  return false
+}
+
+async function loadBankTransactions() {
+  if (!bankStartDate.value) {
+    bankStartDate.value = getTodayLocal()
   }
 
-  if (expenseResult.error) {
-    console.error(expenseResult.error)
+  if (!bankEndDate.value) {
+    bankEndDate.value = bankStartDate.value
+  }
+
+  const [accountsResult, incomeResult, expenseResult] =
+    await fetchBankTransactions()
+
+  if (checkBankQueryError(accountsResult, incomeResult, expenseResult)) {
     return
   }
 
   bankAccounts = accountsResult.data ?? []
-
   currentBankIncomes = incomeResult.data ?? []
   currentBankExpenses = expenseResult.data ?? []
 
@@ -97,8 +101,8 @@ async function loadBankTransactions() {
 
   renderBankTransactionSummary(
     bankAccounts,
-    incomeResult.data ?? [],
-    expenseResult.data ?? []
+    currentBankIncomes,
+    currentBankExpenses
   )
 }
 
@@ -165,61 +169,61 @@ function closeBankTransactionModal() {
   bankTransactionModal.classList.remove('show')
 }
 
-async function saveBankTransaction() {
-  console.log('saveBankTransaction() terpanggil')
-
-  const transactionDate = bankTransactionDate.value
-
-  const accountId = bankAccountSelect.value
-
-  const recipientName = destinationName.value.trim()
-
-  const transfer = parseNumber(transferAmount.value)
-
-  const fee = parseNumber(adminFee.value)
-
-  const purpose = paymentFor.value.trim()
-
-  if (!transactionDate) {
-    alert('Tanggal wajib diisi.')
-    return
-  }
-
-  if (!accountId) {
-    alert('Pilih nama pengirim.')
-    return
-  }
-
-  if (!recipientName) {
-    alert('Nama penerima wajib diisi.')
-    return
-  }
-
-  if (transfer <= 0) {
-    alert('Nominal transfer harus lebih dari 0.')
-    return
-  }
-
-  const payload = {
-    transaction_date: transactionDate,
-    account_id: accountId,
-    recipient_name: recipientName,
-    transfer_amount: transfer,
-    admin_fee: fee,
-    payment_for: purpose,
+function getBankTransactionPayload() {
+  return {
+    transaction_date: bankTransactionDate.value,
+    account_id: bankAccountSelect.value,
+    recipient_name: destinationName.value.trim(),
+    transfer_amount: parseNumber(transferAmount.value),
+    admin_fee: parseNumber(adminFee.value),
+    payment_for: paymentFor.value.trim(),
     created_by: window.currentUser.id
   }
+}
 
-  let result
+function validateBankTransaction(payload) {
+  if (!payload.transaction_date) {
+    alert('Tanggal wajib diisi.')
+    return false
+  }
 
+  if (!payload.account_id) {
+    alert('Pilih nama pengirim.')
+    return false
+  }
+
+  if (!payload.recipient_name) {
+    alert('Nama penerima wajib diisi.')
+    return false
+  }
+
+  if (payload.transfer_amount <= 0) {
+    alert('Nominal transfer harus lebih dari 0.')
+    return false
+  }
+
+  return true
+}
+
+async function persistBankTransaction(payload) {
   if (editingBankTransactionId) {
-    result = await supabaseClient
+    return await supabaseClient
       .from('bank_transactions')
       .update(payload)
       .eq('id', editingBankTransactionId)
-  } else {
-    result = await supabaseClient.from('bank_transactions').insert(payload)
   }
+
+  return await supabaseClient.from('bank_transactions').insert(payload)
+}
+
+async function saveBankTransaction() {
+  const payload = getBankTransactionPayload()
+
+  if (!validateBankTransaction(payload)) {
+    return
+  }
+
+  const result = await persistBankTransaction(payload)
 
   if (result.error) {
     console.error(result.error)

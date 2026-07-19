@@ -96,6 +96,25 @@ function updateActiveDropdown() {
   })
 }
 
+async function activateSection({ section, tab, fab = false, onShow }) {
+  hideAllSections()
+  resetActiveTabs()
+
+  section.style.display = 'block'
+
+  if (fab) {
+    transactionFab.style.display = 'flex'
+  }
+
+  tab.classList.add('active')
+
+  updateActiveDropdown()
+
+  if (onShow) {
+    await onShow()
+  }
+}
+
 // ============================================================
 // LOAD / RENDER FUNCTIONS
 // ============================================================
@@ -155,19 +174,16 @@ dashboardTab?.addEventListener('click', async (event) => {
 
   event.preventDefault()
 
-  hideAllSections()
-  resetActiveTabs()
-
-  dashboardSection.style.display = 'block'
-  transactionFab.style.display = 'flex'
-
-  dashboardTab.classList.add('active')
-
-  updateActiveDropdown()
-
-  await loadDashboard()
-  await loadTransactions()
-  await loadDailyStatus()
+  await activateSection({
+    section: dashboardSection,
+    tab: dashboardTab,
+    fab: true,
+    onShow: async () => {
+      await loadDashboard()
+      await loadTransactions()
+      await loadDailyStatus()
+    }
+  })
 })
 
 dashboardStartDate?.addEventListener(
@@ -182,76 +198,55 @@ dashboardStartDate?.addEventListener(
   }
 )
 
-supplierMasterTab?.addEventListener('click', async (e) => {
-  e.preventDefault()
+supplierMasterTab?.addEventListener('click', async (event) => {
+  event.preventDefault()
 
-  hideAllSections()
-  resetActiveTabs()
-
-  supplierMasterSection.style.display = 'block'
-  supplierMasterTab.classList.add('active')
-
-  updateActiveDropdown()
-
-  await loadSupplierMaster()
+  await activateSection({
+    section: supplierMasterSection,
+    tab: supplierMasterTab,
+    onShow: loadSupplierMaster
+  })
 })
 
 supplierReportTab?.addEventListener('click', async (event) => {
   event.preventDefault()
 
-  hideAllSections()
-  resetActiveTabs()
-
-  supplierSection.style.display = 'block'
-  supplierReportTab.classList.add('active')
-
-  updateActiveDropdown()
-
-  await loadSupplierReport()
+  await activateSection({
+    section: supplierSection,
+    tab: supplierReportTab,
+    onShow: loadSupplierReport
+  })
 })
 
 incomeReportTab?.addEventListener('click', async (event) => {
   event.preventDefault()
 
-  hideAllSections()
-  resetActiveTabs()
-
-  incomeSection.style.display = 'block'
-  incomeReportTab.classList.add('active')
-
-  updateActiveDropdown()
-
-  await loadIncomeReport()
+  await activateSection({
+    section: incomeSection,
+    tab: incomeReportTab,
+    onShow: loadIncomeReport
+  })
 })
 
-reportTab?.addEventListener('click', (event) => {
+reportTab?.addEventListener('click', async (event) => {
   if (currentUser?.role === 'viewer') return
 
   event.preventDefault()
 
-  hideAllSections()
-  resetActiveTabs()
-
-  reportSection.style.display = 'block'
-  reportTab.classList.add('active')
-
-  updateActiveDropdown()
+  await activateSection({
+    section: reportSection,
+    tab: reportTab
+  })
 })
 
 bankTransactionTab?.addEventListener('click', async (event) => {
   event.preventDefault()
 
-  hideAllSections()
-
-  resetActiveTabs()
-
-  bankTransactionTab.classList.add('active')
-
-  updateActiveDropdown()
-
-  bankTransactionSection.style.display = 'block'
-
-  await loadBankTransactions()
+  await activateSection({
+    section: bankTransactionSection,
+    tab: bankTransactionTab,
+    onShow: loadBankTransactions
+  })
 })
 
 // ============================================================
