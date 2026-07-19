@@ -75,7 +75,7 @@ function useKitchenCache() {
   return true
 }
 
-function handleKitchenLoadError(error) {
+function handleLoaderError(error) {
   console.error(error)
 }
 
@@ -87,7 +87,7 @@ async function loadKitchens() {
   const { data, error } = await fetchKitchens()
 
   if (error) {
-    console.error(error)
+    handleLoaderError(error)
 
     return
   }
@@ -156,7 +156,7 @@ async function loadSuppliers() {
   const { data, error } = await fetchSuppliers()
 
   if (error) {
-    handleKitchenLoadError(error)
+    handleLoaderError(error)
 
     return
   }
@@ -195,6 +195,34 @@ function renderAccountPlaceholder() {
   `
 }
 
+function renderEmptyAccount() {
+  accountSelect.innerHTML = `
+    <option value="">
+      Tidak tersedia
+    </option>
+  `
+
+  accountSelect.disabled = true
+}
+
+function buildAccountOptions(accounts) {
+  let options = ''
+
+  accounts.forEach((account) => {
+    options += `
+      <option value="${account.id}">
+        ${account.name}${
+          account.income_suppliers?.owner_name
+            ? ` / ${account.income_suppliers.owner_name}`
+            : ''
+        } (${account.bank})
+      </option>
+    `
+  })
+
+  return options
+}
+
 async function loadAccountsFiltered(flow) {
   const kitchenId = kitchenSelect.value
 
@@ -226,32 +254,12 @@ async function loadAccountsFiltered(flow) {
   renderAccountPlaceholder()
 
   if (!uniqueAccounts.length) {
-    accountSelect.innerHTML = `
-      <option value="">
-        Tidak tersedia
-      </option>
-    `
-
-    accountSelect.disabled = true
+    renderEmptyAccount()
 
     return
   }
 
-  let options = ''
-
-  uniqueAccounts.forEach((account) => {
-    options += `
-  <option value="${account.id}">
-    ${account.name}${
-      account.income_suppliers?.owner_name
-        ? ` / ${account.income_suppliers.owner_name}`
-        : ''
-    } (${account.bank})
-  </option>
-`
-  })
-
-  accountSelect.innerHTML += options
+  accountSelect.innerHTML += buildAccountOptions(uniqueAccounts)
 
   if (uniqueAccounts.length === 1) {
     accountSelect.value = uniqueAccounts[0].id
@@ -260,6 +268,43 @@ async function loadAccountsFiltered(flow) {
   } else {
     accountSelect.disabled = false
   }
+}
+
+function renderSupplierPlaceholder() {
+  supplierSelect.innerHTML = `
+    <option
+      value=""
+      disabled
+      selected
+      hidden
+    >
+      Pilih Supplier
+    </option>
+  `
+}
+
+function renderEmptySupplier() {
+  supplierSelect.innerHTML = `
+    <option value="">
+      Tidak tersedia
+    </option>
+  `
+
+  supplierSelect.disabled = true
+}
+
+function buildSupplierOptions(suppliers) {
+  let options = ''
+
+  suppliers.forEach((supplier) => {
+    options += `
+      <option value="${supplier.id}">
+        ${supplier.name}
+      </option>
+    `
+  })
+
+  return options
 }
 
 async function loadSuppliersFiltered() {
@@ -283,40 +328,15 @@ async function loadSuppliersFiltered() {
     ).values()
   ]
 
-  supplierSelect.innerHTML = `
-    <option
-      value=""
-      disabled
-      selected
-      hidden
-    >
-      Pilih Supplier
-    </option>
-  `
+  renderSupplierPlaceholder()
 
   if (!uniqueSuppliers.length) {
-    supplierSelect.innerHTML = `
-      <option value="">
-        Tidak tersedia
-      </option>
-    `
-
-    supplierSelect.disabled = true
+    renderEmptySupplier()
 
     return
   }
 
-  let options = ''
-
-  uniqueSuppliers.forEach((supplier) => {
-    options += `
-      <option value="${supplier.id}">
-        ${supplier.name}
-      </option>
-    `
-  })
-
-  supplierSelect.innerHTML += options
+  supplierSelect.innerHTML += buildSupplierOptions(uniqueSuppliers)
 
   if (uniqueSuppliers.length === 1) {
     supplierSelect.value = uniqueSuppliers[0].id

@@ -58,63 +58,6 @@ function initializeDates() {
   }
 }
 
-function hideAllSections() {
-  dashboardSection.style.display = 'none'
-
-  supplierSection.style.display = 'none'
-
-  supplierMasterSection.style.display = 'none'
-
-  reportSection.style.display = 'none'
-
-  kitchenMasterSection.style.display = 'none'
-
-  disbursementSection.style.display = 'none'
-
-  incomeSection.style.display = 'none'
-
-  bankTransactionSection.style.display = 'none'
-
-  transactionFab.style.display = 'none'
-}
-
-function resetActiveTabs() {
-  document.querySelectorAll('.nav-link').forEach((link) => {
-    link.classList.remove('active')
-  })
-
-  document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
-    dropdown.classList.remove('active')
-  })
-}
-
-function updateActiveDropdown() {
-  document.querySelectorAll('.nav-dropdown').forEach((dropdown) => {
-    const hasActive = dropdown.querySelector('.nav-link.active')
-
-    dropdown.classList.toggle('active', !!hasActive)
-  })
-}
-
-async function activateSection({ section, tab, fab = false, onShow }) {
-  hideAllSections()
-  resetActiveTabs()
-
-  section.style.display = 'block'
-
-  if (fab) {
-    transactionFab.style.display = 'flex'
-  }
-
-  tab.classList.add('active')
-
-  updateActiveDropdown()
-
-  if (onShow) {
-    await onShow()
-  }
-}
-
 // ============================================================
 // LOAD / RENDER FUNCTIONS
 // ============================================================
@@ -169,23 +112,6 @@ async function loadDashboard() {
 // EVENT LISTENERS
 // ============================================================
 
-dashboardTab?.addEventListener('click', async (event) => {
-  if (currentUser?.role === 'viewer') return
-
-  event.preventDefault()
-
-  await activateSection({
-    section: dashboardSection,
-    tab: dashboardTab,
-    fab: true,
-    onShow: async () => {
-      await loadDashboard()
-      await loadTransactions()
-      await loadDailyStatus()
-    }
-  })
-})
-
 dashboardStartDate?.addEventListener(
   'change',
 
@@ -198,61 +124,8 @@ dashboardStartDate?.addEventListener(
   }
 )
 
-supplierMasterTab?.addEventListener('click', async (event) => {
-  event.preventDefault()
-
-  await activateSection({
-    section: supplierMasterSection,
-    tab: supplierMasterTab,
-    onShow: loadSupplierMaster
-  })
-})
-
-supplierReportTab?.addEventListener('click', async (event) => {
-  event.preventDefault()
-
-  await activateSection({
-    section: supplierSection,
-    tab: supplierReportTab,
-    onShow: loadSupplierReport
-  })
-})
-
-incomeReportTab?.addEventListener('click', async (event) => {
-  event.preventDefault()
-
-  await activateSection({
-    section: incomeSection,
-    tab: incomeReportTab,
-    onShow: loadIncomeReport
-  })
-})
-
-reportTab?.addEventListener('click', async (event) => {
-  if (currentUser?.role === 'viewer') return
-
-  event.preventDefault()
-
-  await activateSection({
-    section: reportSection,
-    tab: reportTab
-  })
-})
-
-bankTransactionTab?.addEventListener('click', async (event) => {
-  event.preventDefault()
-
-  await activateSection({
-    section: bankTransactionSection,
-    tab: bankTransactionTab,
-    onShow: loadBankTransactions
-  })
-})
-
 // ============================================================
 // INIT
 // ============================================================
 
 initializeDates()
-
-updateActiveDropdown()

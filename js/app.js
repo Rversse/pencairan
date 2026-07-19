@@ -11,52 +11,20 @@ function registerActivityListeners() {
   resetInactivityTimer()
 }
 
-async function initializeAdminView() {
-  dashboardSection.style.display = 'block'
-
-  resetActiveTabs()
-
-  dashboardTab.classList.add('active')
-
-  await Promise.all([
-    loadTransactions(),
-    loadDashboard(),
-    loadDailyStatus(),
-    loadSupplierReport()
-  ])
-}
-
-async function initializeOperatorView() {
-  incomeSection.style.display = 'block'
-
-  resetActiveTabs()
-
-  incomeReportTab.classList.add('active')
-
-  updateActiveDropdown()
-
-  await loadIncomeReport()
-}
-
-function hideAllSections() {
-  dashboardSection.style.display = 'none'
-  supplierSection.style.display = 'none'
-  reportSection.style.display = 'none'
-  disbursementSection.style.display = 'none'
-  incomeSection.style.display = 'none'
-  supplierMasterSection.style.display = 'none'
-  kitchenMasterSection.style.display = 'none'
-}
-
 async function initializeUserView() {
   const role = currentUser?.role
 
   if (role === 'viewer' || role === 'operator') {
-    await initializeOperatorView()
+    await activateSection({
+      section: incomeSection,
+      tab: incomeReportTab,
+      onShow: loadIncomeReport
+    })
+
     return
   }
 
-  await initializeAdminView()
+  await showDashboard()
 }
 
 async function initializeApplication() {

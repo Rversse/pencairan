@@ -360,19 +360,23 @@
       <section id="bankTransactionSection" style="display: none">
         <div class="page-header">
           <h2>Transaksi Bank</h2>
-        </div>
 
-        <div class="bank-page">
-          <div class="bank-toolbar">
-            <div class="bank-filter">
-              <input type="date" id="bankStartDate" />
-
-              <span>s/d</span>
-
-              <input type="date" id="bankEndDate" />
-
-              <button id="applyBankFilter" class="primary-button">Apply</button>
+          <div class="page-actions">
+            <div class="bank-search">
+              <input
+                type="text"
+                id="bankSearch"
+                placeholder="Cari nama pemilik, bank, atau rekening..."
+                autocomplete="off"
+                spellcheck="false"
+              />
             </div>
+
+            <input type="date" id="bankStartDate" />
+
+            <input type="date" id="bankEndDate" />
+
+            <button id="applyBankFilter" class="primary-button">Apply</button>
 
             <button
               id="addBankTransactionButton"
@@ -382,17 +386,9 @@
               + Tambah Transaksi
             </button>
           </div>
+        </div>
 
-          <div class="bank-search">
-            <input
-              type="text"
-              id="bankSearch"
-              placeholder="Cari nama pemilik, bank, atau rekening..."
-              autocomplete="off"
-              spellcheck="false"
-            />
-          </div>
-
+        <div class="bank-page">
           <div id="bankTransactionTableContainer"></div>
         </div>
       </section>

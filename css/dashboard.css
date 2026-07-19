@@ -137,24 +137,6 @@
   min-width: 120px;
 }
 
-.bank-toolbar {
-  display: flex;
-
-  justify-content: space-between;
-
-  align-items: flex-end;
-
-  gap: 18px;
-
-  margin-bottom: 24px;
-}
-@media (max-width: 768px) {
-  .bank-toolbar {
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
 .bank-row td {
   padding: 26px 22px;
 
@@ -166,54 +148,50 @@
 }
 
 .bank-owner {
-  font-size: 17px;
-
+  font-size: 20px;
   font-weight: 800;
-
   color: var(--navy);
-
-  line-height: 1.2;
+  line-height: 1.15;
+  margin-bottom: 6px;
 }
 
 .bank-account {
-  margin-top: 6px;
-
-  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 
   font-size: 13px;
-
-  letter-spacing: 0.3px;
+  font-weight: 500;
+  color: var(--navy-soft);
+  letter-spacing: 0.2px;
 }
 
 .bank-history-button {
-  display: flex;
-
+  display: inline-flex;
   align-items: center;
-
   justify-content: center;
+  gap: 8px;
 
-  min-width: 72px;
+  min-width: 82px;
+  height: 40px;
+  padding: 0 14px;
 
-  height: 42px;
+  border: 1px solid #dbeafe;
+  border-radius: 12px;
 
-  border: none;
-
-  border-radius: 14px;
-
-  background: #eef5ff;
-
+  background: #eff6ff;
   color: #2563eb;
 
+  font-size: 13px;
   font-weight: 700;
 
-  transition: 0.2s;
-
   cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .bank-history-button:hover {
   background: #dbeafe;
-
+  border-color: #bfdbfe;
   transform: translateY(-2px);
 }
 
@@ -288,9 +266,26 @@
 }
 
 .bank-balance {
-  font-size: 17px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.bank-balance-label {
+  font-size: 11px;
   font-weight: 700;
-  white-space: nowrap;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #94a3b8;
+}
+
+.bank-balance-amount {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--navy);
 }
 
 .bank-balance.positive {
@@ -305,34 +300,9 @@
   color: #64748b;
 }
 
-@media (max-width: 768px) {
-  .bank-summary-cards {
-    grid-template-columns: 1fr;
-  }
-}
-
 .bank-page {
   max-width: 1400px;
   margin: 0 auto;
-}
-
-.bank-filter {
-  display: flex;
-  align-items: flex-end;
-  gap: 14px;
-  flex: 1;
-}
-
-.bank-filter > div {
-  flex: 1;
-}
-
-.bank-filter label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
 }
 
 #bankTransactionTableContainer {
@@ -349,88 +319,86 @@
   box-shadow: 0 6px 24px rgba(15, 23, 42, 0.05);
 }
 
-.bank-summary-card {
-  position: relative;
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 
-  overflow: hidden;
+  max-width: 1400px;
+  margin: 0 auto 20px;
+}
 
-  padding: 24px;
+.page-header h2 {
+  margin: 0;
+  flex-shrink: 0;
+}
 
-  border-radius: 18px;
+.page-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  flex: 1;
+  flex-wrap: wrap;
+}
 
+/* ==========================================================
+   Bank summary cards (nempel di atas tabel, bg flat)
+   ========================================================== */
+
+.bank-summary-cards {
+  max-width: 100%;
+  margin: 0;
   border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 18px 18px 0 0;
+  overflow: hidden;
+  background: #fff;
+}
 
-  background: linear-gradient(180deg, #ffffff, #f8fafc);
+.bank-summary-card {
+  min-height: 0;
+}
 
-  transition: 0.2s;
+.bank-summary-card:not(:last-child) {
+  border-right: 1px solid var(--border);
 }
 
 .bank-summary-card::after {
-  content: '';
-
-  position: absolute;
-
-  width: 120px;
-
-  height: 120px;
-
-  right: -30px;
-
-  top: -30px;
-
-  border-radius: 50%;
-
-  background: rgba(37, 99, 235, 0.05);
-}
-
-.bank-summary-card:hover {
-  transform: translateY(-3px);
-
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-}
-
-.bank-summary-card span {
-  position: relative;
-
-  font-size: 13px;
-
-  color: #64748b;
-}
-
-.bank-summary-card h2 {
-  position: relative;
-
-  margin-top: 12px;
-
-  font-size: 34px;
-
-  font-weight: 800;
+  display: none;
 }
 
 #bankTransactionTableContainer thead th {
-  padding: 18px 20px;
-
+  padding: 20px 24px;
   background: #f8fafc;
-
   border-bottom: 1px solid var(--border);
 
-  font-size: 13px;
-
+  font-size: 12px;
   font-weight: 700;
-
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-
-  letter-spacing: 0.5px;
 
   color: #64748b;
 }
 
+#bankTransactionTableContainer tbody td {
+  padding: 24px;
+  vertical-align: middle;
+}
+
 #bankTransactionTableContainer tbody tr {
-  transition: 0.15s;
+  position: relative;
+  transition:
+    background-color 0.2s ease,
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 #bankTransactionTableContainer tbody tr:hover {
   background: #f8fbff;
+  transform: translateY(-1px);
+  box-shadow: inset 4px 0 0 #2563eb;
 }
 
 #bankTransactionTableContainer tbody tr:not(:last-child) {
@@ -438,31 +406,24 @@
 }
 
 .bank-search {
-  margin-bottom: 20px;
+  width: 320px;
+  margin-bottom: 0;
 }
 
 .bank-search input {
   width: 100%;
-
-  max-width: 460px;
-
-  height: 46px;
-
-  border-radius: 14px;
+  max-width: none;
+  height: 42px;
 }
 
-@media (max-width: 768px) {
-  .bank-form-grid {
-    grid-template-columns: 1fr;
-  }
+.page-actions input[type='date'] {
+  width: 160px;
+  flex: 0 0 160px;
+}
 
-  .bank-modal-footer {
-    flex-direction: column-reverse;
-  }
-
-  .bank-modal-footer button {
-    width: 100%;
-  }
+.page-actions button {
+  width: auto;
+  white-space: nowrap;
 }
 
 .recap-header {
@@ -503,18 +464,6 @@
   justify-content: center;
 
   color: var(--navy);
-}
-
-.dashboard-card:nth-child(1) .dashboard-icon {
-  color: #15803d;
-}
-
-.dashboard-card:nth-child(2) .dashboard-icon {
-  color: #dc2626;
-}
-
-.dashboard-card:nth-child(3) .dashboard-icon {
-  color: #d97706;
 }
 
 .dashboard-icon svg {
@@ -584,6 +533,22 @@
   margin-top: 28px;
 }
 
+/* ==========================================================
+   Dashboard card color variants (income / expense / gas)
+   ========================================================== */
+
+.dashboard-card:nth-child(1) .dashboard-icon {
+  color: #15803d;
+}
+
+.dashboard-card:nth-child(2) .dashboard-icon {
+  color: #dc2626;
+}
+
+.dashboard-card:nth-child(3) .dashboard-icon {
+  color: #d97706;
+}
+
 .dashboard-card:nth-child(1) h2,
 .dashboard-card:nth-child(2) h2,
 .dashboard-card:nth-child(3) h2 {
@@ -622,6 +587,21 @@
     rgba(245, 158, 11, 0.14),
     transparent 72%
   );
+}
+
+/* Override gradient variants above for bank summary cards specifically
+   — flat white bg, square radius nempel ke table di bawahnya */
+.dashboard-card.bank-summary-card {
+  background: transparent;
+  border-radius: 0;
+}
+
+.dashboard-card.bank-summary-card:first-child {
+  border-radius: 18px 0 0 0;
+}
+
+.dashboard-card.bank-summary-card:last-child {
+  border-radius: 0 18px 0 0;
 }
 
 #bankTransactionTableContainer table {
@@ -669,5 +649,31 @@
 
   .dashboard-filters button {
     width: 100%;
+  }
+
+  .bank-form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .bank-modal-footer {
+    flex-direction: column-reverse;
+  }
+
+  .bank-modal-footer button {
+    width: 100%;
+  }
+
+  .bank-summary-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .bank-summary-card:not(:last-child) {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dashboard-card.bank-summary-card:first-child,
+  .dashboard-card.bank-summary-card:last-child {
+    border-radius: 0;
   }
 }

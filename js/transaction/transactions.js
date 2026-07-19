@@ -206,7 +206,7 @@ async function loadTransactions(showLoading = true) {
     transactionsContainer.innerHTML = `
 <div class="empty-state">
   Tidak ada transaksi
-  untuk filter ini
+  untuk tanggal ini
 </div>
       `
 

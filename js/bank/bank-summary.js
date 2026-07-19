@@ -49,7 +49,7 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         historyCount: accountExpense.length
       }
     })
-    .sort((a, b) => b.balance - a.balance)
+    .sort((a, b) => a.ownerName.localeCompare(b.ownerName))
 
   currentBankSummary = summary
 
@@ -71,24 +71,52 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
   const totalBalance = filteredSummary.reduce((t, x) => t + x.balance, 0)
 
   bankTransactionTableContainer.innerHTML = `
-    <div class="bank-summary-cards">
+<div class="dashboard bank-summary-cards">
 
-      <div class="bank-summary-card">
-        <span>Total Masuk</span>
+  <div class="dashboard-card bank-summary-card">
+    <div class="dashboard-card-top">
+      <div>
+        <small>Total Masuk</small>
         <h2>${formatRupiah(totalIncome)}</h2>
       </div>
+      <div class="dashboard-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2">
+          <path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
 
-      <div class="bank-summary-card">
-        <span>Total Keluar</span>
+  <div class="dashboard-card bank-summary-card">
+    <div class="dashboard-card-top">
+      <div>
+        <small>Total Keluar</small>
         <h2>${formatRupiah(totalExpense)}</h2>
       </div>
+      <div class="dashboard-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+          <path d="M12 5v14M5 12l7 7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
 
-      <div class="bank-summary-card">
-        <span>Total Saldo</span>
+  <div class="dashboard-card bank-summary-card">
+    <div class="dashboard-card-top">
+      <div>
+        <small>Total Saldo</small>
         <h2>${formatRupiah(totalBalance)}</h2>
       </div>
-
+      <div class="dashboard-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2">
+          <rect x="2" y="6" width="20" height="12" rx="2"/>
+          <path d="M2 10h20" stroke-linecap="round"/>
+        </svg>
+      </div>
     </div>
+  </div>
+
+</div>
 
     <table class="table">
 

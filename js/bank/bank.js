@@ -261,6 +261,12 @@ function clearDefaultAdminFee() {
   }
 }
 
+bankStartDate?.addEventListener('change', async () => {
+  bankEndDate.value = bankStartDate.value
+
+  await loadBankTransactions()
+})
+
 applyBankFilter?.addEventListener('click', async () => {
   await loadBankTransactions()
 })
