@@ -57,7 +57,7 @@ async function fetchBankTransactions() {
     supabaseClient
       .from('transactions')
       .select('account_id,amount')
-      .eq('flow_type', 'income')
+      .in('flow_type', ['income', 'neutral'])
       .gte('transaction_date', effectiveStartDate)
       .lte('transaction_date', endDate),
 

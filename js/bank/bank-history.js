@@ -1,4 +1,5 @@
 let currentHistoryAccountId = null
+let bankHistoryRequestId = 0
 
 const bankHistoryModal = document.getElementById('bankHistoryModal')
 const bankHistoryTitle = document.getElementById('bankHistoryTitle')
@@ -6,6 +7,8 @@ const bankHistoryContent = document.getElementById('bankHistoryContent')
 const closeBankHistory = document.getElementById('closeBankHistory')
 
 async function openBankHistory(accountId) {
+  const requestId = ++bankHistoryRequestId
+
   currentHistoryAccountId = accountId
 
   const effectiveStartDate =
@@ -45,7 +48,7 @@ accounts(
     supabaseClient
       .from('transactions')
       .select('amount')
-      .eq('flow_type', 'income')
+      .in('flow_type', ['income', 'neutral'])
       .eq('account_id', accountId)
       .gte('transaction_date', effectiveStartDate)
       .lte('transaction_date', bankEndDate.value),
@@ -63,6 +66,8 @@ accounts(
       .eq('id', accountId)
       .single()
   ])
+
+  if (requestId !== bankHistoryRequestId) return
 
   if (transactionResult.error) {
     console.error(transactionResult.error)
