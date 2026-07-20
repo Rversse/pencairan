@@ -13,11 +13,15 @@ async function openBankHistory(accountId) {
       ? BANK_MODULE_START_DATE
       : bankStartDate.value
 
-  bankHistoryModal.classList.add('show')
-
+  // Bersihkan dulu
   bankHistoryTitle.textContent = 'History Rekening'
+  bankHistoryContent.innerHTML = ''
 
+  // Isi skeleton
   renderHistorySkeleton()
+
+  // Baru tampilkan modal
+  bankHistoryModal.classList.add('show')
 
   const [transactionResult, incomeResult, accountResult] = await Promise.all([
     supabaseClient
@@ -105,19 +109,20 @@ accounts(
 `
 
     bankHistoryContent.innerHTML = `
-  <div class="history-summary">
 
-    <div class="history-summary-info">
+    <div class="history-summary">
 
-      <small>Saldo Awal</small>
-      <h3>${formatRupiah(openingBalance)}</h3>
+  <div class="history-summary-info">
 
-      <small style="margin-top:12px;">Saldo Saat Ini</small>
-      <h2>${formatRupiah(openingBalance)}</h2>
+    <small>Saldo Saat Ini</small>
 
-    </div>
+    <h2 class="history-current-balance">
+      ${formatRupiah(openingBalance)}
+    </h2>
 
   </div>
+
+</div>
 
   <div class="history-empty">
 
@@ -164,8 +169,15 @@ accounts(
     </div>
   `
 
+  const dailyTransactionOrder = new Map()
+
   const historyCards = transactions
     .map((item) => {
+      const dateKey = item.transaction_date
+
+      const order = (dailyTransactionOrder.get(dateKey) ?? 0) + 1
+
+      dailyTransactionOrder.set(dateKey, order)
       const transferAmount = Number(item.transfer_amount) || 0
       const adminFee = Number(item.admin_fee) || 0
       const totalOut = transferAmount + adminFee
@@ -179,19 +191,27 @@ accounts(
 
   <div class="history-header">
 
-    <div>
+<div>
 
-      <div class="history-recipient">
-        ${item.recipient_name || 'Penerima tidak diketahui'}
-      </div>
+  <div class="history-recipient-row">
 
-      <div class="history-date">
-        ${formatDateShort(item.transaction_date)}
-        •
-        ${formatTime(item.created_at)}
-      </div>
-
+    <div class="history-recipient">
+      ${item.recipient_name || 'Penerima tidak diketahui'}
     </div>
+
+    <span class="history-order">
+      No. ${order}
+    </span>
+
+  </div>
+
+  <div class="history-date">
+    ${formatDateShort(item.transaction_date)}
+    •
+    ${formatTime(item.created_at)}
+  </div>
+
+</div>
 
     <div class="history-actions">
 
@@ -267,15 +287,16 @@ accounts(
   const html = historyCards.join('')
 
   bankHistoryContent.innerHTML = `
-<div class="history-summary">
+
+  <div class="history-summary">
 
   <div class="history-summary-info">
 
-    <small>Saldo Awal</small>
-    <h3>${formatRupiah(openingBalance)}</h3>
+    <small>Saldo Saat Ini</small>
 
-    <small style="margin-top:12px;">Saldo Saat Ini</small>
-    <h2>${formatRupiah(historyBalance)}</h2>
+    <h2 class="history-current-balance">
+      ${formatRupiah(historyBalance)}
+    </h2>
 
   </div>
 

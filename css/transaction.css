@@ -46,21 +46,35 @@
 
 .transaction-card small {
   color: var(--navy-soft);
-  font-size: 13px;
+
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+
+  line-height: var(--line-normal);
+
   opacity: 0.92;
 }
 
 .transaction-date {
-  font-size: 13px;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-normal);
+
+  line-height: var(--line-normal);
+
   font-style: italic;
 }
 
 .amount {
   text-align: right;
   white-space: nowrap;
-  font-size: 18px;
-  font-weight: 800;
-  letter-spacing: -0.03em;
+
+  font-size: var(--text-xl);
+  font-weight: var(--fw-extrabold);
+
+  line-height: var(--line-tight);
+
+  letter-spacing: var(--tracking-tight);
+
   color: var(--navy);
 }
 
@@ -135,9 +149,11 @@
 
 .transaction-target {
   color: var(--navy-soft);
-  font-size: 14px;
-  font-weight: 550;
-  line-height: 1.45;
+
+  font-size: var(--text-md);
+  font-weight: var(--fw-medium);
+
+  line-height: var(--line-normal);
 }
 
 .transactions-header {
@@ -147,10 +163,15 @@
 }
 
 .view-all-link {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: var(--text-md);
+  font-weight: var(--fw-semibold);
+
+  line-height: var(--line-normal);
+
   color: var(--navy);
+
   text-decoration: none;
+
   transition: var(--transition);
 }
 
@@ -187,7 +208,8 @@
   }
   .amount {
     text-align: left;
-    font-size: 24px;
+
+    font-size: var(--text-3xl);
   }
   .transaction-actions {
     width: 100%;

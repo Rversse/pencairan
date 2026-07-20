@@ -19,8 +19,10 @@
   padding: 16px;
   text-align: center;
   vertical-align: middle;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-bold);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
   color: var(--navy);
   background: var(--bg-soft);
   border-bottom: 1px solid var(--border);
@@ -30,7 +32,7 @@
   padding: 15px 16px;
   text-align: center;
   vertical-align: middle;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   border-bottom: 1px solid var(--border);
 }
 
@@ -85,8 +87,9 @@
 
 .summary-total-row td {
   color: var(--gold);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+
+  font-weight: var(--fw-bold);
   border-top: 1px solid var(--border);
 }
 
@@ -109,14 +112,19 @@
 
 .supplier-summary-top h3 {
   margin: 0;
-  font-size: 18px;
-  letter-spacing: 0.2px;
-  font-weight: 700;
+  font-size: var(--text-xl);
+
+  font-weight: var(--fw-bold);
+
+  line-height: var(--line-tight);
+
+  letter-spacing: var(--tracking-normal);
   color: var(--navy);
 }
 
 .supplier-summary-top span {
-  font-size: 14px;
+  font-size: var(--text-md);
+  font-weight: var(--fw-medium);
   color: var(--navy-soft);
 }
 
@@ -134,15 +142,20 @@
   text-align: center;
   background: var(--bg-soft);
   color: var(--navy);
-  font-size: 13px;
-  font-weight: 700;
+  font-size: var(--text-sm);
+
+  font-weight: var(--fw-bold);
+
+  letter-spacing: var(--tracking-wide);
+
+  text-transform: uppercase;
   border-bottom: 1px solid var(--border);
 }
 
 .disbursement-table td {
   padding: 15px 16px;
   text-align: center;
-  font-weight: 500;
+  font-weight: var(--fw-medium);
   border-bottom: 1px solid var(--border);
 }
 
@@ -187,8 +200,8 @@
   min-width: 90px;
   min-height: 38px;
   padding: 0 16px;
-  font-size: 13px;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
   border-radius: 10px;
   transition: var(--transition);
   box-shadow: none;
@@ -210,10 +223,10 @@
     gap: 6px;
   }
   .supplier-summary-top h3 {
-    font-size: 16px;
+    font-size: var(--text-lg);
   }
   .supplier-summary-top span {
-    font-size: 12px;
+    font-size: var(--text-xs);
   }
   .summary-table {
     min-width: 720px;
@@ -228,6 +241,6 @@
   .summary-table thead th,
   .summary-table tbody td {
     padding: 14px 12px;
-    font-size: 13px;
+    font-size: var(--text-sm);
   }
 }

@@ -20,4 +20,32 @@
   --gold-hover: #b45309;
   --scrollbar: #cbd5e1;
   --scrollbar-hover: #94a3b8;
+
+  /* ==========================
+   TYPOGRAPHY
+========================== */
+
+  --font-family: 'Inter', sans-serif;
+
+  --text-xs: 11px;
+  --text-sm: 13px;
+  --text-md: 14px;
+  --text-lg: 16px;
+  --text-xl: 18px;
+  --text-2xl: 22px;
+  --text-3xl: 28px;
+
+  --fw-normal: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+  --fw-bold: 700;
+  --fw-extrabold: 800;
+
+  --line-tight: 1.2;
+  --line-normal: 1.5;
+  --line-relaxed: 1.7;
+
+  --tracking-tight: -0.03em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.08em;
 }

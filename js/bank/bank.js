@@ -1,9 +1,9 @@
 let editingBankTransactionId = null
 
-const applyBankFilter = document.getElementById('applyBankFilter')
 const bankSearch = document.getElementById('bankSearch')
 
 const bankAccountSelect = document.getElementById('bankAccountSelect')
+const bankCurrentBalance = document.getElementById('bankCurrentBalance')
 
 const bankStartDate = document.getElementById('bankStartDate')
 const bankEndDate = document.getElementById('bankEndDate')
@@ -88,6 +88,21 @@ function checkBankQueryError(...results) {
   return false
 }
 
+function validateBankModuleDate(date) {
+  if (date >= BANK_MODULE_START_DATE) {
+    return true
+  }
+
+  showToast(
+    `Data transaksi bank tersedia mulai ${formatDateShort(
+      BANK_MODULE_START_DATE
+    )}.`,
+    'warning'
+  )
+
+  return false
+}
+
 async function loadBankTransactions() {
   if (!bankStartDate.value) {
     bankStartDate.value = getTodayLocal()
@@ -104,9 +119,6 @@ async function loadBankTransactions() {
   if (bankEndDate.value < BANK_MODULE_START_DATE) {
     bankEndDate.value = BANK_MODULE_START_DATE
   }
-
-  applyBankFilter.disabled = true
-  applyBankFilter.textContent = 'Memuat...'
 
   addBankTransactionButton.disabled = true
 
@@ -133,9 +145,6 @@ async function loadBankTransactions() {
 
     populateBankAccountDropdown()
   } finally {
-    applyBankFilter.disabled = false
-    applyBankFilter.textContent = 'Apply'
-
     addBankTransactionButton.disabled = false
 
     bankTransactionTableContainer.style.opacity = ''
@@ -154,16 +163,21 @@ function openBankTransactionModal() {
 
   bankAccountSelect.selectedIndex = 0
 
+  updateBankCurrentBalance()
+
   transferAmount.value = ''
 
-  adminFee.value = ''
+  adminFee.value = '0'
 
   destinationName.value = ''
 
   paymentFor.value = ''
 
-  bankTransactionModal.querySelector('button[type="submit"]').textContent =
-    'Simpan Transaksi'
+  const submitButton = bankTransactionModal.querySelector(
+    'button[type="submit"]'
+  )
+
+  submitButton.textContent = 'Simpan Transaksi'
 
   bankTransactionModal.classList.add('show')
 
@@ -178,8 +192,13 @@ function openEditBankTransaction(transaction) {
   populateBankAccountDropdown()
 
   bankTransactionDate.value = transaction.transaction_date
+
   bankAccountSelect.value = transaction.account_id
+
+  updateBankCurrentBalance()
+
   destinationName.value = transaction.recipient_name ?? ''
+
   transferAmount.value = formatNumber(String(transaction.transfer_amount))
 
   adminFee.value =
@@ -196,6 +215,7 @@ function openEditBankTransaction(transaction) {
   submitButton.textContent = 'Update Transaksi'
 
   bankHistoryModal.classList.remove('show')
+
   bankTransactionModal.classList.add('show')
 
   bankTransactionForm.scrollTop = 0
@@ -206,7 +226,13 @@ function openEditBankTransaction(transaction) {
 }
 
 function closeBankTransactionModal() {
+  editingBankTransactionId = null
+
   bankTransactionForm.reset()
+
+  if (bankCurrentBalance) {
+    bankCurrentBalance.value = ''
+  }
 
   bankTransactionModal.classList.remove('show')
 }
@@ -292,6 +318,19 @@ function getCurrentBankBalance(accountId) {
   return account ? account.balance : 0
 }
 
+function updateBankCurrentBalance() {
+  if (!bankCurrentBalance) return
+
+  const accountId = bankAccountSelect.value
+
+  if (!accountId) {
+    bankCurrentBalance.value = ''
+    return
+  }
+
+  bankCurrentBalance.value = formatRupiah(getCurrentBankBalance(accountId))
+}
+
 async function persistBankTransaction(payload) {
   if (editingBankTransactionId) {
     return await supabaseClient
@@ -364,14 +403,30 @@ function clearDefaultAdminFee() {
   }
 }
 
-bankStartDate?.addEventListener('change', async () => {
+bankAccountSelect?.addEventListener('change', () => {
+  updateBankCurrentBalance()
+})
+
+bankStartDate?.addEventListener('change', async (event) => {
+  if (!validateBankModuleDate(event.target.value)) {
+    bankStartDate.value = BANK_MODULE_START_DATE
+  }
+
   bankEndDate.value = bankStartDate.value
 
   await loadBankTransactions()
+
+  requestAnimationFrame(() => event.target.blur())
 })
 
-applyBankFilter?.addEventListener('click', async () => {
+bankEndDate?.addEventListener('change', async (event) => {
+  if (!validateBankModuleDate(event.target.value)) {
+    bankEndDate.value = BANK_MODULE_START_DATE
+  }
+
   await loadBankTransactions()
+
+  requestAnimationFrame(() => event.target.blur())
 })
 
 addBankTransactionButton?.addEventListener('click', () => {
@@ -391,6 +446,12 @@ bankTransactionForm?.addEventListener('submit', async (event) => {
 transferAmount?.addEventListener('input', (event) => {
   event.target.value = formatNumber(event.target.value)
 })
+
+document
+  .getElementById('cancelBankTransactionTop')
+  ?.addEventListener('click', () => {
+    closeBankTransactionModal()
+  })
 
 adminFee?.addEventListener('input', (event) => {
   event.target.value = formatNumber(event.target.value)

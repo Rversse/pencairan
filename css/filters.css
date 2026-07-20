@@ -11,8 +11,12 @@
 .filters button {
   height: 36px;
   padding: 0 14px;
-  font-size: 13px;
-  font-weight: 500;
+
+  font-size: var(--text-sm);
+  font-weight: var(--fw-medium);
+
+  line-height: var(--line-normal);
+
   border-radius: 14px;
 }
 

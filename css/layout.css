@@ -10,12 +10,20 @@ body {
   margin: 0;
   padding: 18px 22px;
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
-  line-height: 1.5;
+
+  font-family: var(--font-family);
+  font-size: var(--text-md);
+  font-weight: var(--fw-normal);
+  line-height: var(--line-normal);
+
   color: var(--navy);
   background: var(--bg);
   background-attachment: fixed;
   visibility: hidden;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
 .container {

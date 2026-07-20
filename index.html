@@ -376,8 +376,6 @@
 
             <input type="date" id="bankEndDate" />
 
-            <button id="applyBankFilter" class="primary-button">Apply</button>
-
             <button
               id="addBankTransactionButton"
               type="button"
@@ -683,7 +681,17 @@
 
     <div id="bankTransactionModal" class="modal-overlay">
       <div class="modal-content">
-        <h2>Tambah Transaksi Bank</h2>
+        <div class="modal-header">
+          <h2>Tambah Transaksi Bank</h2>
+
+          <button
+            type="button"
+            id="cancelBankTransactionTop"
+            class="close-modal"
+          >
+            ✕
+          </button>
+        </div>
 
         <form id="bankTransactionForm">
           <div class="bank-form-grid">
@@ -697,13 +705,26 @@
               <select id="bankAccountSelect"></select>
             </div>
 
-            <div class="bank-form-full">
+            <div>
+              <label>Saldo Pengirim</label>
+
+              <input
+                id="bankCurrentBalance"
+                type="text"
+                readonly
+                tabindex="-1"
+                autocomplete="off"
+              />
+            </div>
+
+            <div>
               <label>Nama Penerima</label>
-              <input id="destinationName" />
+              <input id="destinationName" autocomplete="off" />
             </div>
 
             <div>
               <label>Nominal Transfer</label>
+
               <input
                 id="transferAmount"
                 inputmode="numeric"
@@ -713,12 +734,14 @@
 
             <div>
               <label>Biaya Admin</label>
+
               <input id="adminFee" inputmode="numeric" autocomplete="off" />
             </div>
 
             <div class="bank-form-full">
               <label>Keperluan</label>
-              <textarea id="paymentFor" rows="3"></textarea>
+
+              <textarea id="paymentFor" rows="2" autocomplete="off"></textarea>
             </div>
           </div>
 
@@ -748,7 +771,7 @@
           </div>
 
           <button type="button" id="closeBankHistory" class="secondary-button">
-            Tutup
+            X
           </button>
         </div>
 

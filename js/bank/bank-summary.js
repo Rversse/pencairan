@@ -164,8 +164,7 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
   ${filteredSummary
     .map((item) => {
-      const balanceClass =
-        item.balance > 0 ? 'positive' : item.balance < 0 ? 'negative' : 'zero'
+      const balanceClass = 'balance'
 
       const [bankName, accountNumber] = item.rekening.split(' • ')
 
@@ -218,14 +217,14 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
           <td class="text-center">
 
-            <button
-              class="bank-history-button"
+<button
+  class="bank-history-button ${item.historyCount > 0 ? 'has-history' : 'no-history'}"
               data-account-id="${item.accountId}"
               title="Lihat History"
             >
               Riwayat
 
-              <span class="history-count">
+              <span class="history-count ${item.historyCount > 0 ? 'has-history' : 'no-history'}">
                 ${item.historyCount}
               </span>
             </button>
@@ -258,35 +257,31 @@ function populateBankAccountDropdown() {
     </option>
   `
 
-  const summaryMap = new Map(
-    currentBankSummary.map((item) => [item.accountId, item])
-  )
-
-  bankAccounts.forEach((account) => {
-    if (
-      !account.income_suppliers?.owner_name ||
-      !account.account_number ||
-      account.account_number === '-'
-    ) {
-      return
-    }
-
-    const summary = summaryMap.get(account.id)
-
-    const saldo = summary?.balance ?? 0
-
-    bankAccountSelect.insertAdjacentHTML(
-      'beforeend',
-      `
-      <option value="${account.id}">
-        ${account.income_suppliers.owner_name}
-        • ${account.bank}
-        • ${getLastFiveDigits(account.account_number)}
-        • ${formatRupiah(saldo)}
-      </option>
-    `
-    )
-  })
+  bankAccounts
+    .filter((account) => {
+      return (
+        account.income_suppliers?.owner_name &&
+        account.account_number &&
+        account.account_number !== '-'
+      )
+    })
+    .sort((a, b) => {
+      return a.income_suppliers.owner_name.localeCompare(
+        b.income_suppliers.owner_name
+      )
+    })
+    .forEach((account) => {
+      bankAccountSelect.insertAdjacentHTML(
+        'beforeend',
+        `
+          <option value="${account.id}">
+            ${account.income_suppliers.owner_name}
+            • ${account.bank}
+            • ${getLastFiveDigits(account.account_number)}
+          </option>
+        `
+      )
+    })
 }
 
 function getLastFiveDigits(accountNumber) {

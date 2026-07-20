@@ -48,7 +48,7 @@ addAccountButton?.addEventListener('click', () => {
 
   accountBank.value = 'BNI'
   accountNumber.value = ''
-  accountOpeningBalance.value = formatInputRupiah(0)
+  accountOpeningBalance.value = formatNumber('0')
   accountStatus.value = 'true'
 
   accountEditor.style.display = 'block'
@@ -124,11 +124,6 @@ function renderSupplierAccounts(accounts) {
       ? '<span class="badge badge-income">Aktif</span>'
       : '<span class="badge badge-expense">Nonaktif</span>'
   }
-</div>
-
-<div class="account-opening">
-    💰 Saldo Awal:
-    <strong>${formatRupiah(account.opening_balance || 0)}</strong>
 </div>
 
 <div class="account-kitchens">
@@ -266,7 +261,7 @@ function resetAccountEditor() {
 
   accountBank.value = 'BNI'
   accountNumber.value = ''
-  accountOpeningBalance.value = formatInputRupiah(0)
+  accountOpeningBalance.value = formatNumber('0')
   accountStatus.value = 'true'
 }
 
@@ -339,8 +334,8 @@ function openAccountModal(id) {
   accountNumber.value = account.account_number ?? ''
   accountStatus.value = String(account.is_active)
 
-  accountOpeningBalance.value = formatInputRupiah(
-    Number(account.opening_balance) || 0
+  accountOpeningBalance.value = formatNumber(
+    String(Number(account.opening_balance) || 0)
   )
 
   mappingEditor.style.display = 'none'
@@ -469,11 +464,6 @@ function openAccountPreview(supplierId) {
   title="Klik untuk menyalin"
 >
   ${account.account_number ?? '-'}
-</div>
-
-<div class="preview-account-opening">
-    💰 Saldo Awal
-    <strong>${formatRupiah(account.opening_balance || 0)}</strong>
 </div>
 
 <div class="preview-account-kitchens">
@@ -740,8 +730,8 @@ function openSupplierModal(id) {
 }
 
 accountOpeningBalance.addEventListener('input', () => {
-  accountOpeningBalance.value = formatInputRupiah(
-    parseRupiah(accountOpeningBalance.value)
+  accountOpeningBalance.value = formatNumber(
+    String(parseNumber(accountOpeningBalance.value))
   )
 })
 
@@ -963,7 +953,7 @@ async function saveAccount() {
     return
   }
 
-  const openingBalance = Number(parseRupiah(accountOpeningBalance.value))
+  const openingBalance = parseNumber(accountOpeningBalance.value)
 
   const isEdit = !!currentAccountId
 
