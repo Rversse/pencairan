@@ -98,14 +98,12 @@ async function loadDashboard() {
   const summary = data?.[0] ?? {
     income: 0,
     expense: 0,
-    gas: 0
+    operational: 0
   }
 
   surplusAmount.textContent = formatRupiah(summary.income)
-
   totalExpense.textContent = formatRupiah(summary.expense)
-
-  totalGas.textContent = formatRupiah(summary.gas)
+  totalOperational.textContent = formatRupiah(summary.operational)
 }
 
 // ============================================================

@@ -17,7 +17,7 @@ function buildSupplierData(data) {
     Sukalarang: 0,
     Aris: 0,
     Babinsa: 0,
-    Gas: 0,
+    Operational: 0,
     Total: 0
   }
 
@@ -42,7 +42,7 @@ function buildSupplierData(data) {
         Sukalarang: 0,
         Aris: 0,
         Babinsa: 0,
-        Gas: 0,
+        Operational: 0,
         Total: 0
       }
     }
@@ -57,7 +57,7 @@ function buildSupplierData(data) {
         Sukalarang: 0,
         Aris: 0,
         Babinsa: 0,
-        Gas: 0,
+        Operational: 0,
         Total: 0
       }
     }
@@ -68,7 +68,7 @@ function buildSupplierData(data) {
         Sukalarang: 0,
         Aris: 0,
         Babinsa: 0,
-        Gas: 0,
+        Operational: 0,
         Total: 0
       }
     }
@@ -117,10 +117,10 @@ function buildSupplierData(data) {
     if (item.flow_type === 'neutral') {
       const amount = Number(item.amount)
 
-      targetSummary.Gas += amount
-      targetDaily.Gas += amount
-      summaryTotals.Gas += amount
-      dailyTotals[date].Gas += amount
+      targetSummary.Operational += amount
+      targetDaily.Operational += amount
+      summaryTotals.Operational += amount
+      dailyTotals[date].Operational += amount
     }
   })
 
@@ -165,7 +165,7 @@ function renderSupplierSummary(reportData) {
             </td>
 
             <td>
-              ${formatRupiah(values.Gas)}
+              ${formatRupiah(values.Operational)}
             </td>
 
             <td>
@@ -213,8 +213,8 @@ ${
 <th>SUKALARANG</th>
 <th>ARIS</th>
 <th>BABINSA</th>
-<th>GAS</th>
-<th>TOTAL (TANPA GAS)</th>
+<th>OPS</th>
+<th>TOTAL (TANPA OPS)</th>
 
           </tr>
 
@@ -269,7 +269,7 @@ ${
             <td>
 
               <strong>
-                ${formatRupiah(totals.Gas)}
+                ${formatRupiah(totals.Operational)}
               </strong>
 
             </td>
@@ -343,7 +343,7 @@ function renderSupplierDailySummary(reportData) {
                 </td>
 
                 <td>
-                  ${formatRupiah(values.Gas)}
+                  ${formatRupiah(values.Operational)}
                 </td>
 
                 <td>
@@ -393,7 +393,7 @@ ${formatDateShort(date)}
 <th>SUKALARANG</th>
 <th>ARIS</th>
 <th>BABINSA</th>
-<th>GAS</th>
+<th>OPS</th>
 <th>TOTAL</th>
 
                 </tr>
@@ -449,7 +449,7 @@ ${formatDateShort(date)}
                   <td>
 
                     <strong>
-                      ${formatRupiah(totals.Gas)}
+                      ${formatRupiah(totals.Operational)}
                     </strong>
 
                   </td>

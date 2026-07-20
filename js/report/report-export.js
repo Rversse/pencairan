@@ -215,7 +215,7 @@ function buildExportFileName(
   const flowLabelMap = {
     income: 'bgn',
     expense: 'supplier',
-    neutral: 'gas'
+    neutral: 'operational'
   }
 
   const flowPart = flowLabelMap[selectedFlowType] || 'semua'

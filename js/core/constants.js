@@ -34,7 +34,7 @@ const viewerBadge = document.getElementById('viewerBadge')
 
 const transactionsContainer = document.getElementById('transactions')
 
-const totalGas = document.getElementById('totalGas')
+const totalOperational = document.getElementById('totalOperational')
 
 const totalExpense = document.getElementById('totalExpense')
 

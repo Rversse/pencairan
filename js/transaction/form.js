@@ -2,7 +2,7 @@ function updateFlowOptions() {
   const selectedKitchen =
     kitchenSelect.options[kitchenSelect.selectedIndex]?.text || ''
 
-  const hasGas =
+  const hasOperational =
     !selectedKitchen.includes('Sukaraja') && !selectedKitchen.includes('Cihaur')
 
   flowType.innerHTML = `
@@ -24,12 +24,12 @@ function updateFlowOptions() {
     </option>
     `
 
-  if (hasGas) {
+  if (hasOperational) {
     flowType.innerHTML += `
-      <option value="gas">
-        BELANJA GAS
-      </option>
-    `
+    <option value="operational">
+      OPERASIONAL
+    </option>
+  `
   }
 }
 
@@ -61,7 +61,7 @@ function updateFormFlow() {
     return
   }
 
-  if (flowType.value === 'pemasukan' || flowType.value === 'gas') {
+  if (flowType.value === 'pemasukan' || flowType.value === 'operational') {
     if (isSukaraja) {
       amountInput.disabled = !accountSelect.value
 
@@ -132,20 +132,20 @@ async function toggleFields() {
   }
 
   // ======================
-  // GAS
+  // OPERASIONAL
   // ======================
 
-  if (flow === 'gas') {
+  if (flow === 'operational') {
     accountSelect.style.display = 'block'
 
     await loadAccountsFiltered(flow)
 
-    const gasAccount = Array.from(accountSelect.options).find(
+    const operationalAccount = Array.from(accountSelect.options).find(
       (option) => option.value && option.text.includes('BNI')
     )
 
-    if (gasAccount) {
-      accountSelect.value = gasAccount.value
+    if (operationalAccount) {
+      accountSelect.value = operationalAccount.value
     }
 
     updateFormFlow()
@@ -222,7 +222,7 @@ function resetFormState() {
       return
     }
 
-    if (flowType.value === 'gas') {
+    if (flowType.value === 'operational') {
       amountInput.focus()
     }
   })
@@ -243,7 +243,7 @@ function lockTransactionFields(isEditing) {
     supplierSelect.disabled = isEditing
   }
 
-  if (flowType.value === 'pemasukan' || flowType.value === 'gas') {
+  if (flowType.value === 'pemasukan' || flowType.value === 'operational') {
     accountSelect.disabled = isEditing
   }
 }
@@ -259,7 +259,7 @@ function setTransactionFlow(flowTypeValue) {
       break
 
     case 'neutral':
-      flowType.value = 'gas'
+      flowType.value = 'operational'
       break
   }
 }
@@ -298,16 +298,14 @@ async function editTransaction(transaction) {
   }
 
   // ======================
-  // GAS LOCK
+  // OPERASIONAL LOCK
   // ======================
 
-  const isGas = transaction.flow_type === 'neutral'
+  const isOperational = transaction.flow_type === 'neutral'
 
-  flowType.disabled = isGas
-
-  accountSelect.disabled = isGas
-
-  supplierSelect.disabled = isGas
+  flowType.disabled = isOperational
+  accountSelect.disabled = isOperational
+  supplierSelect.disabled = isOperational
 
   amountInput.value = formatNumber(String(transaction.amount))
 
@@ -342,10 +340,10 @@ function getTransactionType(flow) {
         supplier_id: supplierSelect.value
       }
 
-    case 'gas':
+    case 'operational':
       return {
         flow_type: 'neutral',
-        category: 'GAS',
+        category: 'OPS',
         account_id: accountSelect.value,
         supplier_id: null
       }
@@ -384,7 +382,10 @@ function validateTransaction(flow, amount) {
     return false
   }
 
-  if ((flow === 'pemasukan' || flow === 'gas') && !accountSelect.value) {
+  if (
+    (flow === 'pemasukan' || flow === 'operational') &&
+    !accountSelect.value
+  ) {
     showToast('Rekening wajib dipilih')
     return false
   }

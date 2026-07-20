@@ -24,7 +24,7 @@ async function loadReportTransactions(startDate, endDate) {
 }
 
 function hasTransaction(data) {
-  return data.income > 0 || data.expense > 0 || data.gas > 0
+  return data.income > 0 || data.expense > 0 || data.operational > 0
 }
 
 function buildGroupedData(kitchens, data) {
@@ -37,7 +37,7 @@ function buildGroupedData(kitchens, data) {
       total_pm: kitchen.total_pm || 0,
       income: 0,
       expense: 0,
-      gas: 0
+      operational: 0
     }
 
     dailyGrouped[kitchen.id] = {}
@@ -55,7 +55,7 @@ function buildGroupedData(kitchens, data) {
       dailyGrouped[kitchen.id][date] = {
         income: 0,
         expense: 0,
-        gas: 0
+        operational: 0
       }
     }
 
@@ -70,8 +70,8 @@ function buildGroupedData(kitchens, data) {
     }
 
     if (transaction.flow_type === 'neutral') {
-      grouped[kitchen.id].gas += amount
-      dailyGrouped[kitchen.id][date].gas += amount
+      grouped[kitchen.id].operational += amount
+      dailyGrouped[kitchen.id][date].operational += amount
     }
   })
 
@@ -84,7 +84,7 @@ function buildGroupedData(kitchens, data) {
 function renderSummaryTable(grouped) {
   let grandIncome = 0
   let grandExpense = 0
-  let grandGas = 0
+  let grandOperational = 0
   let grandRemaining = 0
 
   let tableHtml = ''
@@ -107,7 +107,7 @@ function renderSummaryTable(grouped) {
 
       grandIncome += item.income
       grandExpense += item.expense
-      grandGas += item.gas
+      grandOperational += item.operational
       grandRemaining += remaining
 
       tableHtml += `
@@ -116,7 +116,7 @@ function renderSummaryTable(grouped) {
         <td>${item.total_pm.toLocaleString('id-ID')}</td>
         <td>${formatRupiah(item.income)}</td>
         <td>${formatRupiah(item.expense)}</td>
-        <td>${formatRupiah(item.gas)}</td>
+        <td>${formatRupiah(item.operational)}</td>
         <td class="${remaining < 0 ? 'negative' : 'positive'}">
           ${formatRupiah(remaining)}
         </td>
@@ -128,17 +128,18 @@ function renderSummaryTable(grouped) {
   return {
     grandIncome,
     grandExpense,
-    grandGas,
+    grandOperational,
     grandRemaining
   }
 }
 
 function updateSummaryCards(summary) {
-  const { grandIncome, grandExpense, grandGas, grandRemaining } = summary
+  const { grandIncome, grandExpense, grandOperational, grandRemaining } =
+    summary
 
   reportTotalIncome.textContent = formatRupiah(grandIncome)
   reportTotalExpense.textContent = formatRupiah(grandExpense)
-  reportTotalGas.textContent = formatRupiah(grandGas)
+  reportTotalOperational.textContent = formatRupiah(grandOperational)
   reportTotalRemaining.textContent = formatRupiah(grandRemaining)
 
   reportTotalRemaining
@@ -178,7 +179,7 @@ function renderReportDetails(grouped, dailyGrouped) {
           <td>${date.split('-').reverse().join('-')}</td>
           <td>${formatRupiah(values.income)}</td>
           <td>${formatRupiah(values.expense)}</td>
-          <td>${formatRupiah(values.gas)}</td>
+          <td>${formatRupiah(values.operational)}</td>
           <td class="${remaining < 0 ? 'negative' : 'positive'}">
             ${formatRupiah(remaining)}
           </td>
@@ -221,7 +222,7 @@ function renderReportDetails(grouped, dailyGrouped) {
           <th>Tanggal</th>
           <th>BGN</th>
           <th>Supplier</th>
-          <th>Gas</th>
+          <th>OPS</th>
           <th>Total</th>
         </tr>
       </thead>

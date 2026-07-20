@@ -115,7 +115,7 @@
               <div class="daily-status-legend">
                 <span class="legend-bgn">BGN</span>
                 <span class="legend-supplier">SUPPLIER</span>
-                <span class="legend-gas">GAS</span>
+                <span class="legend-operational">OPS</span>
               </div>
             </div>
 
@@ -154,13 +154,13 @@
           <div class="dashboard-card">
             <div class="dashboard-card-top">
               <div>
-                <small class="transaction-date"> Total Belanja Gas </small>
+                <small class="transaction-date"> Total Operasional </small>
 
-                <h2 id="totalGas">Rp 0</h2>
+                <h2 id="totalOperational">Rp 0</h2>
               </div>
 
               <div class="dashboard-icon">
-                <i data-lucide="flame"></i>
+                <i data-lucide="package"></i>
               </div>
             </div>
           </div>
@@ -193,7 +193,7 @@
 
               <option value="expense">BELANJA SUPPLIER</option>
 
-              <option value="neutral">BELANJA GAS</option>
+              <option value="neutral">OPERASIONAL</option>
             </select>
 
             <input type="date" id="filterDate" />
@@ -415,7 +415,7 @@
             <option value="">Semua Transaksi</option>
             <option value="income">BELANJA BGN</option>
             <option value="expense">BELANJA SUPPLIER</option>
-            <option value="neutral">BELANJA GAS</option>
+            <option value="neutral">OPERASIONAL</option>
           </select>
 
           <button id="generateButton">Generate</button>
@@ -437,9 +437,9 @@
           </div>
 
           <div class="summary-card">
-            <small> BELANJA GAS </small>
+            <small>OPERASIONAL</small>
 
-            <h2 id="reportTotalGas">Rp. 0</h2>
+            <h2 id="reportTotalOperational">Rp. 0</h2>
           </div>
 
           <div class="summary-card">
@@ -457,7 +457,7 @@
                 <th>TOTAL PM</th>
                 <th>BELANJA BGN</th>
                 <th>BELANJA SUPPLIER</th>
-                <th>GAS</th>
+                <th>OPERASIONAL</th>
                 <th>TOTAL</th>
               </tr>
             </thead>

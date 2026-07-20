@@ -234,7 +234,7 @@ async function loadAccountsFiltered(flow) {
 
   const flowMap = {
     pemasukan: 'income',
-    gas: 'neutral'
+    operational: 'neutral'
   }
 
   const dbFlow = flowMap[flow]

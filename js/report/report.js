@@ -21,7 +21,9 @@
 
   const reportTotalExpense = document.getElementById('reportTotalExpense')
 
-  const reportTotalGas = document.getElementById('reportTotalGas')
+  const reportTotalOperational = document.getElementById(
+    'reportTotalOperational'
+  )
 
   const reportTotalRemaining = document.getElementById('reportTotalRemaining')
 

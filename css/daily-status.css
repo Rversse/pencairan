@@ -207,14 +207,14 @@
   background: #fee2e2;
 }
 
-.legend-gas {
+.legend-operational {
   color: #d97706;
   background: #fef3c7;
 }
 
 .legend-bgn,
 .legend-supplier,
-.legend-gas {
+.legend-operational {
   color: #111827;
   font-weight: 700;
 }

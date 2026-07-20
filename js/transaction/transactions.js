@@ -59,9 +59,9 @@ function renderTransactionCards(data) {
     }
 
     if (transaction.flow_type === 'neutral') {
-      badgeClass = 'badge-gas'
+      badgeClass = 'badge-operational'
 
-      label = 'GAS'
+      label = 'OPS'
     }
 
     const target = transaction.accounts
@@ -122,7 +122,7 @@ function renderTransactionCards(data) {
       transaction.flow_type === 'income'
         ? 'target-income'
         : transaction.flow_type === 'neutral'
-          ? 'target-gas'
+          ? 'target-operational'
           : 'target-expense'
     }
   "

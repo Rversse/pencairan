@@ -57,28 +57,32 @@ async function loadDailyStatus() {
   kitchens.forEach((kitchen) => {
     const kitchenTransactions = transactionMap.get(kitchen.id) ?? []
 
-    const needsGas = !['Sukaraja', 'Cihaur'].includes(kitchen.name)
+    const needsOperational = !['Sukaraja', 'Cihaur'].includes(kitchen.name)
 
     let hasIncome = false
     let hasExpense = false
-    let hasGas = false
+    let hasOperational = false
 
     for (const item of kitchenTransactions) {
       if (item.flow_type === 'income') hasIncome = true
       else if (item.flow_type === 'expense') hasExpense = true
-      else if (item.flow_type === 'neutral') hasGas = true
+      else if (item.flow_type === 'neutral') hasOperational = true
 
-      if (hasIncome && hasExpense && (needsGas ? hasGas : true)) {
+      if (
+        hasIncome &&
+        hasExpense &&
+        (needsOperational ? hasOperational : true)
+      ) {
         break
       }
     }
 
     let completed = 0
-    let required = needsGas ? 3 : 2
+    let required = needsOperational ? 3 : 2
 
     if (hasIncome) completed++
     if (hasExpense) completed++
-    if (needsGas && hasGas) completed++
+    if (needsOperational && hasOperational) completed++
 
     let icon = ''
     let cssClass = ''
@@ -99,11 +103,11 @@ async function loadDailyStatus() {
 
     let statusText = ''
 
-    if (needsGas) {
+    if (needsOperational) {
       statusText = `
   B${hasIncome ? '🟢' : '🔴'}
   S${hasExpense ? '🟢' : '🔴'}
-  G${hasGas ? '🟢' : '🔴'}
+  O${hasOperational ? '🟢' : '🔴'}
 `
     } else {
       statusText = `
