@@ -61,3 +61,5 @@ const reportStartDate = document.getElementById('startDate')
 const reportEndDate = document.getElementById('endDate')
 
 const SUKARAJA_NAME = 'Sukaraja'
+
+const BANK_MODULE_START_DATE = '2026-07-20'

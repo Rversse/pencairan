@@ -223,7 +223,9 @@ async function loadTransactions(showLoading = true) {
 
   transactionsContainer.innerHTML = renderTransactionCards(data)
 
-  lucide.createIcons()
+  if (window.lucide) {
+    lucide.createIcons()
+  }
 
   bindEditButtons(data)
 }

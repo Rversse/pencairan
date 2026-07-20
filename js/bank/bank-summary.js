@@ -7,6 +7,29 @@ let currentBankIncomes = []
 let currentBankExpenses = []
 
 function renderBankTransactionSummary(accounts, incomes, expenses) {
+  const incomeMap = new Map()
+  const expenseMap = new Map()
+
+  for (const item of incomes) {
+    incomeMap.set(
+      item.account_id,
+      (incomeMap.get(item.account_id) ?? 0) + Number(item.amount)
+    )
+  }
+
+  for (const item of expenses) {
+    const current = expenseMap.get(item.account_id) ?? {
+      total: 0,
+      count: 0
+    }
+
+    current.total += Number(item.transfer_amount) + Number(item.admin_fee)
+
+    current.count++
+
+    expenseMap.set(item.account_id, current)
+  }
+
   const summary = accounts
     .filter((account) => {
       return (
@@ -17,36 +40,32 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
       )
     })
     .map((account) => {
-      const accountIncome = incomes.filter(
-        (item) => item.account_id === account.id
-      )
+      const openingBalance = Number(account.opening_balance) || 0
 
-      const accountExpense = expenses.filter(
-        (item) => item.account_id === account.id
-      )
+      const income = incomeMap.get(account.id) ?? 0
 
-      const income = accountIncome.reduce(
-        (t, item) => t + Number(item.amount),
-        0
-      )
+      const expenseData = expenseMap.get(account.id) ?? {
+        total: 0,
+        count: 0
+      }
 
-      const expense = accountExpense.reduce(
-        (t, item) => t + Number(item.transfer_amount) + Number(item.admin_fee),
-        0
-      )
+      const expense = expenseData.total
+      const historyCount = expenseData.count
 
-      const balance = income - expense
+      const balance = openingBalance + income - expense
 
       return {
         accountId: account.id,
         ownerName: account.income_suppliers.owner_name,
-        rekening: `${account.bank} • ${getLastFiveDigits(
-          account.account_number
-        )}`,
+        rekening: `${account.bank} • ${getLastFiveDigits(account.account_number)}`,
+
+        openingBalance,
+
         income,
         expense,
         balance,
-        historyCount: accountExpense.length
+
+        historyCount
       }
     })
     .sort((a, b) => a.ownerName.localeCompare(b.ownerName))
@@ -55,20 +74,26 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
   const keyword = bankSearch?.value.trim().toLowerCase() ?? ''
 
-  const filteredSummary = summary.filter((item) => {
-    if (!keyword) return true
+  const filteredSummary = keyword
+    ? summary.filter((item) => {
+        return (
+          item.ownerName.toLowerCase().includes(keyword) ||
+          item.rekening.toLowerCase().includes(keyword)
+        )
+      })
+    : summary
 
-    return (
-      item.ownerName.toLowerCase().includes(keyword) ||
-      item.rekening.toLowerCase().includes(keyword)
-    )
-  })
+  let totalOpeningBalance = 0
+  let totalIncome = 0
+  let totalExpense = 0
+  let totalBalance = 0
 
-  const totalIncome = filteredSummary.reduce((t, x) => t + x.income, 0)
-
-  const totalExpense = filteredSummary.reduce((t, x) => t + x.expense, 0)
-
-  const totalBalance = filteredSummary.reduce((t, x) => t + x.balance, 0)
+  for (const item of filteredSummary) {
+    totalOpeningBalance += item.openingBalance
+    totalIncome += item.income
+    totalExpense += item.expense
+    totalBalance += item.balance
+  }
 
   bankTransactionTableContainer.innerHTML = `
 <div class="dashboard bank-summary-cards">
@@ -118,80 +143,103 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
 </div>
 
-    <table class="table">
+<table class="table">
 
-      <thead>
+  <thead>
 
-        <tr>
+    <tr>
 
-          <th style="width:34%">Rekening</th>
-          <th class="text-end">Masuk</th>
-          <th class="text-end">Keluar</th>
-          <th class="text-end">Saldo</th>
-          <th class="text-center" style="width:90px">Aksi</th>
+      <th style="width:28%">Rekening</th>
+      <th class="text-center">Saldo Awal</th>
+      <th class="text-center">Masuk</th>
+      <th class="text-center">Keluar</th>
+      <th class="text-center">Saldo Akhir</th>
+      <th class="text-center" style="width:90px">Aksi</th>
+
+    </tr>
+
+  </thead>
+
+  <tbody>
+
+  ${filteredSummary
+    .map((item) => {
+      const balanceClass =
+        item.balance > 0 ? 'positive' : item.balance < 0 ? 'negative' : 'zero'
+
+      const [bankName, accountNumber] = item.rekening.split(' • ')
+
+      return `
+        <tr class="bank-row">
+
+          <td>
+
+            <div class="bank-owner">
+              ${item.ownerName}
+            </div>
+
+            <div class="bank-account">
+
+              <span class="bank-bank-badge">
+                ${bankName}
+              </span>
+
+              <span class="bank-account-number">
+                ${accountNumber}
+              </span>
+
+            </div>
+
+          </td>
+
+<td class="text-center">
+  <div class="bank-money">
+    <strong>${formatRupiah(item.openingBalance)}</strong>
+  </div>
+</td>
+
+<td class="text-center">
+  <div class="bank-money income">
+    <strong>${formatRupiah(item.income)}</strong>
+  </div>
+</td>
+
+<td class="text-center">
+  <div class="bank-money expense">
+    <strong>${formatRupiah(item.expense)}</strong>
+  </div>
+</td>
+
+<td class="text-center">
+  <div class="bank-money ${balanceClass}">
+    <strong>${formatRupiah(item.balance)}</strong>
+  </div>
+</td>
+
+          <td class="text-center">
+
+            <button
+              class="bank-history-button"
+              data-account-id="${item.accountId}"
+              title="Lihat History"
+            >
+              Riwayat
+
+              <span class="history-count">
+                ${item.historyCount}
+              </span>
+            </button>
+
+          </td>
 
         </tr>
+      `
+    })
+    .join('')}
 
-      </thead>
+  </tbody>
 
-      <tbody>
-
-      ${filteredSummary
-        .map((item) => {
-          const balanceClass =
-            item.balance > 0
-              ? 'positive'
-              : item.balance < 0
-                ? 'negative'
-                : 'zero'
-
-          return `
-            <tr class="bank-row">
-
-              <td>
-
-                <div class="bank-owner">
-                  ${item.ownerName}
-                </div>
-
-                <div class="bank-account">
-                  ${item.rekening}
-                </div>
-
-              </td>
-
-              <td class="text-end bank-income">
-                ${formatRupiah(item.income)}
-              </td>
-
-              <td class="text-end bank-expense">
-                ${formatRupiah(item.expense)}
-              </td>
-
-              <td class="text-end bank-balance ${balanceClass}">
-                ${formatRupiah(item.balance)}
-              </td>
-
-              <td class="text-center">
-
-                <button
-                  class="bank-history-button"
-                  data-account-id="${item.accountId}"
-                  title="Lihat History"
-                >
-                  📊 ${item.historyCount}
-                </button>
-
-              </td>
-
-            </tr>
-          `
-        })
-        .join('')}
-
-      </tbody>
-
-    </table>
+</table>
   `
 
   bankTransactionTableContainer
@@ -210,6 +258,10 @@ function populateBankAccountDropdown() {
     </option>
   `
 
+  const summaryMap = new Map(
+    currentBankSummary.map((item) => [item.accountId, item])
+  )
+
   bankAccounts.forEach((account) => {
     if (
       !account.income_suppliers?.owner_name ||
@@ -219,18 +271,9 @@ function populateBankAccountDropdown() {
       return
     }
 
-    const income = currentBankIncomes
-      .filter((item) => item.account_id === account.id)
-      .reduce((t, item) => t + Number(item.amount), 0)
+    const summary = summaryMap.get(account.id)
 
-    const expense = currentBankExpenses
-      .filter((item) => item.account_id === account.id)
-      .reduce(
-        (t, item) => t + Number(item.transfer_amount) + Number(item.admin_fee),
-        0
-      )
-
-    const saldo = income - expense
+    const saldo = summary?.balance ?? 0
 
     bankAccountSelect.insertAdjacentHTML(
       'beforeend',

@@ -27,29 +27,39 @@ const bankTransactionTableContainer = document.getElementById(
 )
 
 async function fetchBankTransactions() {
-  return await Promise.all([
+  const effectiveStartDate =
+    bankStartDate.value < BANK_MODULE_START_DATE
+      ? BANK_MODULE_START_DATE
+      : bankStartDate.value
+
+  const endDate = bankEndDate.value
+
+  return Promise.all([
     supabaseClient
       .from('accounts')
       .select(
         `
+    id,
+    bank,
+    account_number,
+    opening_balance,
+    supplier_id,
+    income_suppliers (
         id,
-        bank,
-        account_number,
-        supplier_id,
-        income_suppliers (
-          id,
-          owner_name
-        )
-      `
+        owner_name
+    )
+`
       )
-      .eq('is_active', true),
+      .eq('is_active', true)
+      .order('bank')
+      .order('account_number'),
 
     supabaseClient
       .from('transactions')
-      .select('account_id, amount')
+      .select('account_id,amount')
       .eq('flow_type', 'income')
-      .gte('transaction_date', bankStartDate.value)
-      .lte('transaction_date', bankEndDate.value),
+      .gte('transaction_date', effectiveStartDate)
+      .lte('transaction_date', endDate),
 
     supabaseClient
       .from('bank_transactions')
@@ -58,11 +68,12 @@ async function fetchBankTransactions() {
         id,
         account_id,
         transfer_amount,
-        admin_fee
+        admin_fee,
+        transaction_date
       `
       )
-      .gte('transaction_date', bankStartDate.value)
-      .lte('transaction_date', bankEndDate.value)
+      .gte('transaction_date', effectiveStartDate)
+      .lte('transaction_date', endDate)
   ])
 }
 
@@ -86,24 +97,50 @@ async function loadBankTransactions() {
     bankEndDate.value = bankStartDate.value
   }
 
-  const [accountsResult, incomeResult, expenseResult] =
-    await fetchBankTransactions()
-
-  if (checkBankQueryError(accountsResult, incomeResult, expenseResult)) {
-    return
+  if (bankStartDate.value < BANK_MODULE_START_DATE) {
+    bankStartDate.value = BANK_MODULE_START_DATE
   }
 
-  bankAccounts = accountsResult.data ?? []
-  currentBankIncomes = incomeResult.data ?? []
-  currentBankExpenses = expenseResult.data ?? []
+  if (bankEndDate.value < BANK_MODULE_START_DATE) {
+    bankEndDate.value = BANK_MODULE_START_DATE
+  }
 
-  populateBankAccountDropdown()
+  applyBankFilter.disabled = true
+  applyBankFilter.textContent = 'Memuat...'
 
-  renderBankTransactionSummary(
-    bankAccounts,
-    currentBankIncomes,
-    currentBankExpenses
-  )
+  addBankTransactionButton.disabled = true
+
+  bankTransactionTableContainer.style.opacity = '.6'
+  bankTransactionTableContainer.style.pointerEvents = 'none'
+
+  try {
+    const [accountsResult, incomeResult, expenseResult] =
+      await fetchBankTransactions()
+
+    if (checkBankQueryError(accountsResult, incomeResult, expenseResult)) {
+      return
+    }
+
+    bankAccounts = accountsResult.data ?? []
+    currentBankIncomes = incomeResult.data ?? []
+    currentBankExpenses = expenseResult.data ?? []
+
+    renderBankTransactionSummary(
+      bankAccounts,
+      currentBankIncomes,
+      currentBankExpenses
+    )
+
+    populateBankAccountDropdown()
+  } finally {
+    applyBankFilter.disabled = false
+    applyBankFilter.textContent = 'Apply'
+
+    addBankTransactionButton.disabled = false
+
+    bankTransactionTableContainer.style.opacity = ''
+    bankTransactionTableContainer.style.pointerEvents = ''
+  }
 }
 
 function openBankTransactionModal() {
@@ -141,26 +178,31 @@ function openEditBankTransaction(transaction) {
   populateBankAccountDropdown()
 
   bankTransactionDate.value = transaction.transaction_date
-
   bankAccountSelect.value = transaction.account_id
-
-  destinationName.value = transaction.recipient_name
-
+  destinationName.value = transaction.recipient_name ?? ''
   transferAmount.value = formatNumber(String(transaction.transfer_amount))
 
   adminFee.value =
-    Number(transaction.admin_fee) === 0
-      ? ''
-      : formatNumber(String(transaction.admin_fee))
+    Number(transaction.admin_fee) > 0
+      ? formatNumber(String(transaction.admin_fee))
+      : '0'
 
   paymentFor.value = transaction.payment_for ?? ''
 
-  bankTransactionModal.querySelector('button[type="submit"]').textContent =
-    'Update Transaksi'
+  const submitButton = bankTransactionModal.querySelector(
+    'button[type="submit"]'
+  )
+
+  submitButton.textContent = 'Update Transaksi'
 
   bankHistoryModal.classList.remove('show')
-
   bankTransactionModal.classList.add('show')
+
+  bankTransactionForm.scrollTop = 0
+
+  requestAnimationFrame(() => {
+    bankAccountSelect.focus()
+  })
 }
 
 function closeBankTransactionModal() {
@@ -183,26 +225,71 @@ function getBankTransactionPayload() {
 
 function validateBankTransaction(payload) {
   if (!payload.transaction_date) {
-    alert('Tanggal wajib diisi.')
+    showToast('Tanggal wajib diisi.', 'error')
+    bankTransactionDate.focus()
     return false
   }
 
   if (!payload.account_id) {
-    alert('Pilih nama pengirim.')
+    showToast('Pilih rekening pengirim.', 'error')
+    bankAccountSelect.focus()
     return false
   }
 
   if (!payload.recipient_name) {
-    alert('Nama penerima wajib diisi.')
+    showToast('Nama penerima wajib diisi.', 'error')
+    destinationName.focus()
     return false
   }
 
   if (payload.transfer_amount <= 0) {
-    alert('Nominal transfer harus lebih dari 0.')
+    showToast('Nominal transfer harus lebih dari 0.', 'error')
+    transferAmount.focus()
+    return false
+  }
+
+  if (payload.admin_fee < 0) {
+    showToast('Biaya admin tidak boleh negatif.', 'error')
+    adminFee.focus()
+    return false
+  }
+
+  const currentBalance = getCurrentBankBalance(payload.account_id)
+  const totalOut = payload.transfer_amount + payload.admin_fee
+
+  let availableBalance = currentBalance
+
+  if (editingBankTransactionId) {
+    const oldTransaction = currentBankExpenses.find(
+      (item) => item.id === editingBankTransactionId
+    )
+
+    if (oldTransaction) {
+      availableBalance +=
+        (Number(oldTransaction.transfer_amount) || 0) +
+        (Number(oldTransaction.admin_fee) || 0)
+    }
+  }
+
+  if (totalOut > availableBalance) {
+    showToast(
+      `Saldo tidak mencukupi. Saldo tersedia ${formatRupiah(availableBalance)}.`,
+      'error'
+    )
+
+    transferAmount.focus()
     return false
   }
 
   return true
+}
+
+function getCurrentBankBalance(accountId) {
+  const account = currentBankSummary.find(
+    (item) => item.accountId === accountId
+  )
+
+  return account ? account.balance : 0
 }
 
 async function persistBankTransaction(payload) {
@@ -217,41 +304,57 @@ async function persistBankTransaction(payload) {
 }
 
 async function saveBankTransaction() {
-  const payload = getBankTransactionPayload()
-
-  if (!validateBankTransaction(payload)) {
-    return
-  }
-
-  const result = await persistBankTransaction(payload)
-
-  if (result.error) {
-    console.error(result.error)
-
-    showToast(
-      editingBankTransactionId
-        ? 'Gagal mengubah transaksi.'
-        : 'Gagal menyimpan transaksi.',
-      'error'
-    )
-
-    return
-  }
-
-  const edited = editingBankTransactionId !== null
-
-  editingBankTransactionId = null
-
-  closeBankTransactionModal()
-
-  await loadBankTransactions()
-
-  showToast(
-    edited ? 'Transaksi berhasil diperbarui.' : 'Transaksi berhasil disimpan.'
+  const submitButton = bankTransactionForm.querySelector(
+    'button[type="submit"]'
   )
 
-  if (edited && currentHistoryAccountId) {
-    await openBankHistory(currentHistoryAccountId)
+  const originalText = submitButton.textContent
+
+  submitButton.disabled = true
+  submitButton.textContent = editingBankTransactionId
+    ? 'Mengupdate...'
+    : 'Menyimpan...'
+
+  try {
+    const payload = getBankTransactionPayload()
+
+    if (!validateBankTransaction(payload)) {
+      return
+    }
+
+    const result = await persistBankTransaction(payload)
+
+    if (result.error) {
+      console.error(result.error)
+
+      showToast(
+        editingBankTransactionId
+          ? 'Gagal mengubah transaksi.'
+          : 'Gagal menyimpan transaksi.',
+        'error'
+      )
+
+      return
+    }
+
+    const edited = editingBankTransactionId !== null
+
+    editingBankTransactionId = null
+
+    closeBankTransactionModal()
+
+    await loadBankTransactions()
+
+    showToast(
+      edited ? 'Transaksi berhasil diperbarui.' : 'Transaksi berhasil disimpan.'
+    )
+
+    if (edited && currentHistoryAccountId) {
+      await openBankHistory(currentHistoryAccountId)
+    }
+  } finally {
+    submitButton.disabled = false
+    submitButton.textContent = originalText
   }
 }
 

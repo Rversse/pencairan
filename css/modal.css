@@ -651,64 +651,64 @@
 
 .history-summary {
   display: flex;
-
   justify-content: space-between;
-
   align-items: center;
 
-  padding: 20px 24px;
+  padding: 12px 18px;
 
-  margin-bottom: 22px;
+  margin-bottom: 14px;
 
   border: 1px solid var(--border);
-
-  border-radius: 18px;
+  border-radius: 16px;
 
   background: linear-gradient(180deg, #f8fbff, #eef5ff);
+}
+
+.history-summary h2 {
+  margin-top: 2px;
+
+  font-size: 24px;
+
+  line-height: 1.2;
+}
+
+.history-summary small {
+  font-size: 12px;
 }
 
 .history-summary-info small {
   display: block;
 
-  margin-bottom: 8px;
+  margin-bottom: 2px;
+
+  font-size: 12px;
 
   color: var(--navy-soft);
-
-  font-size: 13px;
 }
 
 .history-summary-info h2 {
   margin: 0;
 
-  font-size: 38px;
+  font-size: 28px;
 
   font-weight: 800;
 
+  line-height: 1.15;
+
   color: var(--navy);
-}
 
-.history-summary-badge {
-  padding: 10px 18px;
-
-  border-radius: 999px;
-
-  background: #dcfce7;
-
-  color: #166534;
-
-  font-size: 13px;
-
-  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
 }
 
 .history-card {
   margin-bottom: 18px;
 
-  padding: 22px;
+  padding: 14px 16px;
 
   border: 1px solid var(--border);
 
-  border-radius: 18px;
+  border-radius: 12px;
 
   background: #fff;
 
@@ -719,74 +719,6 @@
   transform: translateY(-2px);
 
   box-shadow: 0 10px 22px rgba(15, 23, 42, 0.08);
-}
-
-.history-date {
-  margin-bottom: 8px;
-
-  font-size: 13px;
-
-  color: var(--navy-soft);
-}
-
-.history-recipient {
-  margin-bottom: 18px;
-
-  font-size: 24px;
-
-  font-weight: 700;
-
-  color: var(--navy);
-}
-
-.history-grid {
-  display: grid;
-
-  grid-template-columns: 150px 1fr;
-
-  row-gap: 10px;
-
-  column-gap: 16px;
-}
-
-.history-grid span {
-  color: var(--navy-soft);
-}
-
-.history-grid strong {
-  text-align: right;
-
-  color: var(--navy);
-}
-
-.history-balance {
-  color: #15803d !important;
-}
-
-.history-purpose {
-  margin-top: 18px;
-
-  padding-top: 18px;
-
-  border-top: 1px dashed var(--border);
-
-  color: var(--navy-soft);
-
-  line-height: 1.7;
-}
-
-.history-actions {
-  display: flex;
-
-  justify-content: flex-end;
-
-  gap: 12px;
-
-  margin-top: 22px;
-
-  padding-top: 18px;
-
-  border-top: 1px solid var(--border);
 }
 
 @media (max-width: 768px) {

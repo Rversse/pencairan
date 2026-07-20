@@ -47,6 +47,10 @@ function formatNumber(value) {
   return value.replace(/\D/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')
 }
 
+function parseNumber(value) {
+  return Number(String(value ?? '').replace(/\D/g, '')) || 0
+}
+
 // ======================
 // DATE
 // ======================

@@ -8,38 +8,56 @@ const closeBankHistory = document.getElementById('closeBankHistory')
 async function openBankHistory(accountId) {
   currentHistoryAccountId = accountId
 
+  const effectiveStartDate =
+    bankStartDate.value < BANK_MODULE_START_DATE
+      ? BANK_MODULE_START_DATE
+      : bankStartDate.value
+
   bankHistoryModal.classList.add('show')
 
-  bankHistoryTitle.textContent = 'Memuat...'
+  bankHistoryTitle.textContent = 'History Rekening'
 
-  bankHistoryContent.innerHTML = `
-    <div style="padding:32px;text-align:center">
-      Memuat history...
-    </div>
-  `
+  renderHistorySkeleton()
 
-  const [transactionResult, incomeResult] = await Promise.all([
+  const [transactionResult, incomeResult, accountResult] = await Promise.all([
     supabaseClient
       .from('bank_transactions')
       .select(
         `
         *,
-        accounts(
-          bank,
-          account_number,
-          income_suppliers(owner_name)
-        )
+accounts(
+  bank,
+  account_number,
+  opening_balance,
+  income_suppliers(owner_name)
+)
       `
       )
       .eq('account_id', accountId)
-      .order('transaction_date', { ascending: true })
-      .order('created_at', { ascending: true }),
+      .gte('transaction_date', effectiveStartDate)
+      .lte('transaction_date', bankEndDate.value)
+      .order('transaction_date', { ascending: true }),
 
     supabaseClient
       .from('transactions')
       .select('amount')
       .eq('flow_type', 'income')
       .eq('account_id', accountId)
+      .gte('transaction_date', effectiveStartDate)
+      .lte('transaction_date', bankEndDate.value),
+
+    supabaseClient
+      .from('accounts')
+      .select(
+        `
+    bank,
+    account_number,
+    opening_balance,
+    income_suppliers(owner_name)
+  `
+      )
+      .eq('id', accountId)
+      .single()
   ])
 
   if (transactionResult.error) {
@@ -48,42 +66,93 @@ async function openBankHistory(accountId) {
     bankHistoryTitle.textContent = 'History Rekening'
 
     bankHistoryContent.innerHTML = `
-      <div style="padding:32px;text-align:center">
-        Gagal memuat history.
-      </div>
-    `
+  <div class="history-error">
+
+    <i data-lucide="triangle-alert"></i>
+
+    <h3>Gagal memuat riwayat</h3>
+
+    <p>
+      Terjadi kesalahan saat mengambil data transaksi.
+      Silakan coba lagi.
+    </p>
+
+  </div>
+`
+
+    lucide.createIcons()
 
     return
   }
 
   const transactions = transactionResult.data ?? []
 
+  const account = accountResult.data
+
+  const openingBalance = Number(account.opening_balance) || 0
+
   if (!transactions.length) {
     bankHistoryTitle.textContent = 'History Rekening'
 
+    bankHistoryTitle.innerHTML = `
+  <div class="history-account-title">
+    ${account.income_suppliers?.owner_name ?? '-'}
+  </div>
+
+  <div class="history-account-subtitle">
+    ${account.bank} • ${getLastFiveDigits(account.account_number)}
+  </div>
+`
+
     bankHistoryContent.innerHTML = `
-      <div style="padding:32px;text-align:center">
-        Belum ada transaksi.
-      </div>
-    `
+  <div class="history-summary">
+
+    <div class="history-summary-info">
+
+      <small>Saldo Awal</small>
+      <h3>${formatRupiah(openingBalance)}</h3>
+
+      <small style="margin-top:12px;">Saldo Saat Ini</small>
+      <h2>${formatRupiah(openingBalance)}</h2>
+
+    </div>
+
+  </div>
+
+  <div class="history-empty">
+
+    <i data-lucide="receipt"></i>
+
+    <h3>Belum ada riwayat transfer</h3>
+
+    <p>
+      Riwayat transaksi bank akan muncul di sini setelah Anda
+      melakukan transfer.
+    </p>
+
+  </div>
+`
+
+    lucide.createIcons()
 
     return
   }
 
-  const account = transactions[0].accounts
-
   const totalIncome = (incomeResult.data ?? []).reduce(
-    (total, item) => total + Number(item.amount),
+    (total, item) => total + (Number(item.amount) || 0),
     0
   )
 
-  const totalExpense = transactions.reduce(
-    (total, item) =>
-      total + Number(item.transfer_amount) + Number(item.admin_fee),
-    0
-  )
+  const totalExpense = transactions.reduce((total, item) => {
+    const transferAmount = Number(item.transfer_amount) || 0
+    const adminFee = Number(item.admin_fee) || 0
 
-  let runningBalance = totalIncome
+    return total + transferAmount + adminFee
+  }, 0)
+
+  const historyBalance = openingBalance + totalIncome - totalExpense
+
+  let runningBalance = openingBalance + totalIncome
 
   bankHistoryTitle.innerHTML = `
     <div class="history-account-title">
@@ -95,135 +164,210 @@ async function openBankHistory(accountId) {
     </div>
   `
 
-  const html = transactions
+  const historyCards = transactions
     .map((item) => {
-      const totalOut = Number(item.transfer_amount) + Number(item.admin_fee)
+      const transferAmount = Number(item.transfer_amount) || 0
+      const adminFee = Number(item.admin_fee) || 0
+      const totalOut = transferAmount + adminFee
+
+      const paymentPurpose = item.payment_for?.trim()
 
       runningBalance -= totalOut
 
       return `
-        <div class="history-card">
+<div class="history-card">
 
-          <div class="history-date">
-            ${formatDateShort(item.transaction_date)}
-          </div>
+  <div class="history-header">
 
-          <div class="history-recipient">
-            ${item.recipient_name}
-          </div>
+    <div>
 
-          <div class="history-grid">
-
-            <span>Transfer</span>
-            <strong>${formatRupiah(item.transfer_amount)}</strong>
-
-            <span>Biaya Admin</span>
-            <strong>${formatRupiah(item.admin_fee)}</strong>
-
-            <span>Total Keluar</span>
-            <strong>${formatRupiah(totalOut)}</strong>
-
-            <span>Saldo Setelah</span>
-            <strong class="history-balance">
-              ${formatRupiah(runningBalance)}
-            </strong>
-
-          </div>
-
-          ${
-            item.payment_for
-              ? `
-                <div class="history-purpose">
-                  ${item.payment_for}
-                </div>
-              `
-              : ''
-          }
-
-          <div class="history-actions">
-
-            <button
-              class="secondary-button edit-bank-transaction"
-              data-id="${item.id}"
-            >
-              ✏ Edit
-            </button>
-
-            <button
-              class="danger-button delete-bank-transaction"
-              data-id="${item.id}"
-            >
-              🗑 Hapus
-            </button>
-
-          </div>
-
-        </div>
-      `
-    })
-    .reverse()
-    .join('')
-
-  bankHistoryContent.innerHTML = `
-    <div class="history-summary">
-
-      <div class="history-summary-info">
-
-        <small>Saldo Saat Ini</small>
-
-        <h2>${formatRupiah(totalIncome - totalExpense)}</h2>
-
+      <div class="history-recipient">
+        ${item.recipient_name || 'Penerima tidak diketahui'}
       </div>
 
-      <div class="history-summary-badge">
-        AKTIF
+      <div class="history-date">
+        ${formatDateShort(item.transaction_date)}
+        •
+        ${formatTime(item.created_at)}
       </div>
 
     </div>
 
-    ${html}
-  `
+    <div class="history-actions">
+
+      <button
+        class="secondary-button edit-bank-transaction"
+        data-id="${item.id}"
+      >
+        ✏ Edit
+      </button>
+
+      <button
+        class="danger-button delete-bank-transaction"
+        data-id="${item.id}"
+      >
+        🗑 Hapus
+      </button>
+
+    </div>
+
+  </div>
+
+  <div class="history-details">
+
+    <div class="history-row">
+      <span>Transfer</span>
+      <strong class="history-transfer">
+        ${formatRupiah(transferAmount)}
+      </strong>
+    </div>
+
+    <div class="history-row">
+      <span>Admin</span>
+      <strong class="history-admin">
+        ${formatRupiah(adminFee)}
+      </strong>
+    </div>
+
+    <div class="history-divider"></div>
+
+    <div class="history-row">
+      <span>Total Keluar</span>
+      <strong class="history-out">
+        ${formatRupiah(totalOut)}
+      </strong>
+    </div>
+
+    <div class="history-row">
+      <span>Saldo</span>
+      <strong class="history-balance">
+        ${formatRupiah(runningBalance)}
+      </strong>
+    </div>
+
+  </div>
+
+  ${
+    paymentPurpose
+      ? `
+      <div class="history-purpose">
+        <span title="${paymentPurpose}">
+          ${paymentPurpose}
+        </span>
+      </div>
+      `
+      : ''
+  }
+
+</div>
+`
+    })
+    .reverse()
+
+  const html = historyCards.join('')
+
+  bankHistoryContent.innerHTML = `
+<div class="history-summary">
+
+  <div class="history-summary-info">
+
+    <small>Saldo Awal</small>
+    <h3>${formatRupiah(openingBalance)}</h3>
+
+    <small style="margin-top:12px;">Saldo Saat Ini</small>
+    <h2>${formatRupiah(historyBalance)}</h2>
+
+  </div>
+
+</div>
+
+${html}
+`
+
+  const transactionMap = new Map(
+    transactions.map((item) => [String(item.id), item])
+  )
 
   bankHistoryContent
     .querySelectorAll('.edit-bank-transaction')
     .forEach((button) => {
-      const trx = transactions.find((item) => item.id === button.dataset.id)
+      button.onclick = () => {
+        const trx = transactionMap.get(button.dataset.id)
 
-      button.onclick = () => openEditBankTransaction(trx)
+        if (trx) {
+          openEditBankTransaction(trx)
+        }
+      }
     })
 
   bankHistoryContent
     .querySelectorAll('.delete-bank-transaction')
     .forEach((button) => {
-      button.onclick = () => deleteBankTransaction(button.dataset.id)
+      button.onclick = () => {
+        deleteBankTransaction(button.dataset.id)
+      }
     })
 }
 
 async function deleteBankTransaction(id) {
-  const confirmed = await showConfirm('Yakin ingin menghapus transaksi ini?')
+  const deleteButtons = bankHistoryContent.querySelectorAll(
+    '.delete-bank-transaction'
+  )
 
-  if (!confirmed) return
+  deleteButtons.forEach((btn) => {
+    btn.disabled = true
+  })
 
-  const { error } = await supabaseClient
-    .from('bank_transactions')
-    .delete()
-    .eq('id', id)
+  try {
+    const confirmed = await showConfirm('Yakin ingin menghapus transaksi ini?')
 
-  if (error) {
-    console.error(error)
+    if (!confirmed) return
 
-    showToast('Gagal menghapus transaksi.', 'error')
+    const { error } = await supabaseClient
+      .from('bank_transactions')
+      .delete()
+      .eq('id', id)
 
-    return
+    if (error) {
+      console.error(error)
+      showToast('Gagal menghapus transaksi.', 'error')
+      return
+    }
+
+    await loadBankTransactions()
+
+    showToast('Transaksi berhasil dihapus.')
+
+    if (currentHistoryAccountId) {
+      await openBankHistory(currentHistoryAccountId)
+    }
+  } finally {
+    deleteButtons.forEach((btn) => {
+      btn.disabled = false
+    })
   }
+}
 
-  await loadBankTransactions()
+function renderHistorySkeleton() {
+  bankHistoryContent.innerHTML = `
+    ${Array.from({ length: 3 })
+      .map(
+        () => `
+      <div class="history-card history-skeleton">
 
-  showToast('Transaksi berhasil dihapus.')
+        <div class="skeleton skeleton-title"></div>
 
-  if (currentHistoryAccountId) {
-    await openBankHistory(currentHistoryAccountId)
-  }
+        <div class="skeleton skeleton-text"></div>
+
+        <div class="skeleton skeleton-box"></div>
+
+        <div class="skeleton skeleton-badge"></div>
+
+      </div>
+    `
+      )
+      .join('')}
+  `
 }
 
 closeBankHistory?.addEventListener('click', () => {

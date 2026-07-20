@@ -506,10 +506,6 @@
       </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <script src="supabase.js"></script>
-
     <div id="deleteModal" class="modal-overlay">
       <div class="delete-modal-content">
         <h3>Hapus transaksi?</h3>
@@ -629,6 +625,7 @@
                 <option>BCA</option>
                 <option>BJB</option>
                 <option>MANDIRI</option>
+                <option>BSI</option>
               </select>
             </div>
 
@@ -636,6 +633,18 @@
               <label>Nomor Rekening</label>
 
               <input id="accountNumber" type="text" />
+            </div>
+
+            <div class="form-group">
+              <label>Saldo Awal</label>
+
+              <input
+                id="accountOpeningBalance"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                placeholder="0"
+              />
             </div>
 
             <div class="form-group">
@@ -733,7 +742,10 @@
     <div id="bankHistoryModal" class="modal-overlay">
       <div class="modal-content bank-history-modal">
         <div class="history-modal-header">
-          <div id="bankHistoryTitle"></div>
+          <div class="history-header-info">
+            <h2 id="bankHistoryTitle"></h2>
+            <span id="bankHistorySubtitle"></span>
+          </div>
 
           <button type="button" id="closeBankHistory" class="secondary-button">
             Tutup
@@ -782,6 +794,14 @@
       </div>
     </div>
 
+    <!-- LIBRARY -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
+    <!-- CONFIG -->
+    <script src="supabase.js"></script>
+
     <!-- CORE -->
     <script src="js/core/constants.js"></script>
     <script src="js/core/helpers.js"></script>
@@ -793,7 +813,7 @@
     <!-- COMPONENTS -->
     <script src="js/components/date-picker.js"></script>
 
-    <!-- MASTER DATA -->
+    <!-- MASTER -->
     <script src="js/master/kitchen-master.js"></script>
     <script src="js/master/supplier-master.js"></script>
 
@@ -811,11 +831,13 @@
     <script src="js/report/report-print.js"></script>
     <script src="js/report/report.js"></script>
 
-    <!-- DASHBOARD -->
-    <script src="js/dashboard/disbursement.js"></script>
+    <!-- BANK -->
     <script src="js/bank/bank-summary.js"></script>
     <script src="js/bank/bank-history.js"></script>
     <script src="js/bank/bank.js"></script>
+
+    <!-- DASHBOARD -->
+    <script src="js/dashboard/disbursement.js"></script>
     <script src="js/dashboard/daily-status.js"></script>
     <script src="js/dashboard/dashboard.js"></script>
 
@@ -825,11 +847,7 @@
     <!-- AUTH -->
     <script src="js/auth/auth.js"></script>
 
-    <!-- APP ENTRY -->
+    <!-- APP -->
     <script src="js/app.js"></script>
-
-    <script defer src="https://unpkg.com/lucide@latest"></script>
-
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
   </body>
 </html>

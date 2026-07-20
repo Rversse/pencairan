@@ -17,6 +17,7 @@ const accountModalTitle = document.getElementById('accountModalTitle')
 const closeAccountModal = document.getElementById('closeAccountModal')
 const accountBank = document.getElementById('accountBank')
 const accountNumber = document.getElementById('accountNumber')
+const accountOpeningBalance = document.getElementById('accountOpeningBalance')
 const accountStatus = document.getElementById('accountStatus')
 const saveAccountButton = document.getElementById('saveAccountButton')
 const kitchenMappingList = document.getElementById('kitchenMappingList')
@@ -47,11 +48,12 @@ addAccountButton?.addEventListener('click', () => {
 
   accountBank.value = 'BNI'
   accountNumber.value = ''
+  accountOpeningBalance.value = formatInputRupiah(0)
   accountStatus.value = 'true'
 
   accountEditor.style.display = 'block'
 
-  accountBank.focus()
+  accountNumber.focus()
 })
 
 function openNewSupplierModal() {
@@ -124,9 +126,14 @@ function renderSupplierAccounts(accounts) {
   }
 </div>
 
-    <div class="account-kitchens">
-      ${kitchenNames.length ? kitchenNames.join(', ') : 'Belum dipetakan'}
-    </div>
+<div class="account-opening">
+    💰 Saldo Awal:
+    <strong>${formatRupiah(account.opening_balance || 0)}</strong>
+</div>
+
+<div class="account-kitchens">
+    ${kitchenNames.length ? kitchenNames.join(', ') : 'Belum dipetakan'}
+</div>
 
   </div>
 
@@ -259,6 +266,7 @@ function resetAccountEditor() {
 
   accountBank.value = 'BNI'
   accountNumber.value = ''
+  accountOpeningBalance.value = formatInputRupiah(0)
   accountStatus.value = 'true'
 }
 
@@ -331,6 +339,10 @@ function openAccountModal(id) {
   accountNumber.value = account.account_number ?? ''
   accountStatus.value = String(account.is_active)
 
+  accountOpeningBalance.value = formatInputRupiah(
+    Number(account.opening_balance) || 0
+  )
+
   mappingEditor.style.display = 'none'
   accountEditor.style.display = 'block'
   accountModal.style.display = 'flex'
@@ -352,6 +364,7 @@ accounts (
   id,
   bank,
   account_number,
+  opening_balance,
   is_active,
   kitchen_account_rules (
     kitchen_id,
@@ -456,6 +469,11 @@ function openAccountPreview(supplierId) {
   title="Klik untuk menyalin"
 >
   ${account.account_number ?? '-'}
+</div>
+
+<div class="preview-account-opening">
+    💰 Saldo Awal
+    <strong>${formatRupiah(account.opening_balance || 0)}</strong>
 </div>
 
 <div class="preview-account-kitchens">
@@ -721,6 +739,12 @@ function openSupplierModal(id) {
   resetModalScroll(supplierModal)
 }
 
+accountOpeningBalance.addEventListener('input', () => {
+  accountOpeningBalance.value = formatInputRupiah(
+    parseRupiah(accountOpeningBalance.value)
+  )
+})
+
 addSupplierButton?.addEventListener('click', openNewSupplierModal)
 
 supplierMasterSearch?.addEventListener('input', () => {
@@ -939,6 +963,8 @@ async function saveAccount() {
     return
   }
 
+  const openingBalance = Number(parseRupiah(accountOpeningBalance.value))
+
   const isEdit = !!currentAccountId
 
   let error
@@ -949,6 +975,7 @@ async function saveAccount() {
       .update({
         bank: accountBank.value,
         account_number: accountNumber.value.trim(),
+        opening_balance: openingBalance,
         is_active: accountStatus.value === 'true'
       })
       .eq('id', currentAccountId)
@@ -960,6 +987,7 @@ async function saveAccount() {
       name: supplier.business_name,
       bank: accountBank.value,
       account_number: accountNumber.value.trim(),
+      opening_balance: openingBalance,
       is_active: accountStatus.value === 'true'
     })
 
