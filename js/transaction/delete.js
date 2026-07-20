@@ -66,7 +66,7 @@ confirmDeleteButton.addEventListener(
       )
 
       if (diffDays > 7) {
-        const confirmOld = confirm(
+        const confirmOld = await showConfirm(
           'Transaksi lama terdeteksi. Yakin ingin menghapus?'
         )
 

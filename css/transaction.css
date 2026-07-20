@@ -52,7 +52,7 @@
 
   line-height: var(--line-normal);
 
-  opacity: 0.92;
+  opacity: 1;
 }
 
 .transaction-date {
@@ -125,7 +125,7 @@
 .transaction-left {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   flex: 1;
   min-width: 0;
 }
@@ -189,6 +189,51 @@
 
 .target-operational {
   color: #d97706;
+}
+
+#transactionNote {
+  width: 100%;
+  min-height: 72px;
+  padding: 14px 16px;
+
+  color: var(--navy);
+  background: var(--card);
+
+  border: 1px solid var(--border);
+  border-radius: 14px;
+
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
+
+  resize: vertical;
+
+  transition: var(--transition);
+}
+
+#transactionNote:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px var(--gold-soft);
+}
+
+#transactionNote::placeholder {
+  color: var(--navy-soft);
+}
+
+.transaction-note {
+  display: block;
+  margin-top: 6px;
+  padding-top: 6px;
+
+  border-top: 1px dashed var(--border);
+
+  color: var(--navy-soft);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+  font-style: italic;
+
+  overflow-wrap: anywhere;
 }
 
 @media (max-width: 768px) {

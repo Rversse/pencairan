@@ -45,6 +45,12 @@ async function fetchTransactions() {
   return query.order('created_at', { ascending: false }).limit(transactionLimit)
 }
 
+function escapeHtml(text) {
+  const div = document.createElement('div')
+  div.textContent = text ?? ''
+  return div.innerHTML
+}
+
 function renderTransactionCards(data) {
   let html = ''
   data.forEach((transaction) => {
@@ -93,7 +99,7 @@ function renderTransactionCards(data) {
 
     const isLocked = isTransactionLocked(transaction.transaction_date)
 
-    const canManage = currentUser.role === 'admin' && !isLocked
+    const canManage = currentUser?.role === 'admin' && !isLocked
 
     html += `
 
@@ -132,6 +138,10 @@ function renderTransactionCards(data) {
 
 <small class="transaction-date">
   ${formatDateShort(transaction.transaction_date)}
+</small>
+
+<small class="transaction-note">
+  Catatan: ${escapeHtml(transaction.note) || '-'}
 </small>
 
       </div>

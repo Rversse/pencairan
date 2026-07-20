@@ -32,15 +32,16 @@ async function preloadMappings() {
         kitchen_id,
         flow_type,
         account_id,
-        accounts (
-          id,
-          name,
-          bank,
-          is_active,
-          income_suppliers!accounts_supplier_id_fkey (
-            owner_name
-          )
-        )
+accounts (
+  id,
+  name,
+  bank,
+  account_number,
+  is_active,
+  income_suppliers!accounts_supplier_id_fkey (
+    owner_name
+  )
+)
       `),
 
     supabaseClient.from('kitchen_supplier_rules').select(`
@@ -215,7 +216,7 @@ function buildAccountOptions(accounts) {
           account.income_suppliers?.owner_name
             ? ` / ${account.income_suppliers.owner_name}`
             : ''
-        } (${account.bank})
+        } (${account.bank} - ${account.account_number})
       </option>
     `
   })

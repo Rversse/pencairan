@@ -1,3 +1,5 @@
+const transactionNote = document.getElementById('transactionNote')
+
 function updateFlowOptions() {
   const selectedKitchen =
     kitchenSelect.options[kitchenSelect.selectedIndex]?.text || ''
@@ -43,40 +45,23 @@ function updateFormFlow() {
 
   flowType.disabled = !kitchenSelect.value
 
-  amountInput.disabled = true
-
-  submitButton.disabled = true
-
   const flowSelected = !!flowType.value
 
+  accountSelect.disabled = !flowSelected || flowType.value === 'pengeluaran'
+
+  supplierSelect.disabled = !flowSelected || flowType.value !== 'pengeluaran'
+
+  amountInput.disabled = true
+  transactionNote.disabled = true
+  submitButton.disabled = true
+
   if (!flowSelected) {
-    accountSelect.disabled = true
-
-    supplierSelect.disabled = true
-
-    amountInput.disabled = true
-
-    submitButton.disabled = true
-
     return
   }
 
   if (flowType.value === 'pemasukan' || flowType.value === 'operational') {
-    if (isSukaraja) {
-      amountInput.disabled = !accountSelect.value
-
-      submitButton.disabled = !accountSelect.value
-
-      if (accountSelect.value) {
-        amountInput.focus()
-      }
-    } else {
-      amountInput.disabled = false
-
-      submitButton.disabled = false
-
-      amountInput.focus()
-    }
+    amountInput.disabled = !accountSelect.value
+    submitButton.disabled = !accountSelect.value
 
     return
   }
@@ -85,10 +70,6 @@ function updateFormFlow() {
     amountInput.disabled = !supplierSelect.value
 
     submitButton.disabled = !supplierSelect.value
-
-    if (supplierSelect.value) {
-      amountInput.focus()
-    }
   }
 }
 
@@ -229,6 +210,8 @@ function resetFormState() {
 
   amountInput.value = ''
 
+  transactionNote.value = ''
+
   updateFormFlow()
 
   lockTransactionFields(false)
@@ -309,6 +292,8 @@ async function editTransaction(transaction) {
 
   amountInput.value = formatNumber(String(transaction.amount))
 
+  transactionNote.value = transaction.note || ''
+
   submitButton.textContent = 'Update'
 
   lockTransactionFields(true)
@@ -354,7 +339,8 @@ function getTransactionPayload(flow, amount) {
   const payload = {
     transaction_date: transactionDate.value,
     kitchen_id: kitchenSelect.value,
-    amount: amount
+    amount: amount,
+    note: transactionNote.value.trim() || null
   }
 
   const transactionType = getTransactionType(flow)
@@ -521,11 +507,18 @@ transactionForm.addEventListener('submit', async (event) => {
 transactionForm.addEventListener('keydown', (event) => {
   if (event.key !== 'Enter') return
 
-  if (event.target !== amountInput) return
+  // Nominal -> Catatan
+  if (event.target === amountInput) {
+    event.preventDefault()
+    transactionNote.focus()
+    return
+  }
 
-  event.preventDefault()
-
-  transactionForm.requestSubmit()
+  // Catatan -> Simpan
+  if (event.target === transactionNote && !event.shiftKey) {
+    event.preventDefault()
+    transactionForm.requestSubmit()
+  }
 })
 
 kitchenSelect.addEventListener('change', async () => {
@@ -536,12 +529,55 @@ kitchenSelect.addEventListener('change', async () => {
   await toggleFields()
 
   updateFormFlow()
+
+  if (!flowType.disabled) {
+    flowType.focus()
+  }
 })
 
-transactionDate.addEventListener('change', updateFormFlow)
+transactionDate.addEventListener('change', () => {
+  updateFormFlow()
 
-flowType.addEventListener('change', updateFormFlow)
+  if (!kitchenSelect.disabled) {
+    kitchenSelect.focus()
+  }
+})
 
-accountSelect.addEventListener('change', updateFormFlow)
+flowType.addEventListener('change', async () => {
+  await toggleFields()
 
-supplierSelect.addEventListener('change', updateFormFlow)
+  updateFormFlow()
+
+  if (flowType.value === 'pemasukan' || flowType.value === 'operational') {
+    accountSelect.focus()
+    return
+  }
+
+  if (flowType.value === 'pengeluaran') {
+    supplierSelect.focus()
+  }
+})
+
+accountSelect.addEventListener('change', () => {
+  updateFormFlow()
+
+  if (accountSelect.value) {
+    amountInput.disabled = false
+    amountInput.focus()
+  }
+})
+
+supplierSelect.addEventListener('change', () => {
+  updateFormFlow()
+
+  if (supplierSelect.value) {
+    amountInput.disabled = false
+    amountInput.focus()
+  }
+})
+
+amountInput.addEventListener('input', () => {
+  const amount = Number(amountInput.value.replace(/\./g, ''))
+
+  transactionNote.disabled = amount <= 0
+})
