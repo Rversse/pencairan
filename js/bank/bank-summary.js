@@ -151,8 +151,8 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
       <th style="width:28%">Rekening</th>
       <th class="text-center">Saldo Awal</th>
-      <th class="text-center">Masuk</th>
-      <th class="text-center">Keluar</th>
+      <th class="text-center">Uang Masuk</th>
+      <th class="text-center">Uang Keluar</th>
       <th class="text-center">Saldo Akhir</th>
       <th class="text-center" style="width:90px">Aksi</th>
 
