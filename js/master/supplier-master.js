@@ -265,6 +265,19 @@ function resetAccountEditor() {
   accountStatus.value = 'true'
 }
 
+function formatPhoneNumber(value) {
+  const digits = value.replace(/\D/g, '').slice(0, 15)
+
+  const groups = []
+
+  if (digits.length > 0) groups.push(digits.slice(0, 4))
+  if (digits.length > 4) groups.push(digits.slice(4, 8))
+  if (digits.length > 8) groups.push(digits.slice(8, 12))
+  if (digits.length > 12) groups.push(digits.slice(12))
+
+  return groups.join('-')
+}
+
 async function openKitchenMapping(accountId) {
   if (currentUser?.role !== 'admin') {
     return
@@ -594,9 +607,23 @@ function renderSupplierMaster() {
   filteredSuppliers.forEach((supplier) => {
     const activeAccounts = supplier.accounts.filter(
       (account) => account.is_active
-    ).length
+    )
 
     const totalAccounts = supplier.accounts.length
+
+    const tooltipContent =
+      activeAccounts.length > 0
+        ? activeAccounts
+            .sort((a, b) => a.bank.localeCompare(b.bank, 'id'))
+            .map(
+              (account) => `
+<div class="supplierAccountItem">
+    ${account.bank} - ${account.account_number ?? '-'}
+</div>
+`
+            )
+            .join('')
+        : '<div class="supplierAccountItem">Tidak ada rekening aktif</div>'
 
     rows += `
 <tr>
@@ -619,12 +646,15 @@ function renderSupplierMaster() {
   </td>
 
 <td class="text-center">
-<span
-  class="supplierAccountPreview"
-  data-id="${supplier.id}"
-  title="Klik untuk melihat daftar rekening"
->
-    ${activeAccounts}/${totalAccounts}
+  <span
+    class="supplierAccountPreview"
+    data-id="${supplier.id}"
+  >
+    ${activeAccounts.length}/${totalAccounts}
+
+    <span class="supplierAccountTooltip">
+      ${tooltipContent}
+    </span>
   </span>
 </td>
 
@@ -741,6 +771,37 @@ supplierMasterSearch?.addEventListener('input', () => {
   renderSupplierMaster()
 })
 
+supplierPhone?.addEventListener('input', () => {
+  const digitsBeforeCursor = supplierPhone.value
+    .slice(0, supplierPhone.selectionStart)
+    .replace(/\D/g, '').length
+
+  supplierPhone.value = formatPhoneNumber(supplierPhone.value)
+
+  let cursor = 0
+  let digitCount = 0
+
+  while (
+    cursor < supplierPhone.value.length &&
+    digitCount < digitsBeforeCursor
+  ) {
+    if (/\d/.test(supplierPhone.value[cursor])) {
+      digitCount++
+    }
+    cursor++
+  }
+
+  supplierPhone.setSelectionRange(cursor, cursor)
+})
+
+supplierBusinessName?.addEventListener('input', () => {
+  const cursor = supplierBusinessName.selectionStart
+
+  supplierBusinessName.value = supplierBusinessName.value.toUpperCase()
+
+  supplierBusinessName.setSelectionRange(cursor, cursor)
+})
+
 function hideSupplierModal() {
   supplierMode = 'edit'
 
@@ -841,7 +902,10 @@ async function updateSupplier() {
     return
   }
 
-  const businessName = supplierBusinessName.value.trim()
+  const businessName = supplierBusinessName.value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .toUpperCase()
 
   const { error } = await supabaseClient
     .from('income_suppliers')
@@ -894,7 +958,10 @@ async function insertSupplier() {
   }
 
   const { error } = await supabaseClient.from('income_suppliers').insert({
-    business_name: supplierBusinessName.value.trim(),
+    business_name: supplierBusinessName.value
+      .trim()
+      .replace(/\s+/g, ' ')
+      .toUpperCase(),
     owner_name: supplierOwnerName.value.trim(),
     product_type: supplierProductType.value.trim(),
     phone: supplierPhone.value.trim() || null,

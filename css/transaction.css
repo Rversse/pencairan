@@ -151,9 +151,10 @@
   color: var(--navy-soft);
 
   font-size: var(--text-md);
+
   font-weight: var(--fw-medium);
 
-  line-height: var(--line-normal);
+  line-height: 1.45;
 }
 
 .transactions-header {
@@ -263,4 +264,28 @@
   .transaction-card button {
     flex: 1;
   }
+}
+
+/* ==========================================================
+   Transaction Target
+   ========================================================== */
+
+.supplier-name {
+  font-weight: 700;
+}
+
+.transaction-owner {
+  color: var(--navy);
+  font-weight: 500;
+}
+
+.transaction-bank {
+  color: var(--gold);
+  font-weight: 600;
+}
+
+.target-separator {
+  color: #000000;
+  margin: 0 6px;
+  font-weight: 700;
 }

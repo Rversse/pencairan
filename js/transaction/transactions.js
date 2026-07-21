@@ -17,12 +17,13 @@ async function fetchTransactions() {
       *,
       kitchens(name),
       accounts(
-  name,
-  bank,
-  income_suppliers!accounts_supplier_id_fkey(
-    owner_name
-  )
-),
+        name,
+        bank,
+        account_number,
+        income_suppliers!accounts_supplier_id_fkey(
+          owner_name
+        )
+      ),
       suppliers(name)
     `)
 
@@ -79,17 +80,20 @@ function renderTransactionCards(data) {
       ${
         transaction.accounts.income_suppliers?.owner_name
           ? `
-            /
-            <span class="owner-name">
-              ${transaction.accounts.income_suppliers.owner_name}
-            </span>
+            <span class="target-separator">•</span>
+
+<span class="transaction-owner">
+    ${transaction.accounts.income_suppliers.owner_name}
+</span>
           `
           : ''
       }
 
-      <span class="owner-name">
-        (${transaction.accounts.bank})
-      </span>
+      <span class="target-separator">•</span>
+
+<span class="transaction-bank">
+    ${transaction.accounts.bank} - ${transaction.accounts.account_number}
+</span>
     `
       : `
       <span class="supplier-name">
