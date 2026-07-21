@@ -191,20 +191,7 @@ income_suppliers(owner_name)
             : (item.recipient_name ?? '-')
       }
     })
-
-    console.table(
-      transactions.map((t) => ({
-        direction: t.direction,
-        partner: t.partner,
-        total: t.total
-      }))
-    )
   }
-
-  console.log({
-    isHoldingAccount,
-    account
-  })
 
   const openingBalance = Number(account.opening_balance) || 0
 

@@ -53,12 +53,6 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
   const holdingBalance = holdingOpeningBalance + holdingIncome - holdingExpense
 
-  console.log({
-    holdingIncome,
-    holdingExpense,
-    holdingBalance
-  })
-
   const summary = accounts
     .filter((account) => {
       return (
