@@ -1,30 +1,29 @@
 let editingBankTransactionId = null
 
 const bankSearch = document.getElementById('bankSearch')
-
 const bankAccountSelect = document.getElementById('bankAccountSelect')
 const bankCurrentBalance = document.getElementById('bankCurrentBalance')
-
 const bankStartDate = document.getElementById('bankStartDate')
 const bankEndDate = document.getElementById('bankEndDate')
-
 const addBankTransactionButton = document.getElementById(
   'addBankTransactionButton'
 )
-
 const bankTransactionModal = document.getElementById('bankTransactionModal')
 const bankTransactionForm = document.getElementById('bankTransactionForm')
-
 const bankTransactionDate = document.getElementById('bankTransactionDate')
 const destinationName = document.getElementById('destinationName')
+const isHoldingTransfer = document.getElementById('isHoldingTransfer')
 const transferAmount = document.getElementById('transferAmount')
 const adminFee = document.getElementById('adminFee')
 const paymentFor = document.getElementById('paymentFor')
 const cancelBankTransaction = document.getElementById('cancelBankTransaction')
-
 const bankTransactionTableContainer = document.getElementById(
   'bankTransactionTableContainer'
 )
+
+function getHoldingAccount() {
+  return bankAccounts.find((account) => account.account_category === 'holding')
+}
 
 async function fetchBankTransactions() {
   const effectiveStartDate =
@@ -39,15 +38,17 @@ async function fetchBankTransactions() {
       .from('accounts')
       .select(
         `
+  id,
+  name,
+  bank,
+  account_number,
+  opening_balance,
+  supplier_id,
+  account_category,
+  income_suppliers (
     id,
-    bank,
-    account_number,
-    opening_balance,
-    supplier_id,
-    income_suppliers (
-        id,
-        owner_name
-    )
+    owner_name
+  )
 `
       )
       .eq('is_active', true)
@@ -65,12 +66,16 @@ async function fetchBankTransactions() {
       .from('bank_transactions')
       .select(
         `
-        id,
-        account_id,
-        transfer_amount,
-        admin_fee,
-        transaction_date
-      `
+    id,
+    account_id,
+    recipient_name,
+    payment_for,
+    transfer_amount,
+    admin_fee,
+    transfer_type,
+    transaction_date,
+    created_at
+`
       )
       .gte('transaction_date', effectiveStartDate)
       .lte('transaction_date', endDate)
@@ -161,6 +166,9 @@ function openBankTransactionModal() {
 
   populateBankAccountDropdown()
 
+  bankAccountSelect.disabled = false
+  isHoldingTransfer.disabled = false
+
   bankAccountSelect.selectedIndex = 0
 
   updateBankCurrentBalance()
@@ -169,7 +177,8 @@ function openBankTransactionModal() {
 
   adminFee.value = '0'
 
-  destinationName.value = ''
+  isHoldingTransfer.checked = false
+  updateHoldingTransferState()
 
   paymentFor.value = ''
 
@@ -195,9 +204,18 @@ function openEditBankTransaction(transaction) {
 
   bankAccountSelect.value = transaction.account_id
 
+  bankAccountSelect.disabled = true
+  isHoldingTransfer.disabled = true
+
   updateBankCurrentBalance()
 
-  destinationName.value = transaction.recipient_name ?? ''
+  isHoldingTransfer.checked = transaction.transfer_type === 'holding'
+
+  updateHoldingTransferState()
+
+  if (!isHoldingTransfer.checked) {
+    destinationName.value = transaction.recipient_name ?? ''
+  }
 
   transferAmount.value = formatNumber(String(transaction.transfer_amount))
 
@@ -230,14 +248,26 @@ function closeBankTransactionModal() {
 
   bankTransactionForm.reset()
 
+  isHoldingTransfer.checked = false
+  updateHoldingTransferState()
+
   if (bankCurrentBalance) {
     bankCurrentBalance.value = ''
   }
+
+  bankAccountSelect.disabled = false
+  isHoldingTransfer.disabled = false
 
   bankTransactionModal.classList.remove('show')
 }
 
 function getBankTransactionPayload() {
+  const selectedAccount = bankAccounts.find(
+    (account) => account.id === bankAccountSelect.value
+  )
+
+  const isHoldingSender = selectedAccount?.account_category === 'holding'
+
   return {
     transaction_date: bankTransactionDate.value,
     account_id: bankAccountSelect.value,
@@ -245,6 +275,13 @@ function getBankTransactionPayload() {
     transfer_amount: parseNumber(transferAmount.value),
     admin_fee: parseNumber(adminFee.value),
     payment_for: paymentFor.value.trim(),
+
+    transfer_type: isHoldingSender
+      ? 'normal'
+      : isHoldingTransfer.checked
+        ? 'holding'
+        : 'normal',
+
     created_by: window.currentUser.id
   }
 }
@@ -331,6 +368,35 @@ function updateBankCurrentBalance() {
   bankCurrentBalance.value = formatRupiah(getCurrentBankBalance(accountId))
 }
 
+function updateHoldingTransferState() {
+  const selectedAccount = bankAccounts.find(
+    (account) => account.id === bankAccountSelect.value
+  )
+
+  const isHoldingSender = selectedAccount?.account_category === 'holding'
+
+  if (isHoldingSender) {
+    isHoldingTransfer.checked = false
+    isHoldingTransfer.disabled = true
+
+    destinationName.readOnly = false
+    destinationName.classList.remove('field-locked')
+
+    return
+  }
+
+  isHoldingTransfer.disabled = editingBankTransactionId !== null
+
+  if (isHoldingTransfer.checked) {
+    destinationName.value = getHoldingAccount()?.name ?? ''
+  }
+
+  const locked = isHoldingTransfer.checked || isHoldingTransfer.disabled
+
+  destinationName.readOnly = locked
+  destinationName.classList.toggle('field-locked', locked)
+}
+
 async function persistBankTransaction(payload) {
   if (editingBankTransactionId) {
     return await supabaseClient
@@ -405,6 +471,11 @@ function clearDefaultAdminFee() {
 
 bankAccountSelect?.addEventListener('change', () => {
   updateBankCurrentBalance()
+  updateHoldingTransferState()
+})
+
+isHoldingTransfer?.addEventListener('change', () => {
+  updateHoldingTransferState()
 })
 
 bankStartDate?.addEventListener('change', async (event) => {

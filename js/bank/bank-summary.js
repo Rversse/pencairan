@@ -10,6 +10,12 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
   const incomeMap = new Map()
   const expenseMap = new Map()
 
+  const holdingAccounts = accounts.filter(
+    (account) => account.account_category === 'holding'
+  )
+
+  const holdingAccount = holdingAccounts[0] ?? null
+
   for (const item of incomes) {
     incomeMap.set(
       item.account_id,
@@ -30,9 +36,33 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
     expenseMap.set(item.account_id, current)
   }
 
+  let holdingIncome = 0
+  let holdingExpense = 0
+
+  for (const item of expenses) {
+    if (item.transfer_type === 'holding') {
+      holdingIncome += Number(item.transfer_amount) + Number(item.admin_fee)
+    }
+
+    if (holdingAccount && item.account_id === holdingAccount.id) {
+      holdingExpense += Number(item.transfer_amount) + Number(item.admin_fee)
+    }
+  }
+
+  const holdingOpeningBalance = Number(holdingAccount?.opening_balance) || 0
+
+  const holdingBalance = holdingOpeningBalance + holdingIncome - holdingExpense
+
+  console.log({
+    holdingIncome,
+    holdingExpense,
+    holdingBalance
+  })
+
   const summary = accounts
     .filter((account) => {
       return (
+        account.account_category === 'supplier' &&
         account.income_suppliers?.owner_name &&
         account.bank &&
         account.account_number &&
@@ -55,6 +85,7 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
       const balance = openingBalance + income - expense
 
       return {
+        category: account.account_category,
         accountId: account.id,
         ownerName: account.income_suppliers.owner_name,
         rekening: `${account.bank} • ${getLastFiveDigits(account.account_number)}`,
@@ -68,7 +99,31 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         historyCount
       }
     })
-    .sort((a, b) => a.ownerName.localeCompare(b.ownerName))
+  if (holdingAccount) {
+    const holdingHistoryCount = expenses.filter(
+      (item) =>
+        item.transfer_type === 'holding' ||
+        (holdingAccount && item.account_id === holdingAccount.id)
+    ).length
+
+    summary.push({
+      category: 'holding',
+      accountId: holdingAccount.id,
+      ownerName: holdingAccount.name,
+      rekening: `${holdingAccount.bank} • ${getLastFiveDigits(
+        holdingAccount.account_number
+      )}`,
+
+      openingBalance: holdingOpeningBalance,
+      income: holdingIncome,
+      expense: holdingExpense,
+      balance: holdingBalance,
+
+      historyCount: holdingHistoryCount
+    })
+  }
+
+  summary.sort((a, b) => a.ownerName.localeCompare(b.ownerName))
 
   currentBankSummary = summary
 
@@ -82,6 +137,14 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         )
       })
     : summary
+
+  const holdingSummary = filteredSummary.filter(
+    (item) => item.category === 'holding'
+  )
+
+  const supplierSummary = filteredSummary.filter(
+    (item) => item.category === 'supplier'
+  )
 
   let totalOpeningBalance = 0
   let totalIncome = 0
@@ -162,79 +225,105 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
   <tbody>
 
-  ${filteredSummary
-    .map((item) => {
-      const balanceClass = 'balance'
+${[
+  {
+    title: 'Rekening Penampung',
+    items: holdingSummary
+  },
+  {
+    title: 'Rekening Supplier',
+    items: supplierSummary
+  }
+]
+  .filter((section) => section.items.length)
+  .map(
+    (section) => `
+      <tr class="bank-section-row">
+        <td colspan="6">
+          <div class="bank-section-title">
+            ${section.title}
+          </div>
+        </td>
+      </tr>
 
-      const [bankName, accountNumber] = item.rekening.split(' • ')
+      ${section.items
+        .map((item) => {
+          const balanceClass = 'balance'
 
-      return `
-        <tr class="bank-row">
+          const [bankName, accountNumber] = item.rekening.split(' • ')
 
-          <td>
+          return `
+<tr class="bank-row">
 
-            <div class="bank-owner">
-              ${item.ownerName}
-            </div>
+  <td>
 
-            <div class="bank-account">
+    <div class="bank-owner">
+      ${item.ownerName}
+    </div>
 
-              <span class="bank-bank-badge">
-                ${bankName}
-              </span>
+    <div class="bank-account">
 
-              <span class="bank-account-number">
-                ${accountNumber}
-              </span>
+      <span class="bank-bank-badge">
+        ${bankName}
+      </span>
 
-            </div>
+      <span class="bank-account-number">
+        ${accountNumber}
+      </span>
 
-          </td>
+    </div>
 
-<td class="text-center">
-  <div class="bank-money">
-    <strong>${formatRupiah(item.openingBalance)}</strong>
-  </div>
-</td>
+  </td>
 
-<td class="text-center">
-  <div class="bank-money income">
-    <strong>${formatRupiah(item.income)}</strong>
-  </div>
-</td>
+  <td class="text-center">
+    <div class="bank-money">
+      <strong>${formatRupiah(item.openingBalance)}</strong>
+    </div>
+  </td>
 
-<td class="text-center">
-  <div class="bank-money expense">
-    <strong>${formatRupiah(item.expense)}</strong>
-  </div>
-</td>
+  <td class="text-center">
+    <div class="bank-money income">
+      <strong>${formatRupiah(item.income)}</strong>
+    </div>
+  </td>
 
-<td class="text-center">
-  <div class="bank-money ${balanceClass}">
-    <strong>${formatRupiah(item.balance)}</strong>
-  </div>
-</td>
+  <td class="text-center">
+    <div class="bank-money expense">
+      <strong>${formatRupiah(item.expense)}</strong>
+    </div>
+  </td>
 
-          <td class="text-center">
+  <td class="text-center">
+    <div class="bank-money ${balanceClass}">
+      <strong>${formatRupiah(item.balance)}</strong>
+    </div>
+  </td>
 
-<button
-  class="bank-history-button ${item.historyCount > 0 ? 'has-history' : 'no-history'}"
-              data-account-id="${item.accountId}"
-              title="Lihat History"
-            >
-              Riwayat
+  <td class="text-center">
 
-              <span class="history-count ${item.historyCount > 0 ? 'has-history' : 'no-history'}">
-                ${item.historyCount}
-              </span>
-            </button>
+    <button
+      class="bank-history-button ${item.historyCount > 0 ? 'has-history' : 'no-history'}"
+      data-account-id="${item.accountId}"
+      title="Lihat History">
 
-          </td>
+      Riwayat
 
-        </tr>
-      `
-    })
-    .join('')}
+      <span class="history-count ${item.historyCount > 0 ? 'has-history' : 'no-history'}">
+        ${item.historyCount}
+      </span>
+
+    </button>
+
+  </td>
+
+</tr>
+`
+        })
+        .join('')}
+
+    `
+  )
+  .join('')}
 
   </tbody>
 
@@ -257,31 +346,72 @@ function populateBankAccountDropdown() {
     </option>
   `
 
-  bankAccounts
+  const holdingAccounts = bankAccounts
+    .filter((account) => account.account_category === 'holding')
+    .sort((a, b) => a.name.localeCompare(b.name))
+
+  const supplierAccounts = bankAccounts
     .filter((account) => {
       return (
+        account.account_category === 'supplier' &&
         account.income_suppliers?.owner_name &&
         account.account_number &&
         account.account_number !== '-'
       )
     })
-    .sort((a, b) => {
-      return a.income_suppliers.owner_name.localeCompare(
-        b.income_suppliers.owner_name
-      )
-    })
-    .forEach((account) => {
-      bankAccountSelect.insertAdjacentHTML(
+    .sort((a, b) =>
+      a.income_suppliers.owner_name.localeCompare(b.income_suppliers.owner_name)
+    )
+
+  if (holdingAccounts.length) {
+    bankAccountSelect.insertAdjacentHTML(
+      'beforeend',
+      `
+      <optgroup label="Rekening Penampung">
+      </optgroup>
+      `
+    )
+
+    const group = bankAccountSelect.lastElementChild
+
+    holdingAccounts.forEach((account) => {
+      group.insertAdjacentHTML(
         'beforeend',
         `
-          <option value="${account.id}">
-            ${account.income_suppliers.owner_name}
-            • ${account.bank}
-            • ${getLastFiveDigits(account.account_number)}
-          </option>
+        <option value="${account.id}">
+          ${account.name}
+          • ${account.bank}
+          • ${getLastFiveDigits(account.account_number)}
+        </option>
         `
       )
     })
+  }
+
+  if (supplierAccounts.length) {
+    bankAccountSelect.insertAdjacentHTML(
+      'beforeend',
+      `
+      <optgroup label="Rekening Supplier">
+      </optgroup>
+      `
+    )
+
+    const group = bankAccountSelect.lastElementChild
+
+    supplierAccounts.forEach((account) => {
+      group.insertAdjacentHTML(
+        'beforeend',
+        `
+        <option value="${account.id}">
+          ${account.income_suppliers.owner_name}
+          • ${account.bank}
+          • ${getLastFiveDigits(account.account_number)}
+        </option>
+        `
+      )
+    })
+  }
 }
 
 function getLastFiveDigits(accountNumber) {

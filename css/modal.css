@@ -662,12 +662,11 @@
 }
 
 .history-account-title {
-  font-size: var(--text-3xl);
-  font-weight: var(--fw-extrabold);
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
 
   line-height: var(--line-tight);
-
-  letter-spacing: var(--tracking-tight);
 
   color: var(--navy);
 }
@@ -676,7 +675,8 @@
   font-size: var(--text-md);
   font-weight: var(--fw-medium);
 
-  color: var(--navy-soft);
+  margin-top: 4px;
+  color: #64748b;
 }
 
 #bankHistoryContent {
@@ -765,8 +765,7 @@
 
 .history-card:hover {
   transform: translateY(-2px);
-
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
 
   border-left-color: #b91c1c;
 }

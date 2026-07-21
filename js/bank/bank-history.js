@@ -57,11 +57,13 @@ accounts(
       .from('accounts')
       .select(
         `
-    bank,
-    account_number,
-    opening_balance,
-    income_suppliers(owner_name)
-  `
+name,
+bank,
+account_number,
+opening_balance,
+account_category,
+income_suppliers(owner_name)
+`
       )
       .eq('id', accountId)
       .single()
@@ -94,9 +96,115 @@ accounts(
     return
   }
 
-  const transactions = transactionResult.data ?? []
-
   const account = accountResult.data
+
+  const isHoldingAccount = account?.account_category === 'holding'
+
+  let transactions = []
+
+  if (isHoldingAccount) {
+    const [incomingResult, outgoingResult] = await Promise.all([
+      supabaseClient
+        .from('bank_transactions')
+        .select(
+          `
+        *,
+        accounts(
+          bank,
+          account_number,
+          opening_balance,
+          account_category,
+          income_suppliers(owner_name)
+        )
+      `
+        )
+        .eq('transfer_type', 'holding')
+        .gte('transaction_date', effectiveStartDate)
+        .lte('transaction_date', bankEndDate.value),
+
+      supabaseClient
+        .from('bank_transactions')
+        .select(
+          `
+        *,
+        accounts(
+          bank,
+          account_number,
+          opening_balance,
+          account_category,
+          income_suppliers(owner_name)
+        )
+      `
+        )
+        .eq('account_id', accountId)
+        .gte('transaction_date', effectiveStartDate)
+        .lte('transaction_date', bankEndDate.value)
+    ])
+
+    if (incomingResult.error) {
+      console.error(incomingResult.error)
+      return
+    }
+
+    if (outgoingResult.error) {
+      console.error(outgoingResult.error)
+      return
+    }
+
+    transactions = [
+      ...(incomingResult.data ?? []).map((item) => ({
+        ...item,
+        historyType: 'in'
+      })),
+      ...(outgoingResult.data ?? []).map((item) => ({
+        ...item,
+        historyType: 'out'
+      }))
+    ]
+
+    transactions.sort((a, b) => {
+      return new Date(a.transaction_date) - new Date(b.transaction_date)
+    })
+  } else {
+    transactions = transactionResult.data ?? []
+  }
+
+  if (isHoldingAccount) {
+    transactions = transactions.map((item) => {
+      const transferAmount = Number(item.transfer_amount) || 0
+      const adminFee = Number(item.admin_fee) || 0
+
+      return {
+        ...item,
+
+        direction: item.historyType,
+
+        amount: transferAmount,
+        admin: adminFee,
+        total: transferAmount + adminFee,
+
+        partner:
+          item.historyType === 'in'
+            ? (item.accounts?.income_suppliers?.owner_name ??
+              item.accounts?.name ??
+              '-')
+            : (item.recipient_name ?? '-')
+      }
+    })
+
+    console.table(
+      transactions.map((t) => ({
+        direction: t.direction,
+        partner: t.partner,
+        total: t.total
+      }))
+    )
+  }
+
+  console.log({
+    isHoldingAccount,
+    account
+  })
 
   const openingBalance = Number(account.opening_balance) || 0
 
@@ -105,7 +213,11 @@ accounts(
 
     bankHistoryTitle.innerHTML = `
   <div class="history-account-title">
-    ${account.income_suppliers?.owner_name ?? '-'}
+    ${
+      account.account_category === 'holding'
+        ? account.name
+        : (account.income_suppliers?.owner_name ?? '-')
+    }
   </div>
 
   <div class="history-account-subtitle">
@@ -153,20 +265,59 @@ accounts(
     0
   )
 
-  const totalExpense = transactions.reduce((total, item) => {
-    const transferAmount = Number(item.transfer_amount) || 0
-    const adminFee = Number(item.admin_fee) || 0
+  let historyBalance
+  let runningBalance
 
-    return total + transferAmount + adminFee
-  }, 0)
+  if (isHoldingAccount) {
+    const totalIn = transactions
+      .filter((item) => item.historyType === 'in')
+      .reduce((total, item) => {
+        return (
+          total +
+          (Number(item.transfer_amount) || 0) +
+          (Number(item.admin_fee) || 0)
+        )
+      }, 0)
 
-  const historyBalance = openingBalance + totalIncome - totalExpense
+    const totalOut = transactions
+      .filter((item) => item.historyType === 'out')
+      .reduce((total, item) => {
+        return (
+          total +
+          (Number(item.transfer_amount) || 0) +
+          (Number(item.admin_fee) || 0)
+        )
+      }, 0)
 
-  let runningBalance = openingBalance + totalIncome
+    historyBalance = openingBalance + totalIn - totalOut
+
+    runningBalance = openingBalance + totalIn
+  } else {
+    const totalIncome = (incomeResult.data ?? []).reduce(
+      (total, item) => total + (Number(item.amount) || 0),
+      0
+    )
+
+    const totalExpense = transactions.reduce((total, item) => {
+      return (
+        total +
+        (Number(item.transfer_amount) || 0) +
+        (Number(item.admin_fee) || 0)
+      )
+    }, 0)
+
+    historyBalance = openingBalance + totalIncome - totalExpense
+
+    runningBalance = openingBalance + totalIncome
+  }
 
   bankHistoryTitle.innerHTML = `
     <div class="history-account-title">
-      ${account.income_suppliers?.owner_name ?? '-'}
+      ${
+        account.account_category === 'holding'
+          ? account.name
+          : (account.income_suppliers?.owner_name ?? '-')
+      }
     </div>
 
     <div class="history-account-subtitle">
@@ -183,16 +334,37 @@ accounts(
       const order = (dailyTransactionOrder.get(dateKey) ?? 0) + 1
 
       dailyTransactionOrder.set(dateKey, order)
+
       const transferAmount = Number(item.transfer_amount) || 0
+
       const adminFee = Number(item.admin_fee) || 0
-      const totalOut = transferAmount + adminFee
+
+      const totalValue = transferAmount + adminFee
 
       const paymentPurpose = item.payment_for?.trim()
 
-      runningBalance -= totalOut
+      const isIncoming = isHoldingAccount && item.direction === 'in'
+
+      const transferLabel = isIncoming ? 'Transfer Masuk' : 'Transfer Keluar'
+
+      const totalLabel = isIncoming ? 'Total Masuk' : 'Total Keluar'
+
+      const cardClass = isIncoming
+        ? 'history-card incoming'
+        : 'history-card outgoing'
+
+      const amountClass = isIncoming ? 'history-in' : 'history-out'
+
+      const isIncome = isHoldingAccount && item.historyType === 'in'
+
+      if (isIncome) {
+        runningBalance -= totalValue
+      } else {
+        runningBalance -= totalValue
+      }
 
       return `
-<div class="history-card">
+<div class="${cardClass}">
 
   <div class="history-header">
 
@@ -200,13 +372,27 @@ accounts(
 
   <div class="history-recipient-row">
 
-    <div class="history-recipient">
-      ${item.recipient_name || 'Penerima tidak diketahui'}
-    </div>
+<div class="history-recipient">
+  ${
+    isHoldingAccount
+      ? item.partner || '-'
+      : item.recipient_name || 'Penerima tidak diketahui'
+  }
+</div>
 
     <span class="history-order">
       No. ${order}
     </span>
+
+    ${
+      isHoldingAccount
+        ? `
+      <span class="history-direction ${isIncoming ? 'in' : 'out'}">
+        ${isIncoming ? 'MASUK' : 'KELUAR'}
+      </span>
+    `
+        : ''
+    }
 
   </div>
 
@@ -241,8 +427,8 @@ accounts(
   <div class="history-details">
 
     <div class="history-row">
-      <span>Transfer</span>
-      <strong class="history-transfer">
+      <span>${transferLabel}</span>
+      <strong class="${amountClass}">
         ${formatRupiah(transferAmount)}
       </strong>
     </div>
@@ -257,9 +443,9 @@ accounts(
     <div class="history-divider"></div>
 
     <div class="history-row">
-      <span>Total Keluar</span>
+      <span>${totalLabel}</span>
       <strong class="history-out">
-        ${formatRupiah(totalOut)}
+        ${formatRupiah(totalValue)}
       </strong>
     </div>
 
