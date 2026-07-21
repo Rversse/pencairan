@@ -14,13 +14,21 @@ function registerActivityListeners() {
 async function initializeUserView() {
   const role = currentUser?.role
 
-  if (role === 'viewer' || role === 'operator') {
+  if (role === 'viewer') {
     await activateSection({
-      section: incomeSection,
-      tab: incomeReportTab,
-      onShow: loadIncomeReport
+      section: kitchenMasterSection,
+      tab: kitchenMasterTab,
+      onShow: loadKitchenMaster
     })
+    return
+  }
 
+  if (role === 'operator') {
+    await activateSection({
+      section: kitchenMasterSection,
+      tab: kitchenMasterTab,
+      onShow: loadKitchenMaster
+    })
     return
   }
 

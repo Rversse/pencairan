@@ -242,6 +242,9 @@ function openBankTransactionModal() {
 }
 
 function openEditBankTransaction(transaction) {
+  if (currentUser?.role !== 'admin' && currentUser?.role !== 'operator') {
+    return
+  }
   editingBankTransactionId = transaction.id
 
   populateBankAccountDropdown()

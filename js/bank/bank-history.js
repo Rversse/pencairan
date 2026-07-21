@@ -98,6 +98,9 @@ income_suppliers(owner_name)
 
   const account = accountResult.data
 
+  const canManageBank =
+    currentUser?.role === 'admin' || currentUser?.role === 'operator'
+
   const isHoldingAccount = account?.account_category === 'holding'
 
   let transactions = []
@@ -391,23 +394,29 @@ income_suppliers(owner_name)
 
 </div>
 
-    <div class="history-actions">
+${
+  canManageBank
+    ? `
+<div class="history-actions">
 
-      <button
-        class="secondary-button edit-bank-transaction"
-        data-id="${item.id}"
-      >
-        ✏ Edit
-      </button>
+  <button
+    class="secondary-button edit-bank-transaction"
+    data-id="${item.id}"
+  >
+    ✏ Edit
+  </button>
 
-      <button
-        class="danger-button delete-bank-transaction"
-        data-id="${item.id}"
-      >
-        🗑 Hapus
-      </button>
+  <button
+    class="danger-button delete-bank-transaction"
+    data-id="${item.id}"
+  >
+    🗑 Hapus
+  </button>
 
-    </div>
+</div>
+`
+    : ''
+}
 
   </div>
 
@@ -509,6 +518,10 @@ ${html}
 }
 
 async function deleteBankTransaction(id) {
+  if (currentUser?.role !== 'admin' && currentUser?.role !== 'operator') {
+    return
+  }
+
   const deleteButtons = bankHistoryContent.querySelectorAll(
     '.delete-bank-transaction'
   )

@@ -161,8 +161,8 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         <small>Total Masuk</small>
         <h2>${formatRupiah(totalIncome)}</h2>
       </div>
-      <div class="dashboard-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2">
+<div class="dashboard-icon bank-icon income">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
@@ -175,8 +175,8 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         <small>Total Keluar</small>
         <h2>${formatRupiah(totalExpense)}</h2>
       </div>
-      <div class="dashboard-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2">
+      <div class="dashboard-icon bank-icon expense">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M12 5v14M5 12l7 7 7-7" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
       </div>
@@ -189,8 +189,8 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         <small>Total Saldo</small>
         <h2>${formatRupiah(totalBalance)}</h2>
       </div>
-      <div class="dashboard-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2">
+      <div class="dashboard-icon bank-icon balance">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <rect x="2" y="6" width="20" height="12" rx="2"/>
           <path d="M2 10h20" stroke-linecap="round"/>
         </svg>
@@ -206,12 +206,12 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
     <tr>
 
-      <th style="width:28%">Rekening</th>
+      <th class="bank-col-account">Rekening</th>
       <th class="text-center">Saldo Awal</th>
       <th class="text-center">Uang Masuk</th>
       <th class="text-center">Uang Keluar</th>
       <th class="text-center">Saldo Akhir</th>
-      <th class="text-center" style="width:90px">Aksi</th>
+      <th class="text-center bank-col-action">Aksi</th>
 
     </tr>
 

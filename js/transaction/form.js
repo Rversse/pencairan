@@ -387,7 +387,10 @@ function validateTransaction(flow, amount) {
 async function hasDuplicateTransaction(payload) {
   let query = supabaseClient
     .from('transactions')
-    .select('id')
+    .select('id', {
+      count: 'exact',
+      head: true
+    })
     .eq('transaction_date', payload.transaction_date)
     .eq('kitchen_id', payload.kitchen_id)
     .eq('flow_type', payload.flow_type)
@@ -401,9 +404,14 @@ async function hasDuplicateTransaction(payload) {
     query = query.eq('account_id', payload.account_id)
   }
 
-  const { data } = await query.limit(1)
+  const { count, error } = await query
 
-  return data?.length > 0
+  if (error) {
+    console.error(error)
+    return false
+  }
+
+  return (count ?? 0) > 0
 }
 
 async function confirmDuplicateTransaction(payload) {
@@ -415,7 +423,9 @@ async function confirmDuplicateTransaction(payload) {
     return true
   }
 
-  return confirm('Kemungkinan transaksi duplikat. Tetap simpan?')
+  return confirm(
+    'Transaksi dengan tanggal, dapur, rekening/supplier, dan nominal yang sama sudah ada.\n\nTetap simpan?'
+  )
 }
 
 async function persistTransaction(payload) {
