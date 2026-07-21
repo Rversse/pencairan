@@ -33,6 +33,7 @@ function showConfirm(message) {
   return new Promise((resolve) => {
     confirmMessage.textContent = message
 
+    confirmModal.classList.remove('hidden')
     confirmModal.classList.add('show')
 
     const close = (result) => {

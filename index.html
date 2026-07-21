@@ -701,61 +701,81 @@
         </div>
 
         <form id="bankTransactionForm">
-          <div class="bank-form-grid">
-            <div>
-              <label>Tanggal</label>
-              <input type="date" id="bankTransactionDate" />
-            </div>
+          <div class="bank-form-scroll">
+            <div class="bank-form-grid">
+              <div>
+                <label>Tanggal</label>
+                <input type="date" id="bankTransactionDate" />
+              </div>
 
-            <div>
-              <label>Nama Pengirim</label>
-              <select id="bankAccountSelect"></select>
-            </div>
+              <div>
+                <label>Nama Pengirim</label>
+                <select id="bankAccountSelect"></select>
+              </div>
 
-            <div>
-              <label>Saldo Pengirim</label>
+              <div>
+                <label>Saldo Pengirim</label>
 
-              <input
-                id="bankCurrentBalance"
-                type="text"
-                readonly
-                tabindex="-1"
-                autocomplete="off"
-              />
-            </div>
+                <input
+                  id="bankCurrentBalance"
+                  type="text"
+                  readonly
+                  tabindex="-1"
+                  autocomplete="off"
+                />
+              </div>
 
-            <div>
-              <label>Nama Penerima</label>
-              <input id="destinationName" autocomplete="off" />
-            </div>
+              <div>
+                <label>Nama Penerima</label>
+                <input
+                  id="destinationName"
+                  list="recipientHistoryList"
+                  autocomplete="off"
+                />
 
-            <div class="form-group">
-              <label>
-                <input type="checkbox" id="isHoldingTransfer" />
-                Transfer ke Rekening Penampung
-              </label>
-            </div>
+                <datalist id="recipientHistoryList"></datalist>
+              </div>
 
-            <div>
-              <label>Nominal Transfer</label>
+              <div
+                id="holdingTransferCard"
+                class="holding-transfer-card bank-form-full"
+              >
+                <div class="holding-transfer-header">
+                  <div class="holding-transfer-title">
+                    🏦 Transfer ke Rekening Penampung
+                  </div>
+                </div>
 
-              <input
-                id="transferAmount"
-                inputmode="numeric"
-                autocomplete="off"
-              />
-            </div>
+                <label class="switch">
+                  <input type="checkbox" id="isHoldingTransfer" />
 
-            <div>
-              <label>Biaya Admin</label>
+                  <span class="slider"></span>
+                </label>
+              </div>
 
-              <input id="adminFee" inputmode="numeric" autocomplete="off" />
-            </div>
+              <div class="bank-form-full">
+                <label>Keperluan</label>
 
-            <div class="bank-form-full">
-              <label>Keperluan</label>
+                <input id="paymentFor" type="text" maxlength="100" />
+              </div>
 
-              <textarea id="paymentFor" rows="2" autocomplete="off"></textarea>
+              <div class="bank-form-full bank-form-row-2">
+                <div>
+                  <label>Nominal Transfer</label>
+
+                  <input
+                    id="transferAmount"
+                    inputmode="numeric"
+                    autocomplete="off"
+                  />
+                </div>
+
+                <div>
+                  <label>Biaya Admin</label>
+
+                  <input id="adminFee" inputmode="numeric" autocomplete="off" />
+                </div>
+              </div>
             </div>
           </div>
 
