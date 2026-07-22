@@ -41,7 +41,7 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
   for (const item of expenses) {
     if (item.transfer_type === 'holding') {
-      holdingIncome += Number(item.transfer_amount) + Number(item.admin_fee)
+      holdingIncome += Number(item.transfer_amount)
     }
 
     if (holdingAccount && item.account_id === holdingAccount.id) {

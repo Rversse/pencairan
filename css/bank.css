@@ -519,6 +519,10 @@
   min-width: 160px;
 }
 
+#bankHistoryModal .modal-header {
+  padding: 24px 28px 18px;
+}
+
 #cancelBankTransactionTop {
   width: 42px;
 
@@ -672,12 +676,78 @@
    BANK HISTORY
    ========================================================== */
 
+.history-card {
+  position: relative;
+  padding-left: 20px;
+}
+
+.history-card::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 4px;
+  bottom: 4px;
+  width: 4px;
+  border-radius: 4px;
+  background: #16a34a;
+}
+
+.history-card.outgoing::before {
+  background: #ef4444;
+}
+
 .history-card.incoming {
-  border-left: 5px solid #16a34a;
+  background: linear-gradient(
+    to right,
+    rgba(22, 163, 74, 0.05),
+    var(--card) 14%
+  );
 }
 
 .history-card.outgoing {
-  border-left: 5px solid #ef4444;
+  background: linear-gradient(
+    to right,
+    rgba(239, 68, 68, 0.045),
+    var(--card) 14%
+  );
+}
+
+.history-recipient-row {
+  position: relative;
+  padding-left: 34px;
+  min-height: 26px;
+
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  flex-wrap: wrap;
+}
+
+.history-recipient-row::before {
+  content: '↑';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  box-shadow: 0 3px 8px rgba(220, 38, 38, 0.28);
+}
+
+.history-card.incoming .history-recipient-row::before {
+  content: '↓';
+  transform: translateY(-50%);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  box-shadow: 0 3px 8px rgba(22, 163, 74, 0.28);
 }
 
 .history-in {
@@ -690,32 +760,46 @@
   font-weight: 800;
 }
 
-.history-direction {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 64px;
-  height: 22px;
-
-  padding: 0 10px;
-
-  border-radius: 999px;
-
-  font-size: 11px;
+.history-account-title {
+  margin: 0;
+  font-size: 19px;
   font-weight: 700;
-
-  margin-left: 8px;
+  line-height: 1.15;
+  color: var(--navy);
+  letter-spacing: -0.01em;
 }
 
-.history-direction.in {
-  background: #dcfce7;
-  color: #15803d;
+.history-account-subtitle {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #64748b;
 }
 
-.history-direction.out {
-  background: #fee2e2;
-  color: #dc2626;
+.history-account-period {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  font-size: 12px;
+  color: #64748b;
+}
+
+.history-account-period strong {
+  font-size: 14px;
+  color: #334155;
+  font-weight: 600;
+}
+
+.history-direction {
+  height: 20px;
+
+  padding: 0 8px;
+
+  font-size: 10px;
+
+  letter-spacing: 0.04em;
 }
 
 .history-recipient-row {
@@ -726,32 +810,6 @@
   align-items: center;
 
   gap: 10px;
-}
-
-.history-order {
-  display: inline-flex;
-
-  align-items: center;
-
-  justify-content: center;
-
-  min-width: 34px;
-
-  height: 22px;
-
-  padding: 0 8px;
-
-  border-radius: 999px;
-
-  background: #eef2ff;
-
-  color: #4338ca;
-
-  font-size: 11px;
-
-  font-weight: 700;
-
-  flex-shrink: 0;
 }
 
 .history-header-info {
@@ -785,31 +843,29 @@
 }
 
 .history-recipient {
-  font-size: var(--text-lg);
+  font-size: 15px;
 
-  font-weight: var(--fw-bold);
+  font-weight: 700;
 
-  line-height: 1.2;
+  line-height: 1.15;
 
-  margin-bottom: 2px;
+  margin-bottom: 0;
 }
 
 .history-date {
-  margin-top: 2px;
+  margin-top: 4px;
 
-  font-size: 12px;
-
-  line-height: 1.2;
+  font-size: 11px;
 
   color: #64748b;
 }
 
 .history-details {
-  margin: 10px 0;
+  margin: 8px 0;
 
   border: 1px solid var(--border);
 
-  border-radius: 12px;
+  border-radius: 10px;
 
   overflow: hidden;
 
@@ -823,13 +879,11 @@
 
   align-items: center;
 
-  padding: 8px 14px;
+  min-height: 32px;
 
-  font-size: var(--text-sm);
+  padding: 0 12px;
 
-  transition:
-    background 0.18s ease,
-    padding-left 0.18s ease;
+  font-size: 13px;
 }
 
 .history-row:last-child {
@@ -867,6 +921,10 @@
 
   color: var(--navy);
 
+  min-width: 140px;
+
+  text-align: right;
+
   font-variant-numeric: tabular-nums;
 
   font-feature-settings: 'tnum';
@@ -899,15 +957,12 @@
 }
 
 .history-current-balance {
-  margin: 6px 0 0;
-
-  color: #2563eb;
-
-  font-size: var(--text-3xl);
-
-  font-weight: var(--fw-extrabold);
-
+  margin-top: 4px;
+  font-size: 36px;
   line-height: 1.1;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #fff;
 }
 
 .history-purpose span {
@@ -915,7 +970,9 @@
 
   align-items: center;
 
-  padding: 4px 10px;
+  padding: 3px 10px;
+
+  font-size: 10px;
 
   border-radius: 999px;
 
@@ -924,8 +981,6 @@
   color: var(--navy);
 
   border: 1px solid #bfdbfe;
-
-  font-size: 11px;
 
   font-weight: var(--fw-bold);
 }
@@ -937,11 +992,11 @@
 
   align-items: flex-start;
 
-  gap: 10px;
+  gap: 14px;
 
-  padding-bottom: 8px;
+  margin-bottom: 6px;
 
-  margin-bottom: 10px;
+  padding-bottom: 6px;
 
   border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
@@ -958,34 +1013,21 @@
 
 .history-actions button {
   display: inline-flex;
-
   align-items: center;
-
   justify-content: center;
 
-  gap: 4px;
+  width: 40px;
+  height: 40px;
+  min-width: unset;
+  padding: 0;
 
-  height: 32px;
-
-  padding: 0 12px;
-
-  min-width: 72px;
-
-  border-radius: 10px;
-
-  font-size: 12px;
-
-  font-weight: var(--fw-bold);
-
-  line-height: 1;
-
-  white-space: nowrap;
+  border-radius: 9px;
 }
 
 .history-actions button svg,
 .history-actions button i {
-  width: 13px;
-  height: 13px;
+  width: 15px;
+  height: 15px;
 }
 
 .history-count.has-history {
@@ -1081,6 +1123,92 @@
   max-width: 320px;
   color: #64748b;
   line-height: 1.5;
+}
+
+/* ===============================
+   HISTORY BADGES
+   =============================== */
+
+.history-badges {
+  display: flex;
+  gap: 6px;
+  margin-top: 0;
+}
+
+.history-order,
+.history-direction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 20px;
+  padding: 0 8px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.history-order {
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.history-direction.in {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.history-direction.out {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.history-latest-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  height: 22px;
+  padding: 0 10px;
+
+  border-radius: 999px;
+
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  color: #fff;
+
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  box-shadow: 0 3px 8px rgba(217, 119, 6, 0.3);
+}
+
+/* ==========================================
+   HISTORY MODAL CLOSE BUTTON
+   ========================================== */
+
+#bankHistoryModal .modal-close,
+#bankHistoryModal .close-button,
+#bankHistoryModal .modal-header button {
+  width: 44px;
+  height: 44px;
+
+  padding: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 12px;
+
+  transition: all 0.2s ease;
+}
+
+#bankHistoryModal .modal-header button:hover {
+  transform: translateY(-1px);
+
+  background: #f8fafc;
 }
 
 /* ==========================================================

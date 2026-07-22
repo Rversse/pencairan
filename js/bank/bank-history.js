@@ -26,6 +26,11 @@ async function openBankHistory(accountId) {
   // Baru tampilkan modal
   bankHistoryModal.classList.add('show')
 
+  const periodLabel =
+    effectiveStartDate === bankEndDate.value
+      ? `${formatDateShort(effectiveStartDate)}`
+      : `${formatDateShort(effectiveStartDate)} - ${formatDateShort(bankEndDate.value)}`
+
   const [transactionResult, incomeResult, accountResult] = await Promise.all([
     supabaseClient
       .from('bank_transactions')
@@ -213,6 +218,11 @@ income_suppliers(owner_name)
   <div class="history-account-subtitle">
     ${account.bank} • ${getLastFiveDigits(account.account_number)}
   </div>
+
+<div class="history-account-period">
+    <span>Periode</span>
+    <strong>${periodLabel}</strong>
+</div>
 `
 
     bankHistoryContent.innerHTML = `
@@ -256,17 +266,12 @@ income_suppliers(owner_name)
   )
 
   let historyBalance
-  let runningBalance
 
   if (isHoldingAccount) {
     const totalIn = transactions
       .filter((item) => item.historyType === 'in')
       .reduce((total, item) => {
-        return (
-          total +
-          (Number(item.transfer_amount) || 0) +
-          (Number(item.admin_fee) || 0)
-        )
+        return total + (Number(item.transfer_amount) || 0)
       }, 0)
 
     const totalOut = transactions
@@ -280,8 +285,6 @@ income_suppliers(owner_name)
       }, 0)
 
     historyBalance = openingBalance + totalIn - totalOut
-
-    runningBalance = openingBalance + totalIn
   } else {
     const totalIncome = (incomeResult.data ?? []).reduce(
       (total, item) => total + (Number(item.amount) || 0),
@@ -297,8 +300,6 @@ income_suppliers(owner_name)
     }, 0)
 
     historyBalance = openingBalance + totalIncome - totalExpense
-
-    runningBalance = openingBalance + totalIncome
   }
 
   bankHistoryTitle.innerHTML = `
@@ -313,47 +314,63 @@ income_suppliers(owner_name)
     <div class="history-account-subtitle">
       ${account.bank} • ${getLastFiveDigits(account.account_number)}
     </div>
+
+<div class="history-account-period">
+    <span>Periode</span>
+    <strong>${periodLabel}</strong>
+</div>
   `
 
+  // Order transaksi per tanggal dihitung dari urutan ASC (kronologis)
   const dailyTransactionOrder = new Map()
 
-  const historyCards = transactions
-    .map((item) => {
-      const dateKey = item.transaction_date
+  transactions.forEach((item) => {
+    const dateKey = item.transaction_date
 
-      const order = (dailyTransactionOrder.get(dateKey) ?? 0) + 1
+    const order = (dailyTransactionOrder.get(dateKey) ?? 0) + 1
 
-      dailyTransactionOrder.set(dateKey, order)
+    dailyTransactionOrder.set(dateKey, order)
 
-      const transferAmount = Number(item.transfer_amount) || 0
+    item.order = order
+  })
 
-      const adminFee = Number(item.admin_fee) || 0
+  // Card ditampilkan dari transaksi terbaru ke terlama (seperti mutasi bank).
+  // Saldo pada tiap card adalah saldo SETELAH transaksi tersebut terjadi,
+  // dihitung mundur mulai dari historyBalance (saldo saat ini).
+  let cardBalance = historyBalance
 
-      const totalValue = transferAmount + adminFee
+  const historyCards = [...transactions].reverse().map((item, index) => {
+    const order = item.order
 
-      const paymentPurpose = item.payment_for?.trim()
+    const transferAmount = Number(item.transfer_amount) || 0
 
-      const isIncoming = isHoldingAccount && item.direction === 'in'
+    const adminFee = Number(item.admin_fee) || 0
 
-      const transferLabel = isIncoming ? 'Transfer Masuk' : 'Transfer Keluar'
+    const isIncoming = isHoldingAccount && item.direction === 'in'
 
-      const totalLabel = isIncoming ? 'Total Masuk' : 'Total Keluar'
+    const totalValue = isIncoming ? transferAmount : transferAmount + adminFee
 
-      const cardClass = isIncoming
-        ? 'history-card incoming'
-        : 'history-card outgoing'
+    const paymentPurpose = item.payment_for?.trim()
 
-      const amountClass = isIncoming ? 'history-in' : 'history-out'
+    const transferLabel = isIncoming ? 'Dana Diterima' : 'Transfer Keluar'
 
-      const isIncome = isHoldingAccount && item.historyType === 'in'
+    const totalLabel = 'Total Dana Terpotong'
 
-      if (isIncome) {
-        runningBalance -= totalValue
-      } else {
-        runningBalance -= totalValue
-      }
+    const cardClass = isIncoming
+      ? 'history-card incoming'
+      : 'history-card outgoing'
 
-      return `
+    const amountClass = isIncoming ? 'history-in' : 'history-out'
+
+    const cardSaldo = cardBalance
+
+    if (isIncoming) {
+      cardBalance -= transferAmount
+    } else {
+      cardBalance += totalValue
+    }
+
+    return `
 <div class="${cardClass}">
 
   <div class="history-header">
@@ -362,27 +379,27 @@ income_suppliers(owner_name)
 
   <div class="history-recipient-row">
 
-<div class="history-recipient">
-  ${
-    isHoldingAccount
-      ? item.partner || '-'
-      : item.recipient_name || 'Penerima tidak diketahui'
-  }
-</div>
+      <div class="history-recipient">
+          ${
+            isHoldingAccount
+              ? item.partner || '-'
+              : item.recipient_name || 'Penerima tidak diketahui'
+          }
+      </div>
 
-    <span class="history-order">
-      No. ${order}
-    </span>
+      <div class="history-badges">
 
-    ${
-      isHoldingAccount
-        ? `
-      <span class="history-direction ${isIncoming ? 'in' : 'out'}">
-        ${isIncoming ? 'MASUK' : 'KELUAR'}
-      </span>
-    `
-        : ''
-    }
+          ${
+            index === 0
+              ? `<span class="history-latest-badge">TERBARU</span>`
+              : ''
+          }
+
+          <span class="history-order">
+              #${order}
+          </span>
+
+      </div>
 
   </div>
 
@@ -399,19 +416,13 @@ ${
     ? `
 <div class="history-actions">
 
-  <button
-    class="secondary-button edit-bank-transaction"
-    data-id="${item.id}"
-  >
-    ✏ Edit
-  </button>
+<button class="secondary-button edit-bank-transaction" data-id="${item.id}" title="Edit">
+  <i data-lucide="pencil"></i>
+</button>
 
-  <button
-    class="danger-button delete-bank-transaction"
-    data-id="${item.id}"
-  >
-    🗑 Hapus
-  </button>
+<button class="danger-button delete-bank-transaction" data-id="${item.id}" title="Hapus">
+  <i data-lucide="trash-2"></i>
+</button>
 
 </div>
 `
@@ -429,26 +440,38 @@ ${
       </strong>
     </div>
 
-    <div class="history-row">
-      <span>Admin</span>
-      <strong class="history-admin">
-        ${formatRupiah(adminFee)}
-      </strong>
-    </div>
+${
+  !isIncoming
+    ? `
+<div class="history-row">
+  <span>Biaya Admin</span>
+  <strong class="history-admin">
+    ${formatRupiah(adminFee)}
+  </strong>
+</div>
 
-    <div class="history-divider"></div>
+<div class="history-divider"></div>
+`
+    : ''
+}
 
-    <div class="history-row">
-      <span>${totalLabel}</span>
-      <strong class="history-out">
-        ${formatRupiah(totalValue)}
-      </strong>
-    </div>
+${
+  !isIncoming
+    ? `
+<div class="history-row">
+  <span>${totalLabel}</span>
+  <strong class="history-out">
+    ${formatRupiah(totalValue)}
+  </strong>
+</div>
+`
+    : ''
+}
 
     <div class="history-row">
       <span>Saldo</span>
       <strong class="history-balance">
-        ${formatRupiah(runningBalance)}
+        ${formatRupiah(cardSaldo)}
       </strong>
     </div>
 
@@ -468,29 +491,81 @@ ${
 
 </div>
 `
-    })
-    .reverse()
+  })
 
   const html = historyCards.join('')
 
+  const totalTransfer = transactions.reduce(
+    (t, item) => t + (Number(item.transfer_amount) || 0),
+    0
+  )
+
+  const totalAdmin = transactions.reduce(
+    (t, item) => t + (Number(item.admin_fee) || 0),
+    0
+  )
+
+  const totalExpense = isHoldingAccount
+    ? transactions
+        .filter((item) => item.direction === 'out')
+        .reduce(
+          (t, item) =>
+            t +
+            (Number(item.transfer_amount) || 0) +
+            (Number(item.admin_fee) || 0),
+          0
+        )
+    : totalTransfer + totalAdmin
+
+  const totalReceived = isHoldingAccount
+    ? transactions
+        .filter((item) => item.direction === 'in')
+        .reduce((t, item) => t + (Number(item.transfer_amount) || 0), 0)
+    : totalIncome
+
   bankHistoryContent.innerHTML = `
 
-  <div class="history-summary">
+<div class="history-summary">
 
-  <div class="history-summary-info">
+    <div class="history-summary-main">
 
-    <small>Saldo Saat Ini</small>
+        <small>Saldo Saat Ini</small>
 
-    <h2 class="history-current-balance">
-      ${formatRupiah(historyBalance)}
-    </h2>
+        <h2 class="history-current-balance">
+            ${formatRupiah(historyBalance)}
+        </h2>
 
-  </div>
+    </div>
+
+    <div class="history-summary-stats">
+
+        <div class="history-stat">
+            <span>Saldo Awal</span>
+            <strong>${formatRupiah(openingBalance)}</strong>
+        </div>
+
+        <div class="history-stat">
+            <span>${isHoldingAccount ? 'Dana Masuk' : 'Income'}</span>
+            <strong class="income">
+                ${formatRupiah(totalReceived)}
+            </strong>
+        </div>
+
+        <div class="history-stat">
+            <span>${isHoldingAccount ? 'Dana Keluar' : 'Transfer'}</span>
+            <strong class="expense">
+                ${formatRupiah(totalExpense)}
+            </strong>
+        </div>
+
+    </div>
 
 </div>
 
 ${html}
 `
+
+  lucide.createIcons()
 
   const transactionMap = new Map(
     transactions.map((item) => [String(item.id), item])
