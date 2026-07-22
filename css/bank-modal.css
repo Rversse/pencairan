@@ -1,0 +1,241 @@
+/* ==========================================================
+   BANK MODAL
+   ========================================================== */
+
+:root {
+  --bank-control-height: 46px;
+  --bank-gap: 14px;
+}
+
+/* ==========================================================
+   FORM ELEMENTS
+   ========================================================== */
+
+#bankTransactionForm input,
+#bankTransactionForm select,
+#bankTransactionForm textarea {
+  height: var(--bank-control-height);
+  padding: 0 16px;
+  box-sizing: border-box;
+  line-height: normal;
+}
+
+#bankTransactionForm input,
+#bankTransactionForm textarea,
+#bankTransactionForm select {
+  border-radius: 10px;
+}
+
+#bankTransactionForm label {
+  margin-bottom: 5px;
+}
+
+#bankTransactionForm select {
+  padding-top: 2px;
+}
+
+/* ==========================================================
+   FORM LAYOUT
+   ========================================================== */
+
+.bank-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 18px;
+  row-gap: 14px;
+  align-items: start;
+}
+
+.bank-form-grid label {
+  display: block;
+  margin-bottom: 6px;
+
+  font-size: var(--text-sm);
+  font-weight: var(--fw-semibold);
+
+  color: var(--navy);
+}
+
+.bank-form-grid input,
+.bank-form-grid select,
+.bank-form-grid textarea {
+  width: 100%;
+}
+
+.bank-form-full {
+  grid-column: 1 / -1;
+}
+
+#bankTransactionForm {
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  padding: 0;
+
+  gap: 0;
+}
+
+.bank-form-scroll {
+  flex: 1;
+  min-height: 0;
+
+  overflow-y: auto;
+
+  padding: 16px 18px;
+}
+
+.bank-form-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.bank-form-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar);
+  border-radius: 6px;
+}
+
+/* ==========================================================
+   TRANSFER MODE
+   ========================================================== */
+
+#transferDestinationCard {
+  display: flex;
+  flex-direction: column;
+}
+
+#transferDestinationWrapper {
+  display: flex;
+  flex-direction: column;
+}
+
+#registeredTransferContainer,
+#freeTransferContainer {
+  display: flex;
+  flex-direction: column;
+  min-height: 46px;
+}
+
+#transferDestinationWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+#registeredTransferContainer label,
+#freeTransferContainer label {
+  display: block;
+  margin-bottom: 6px;
+}
+
+#transferAmount,
+#adminFee {
+  text-align: right;
+  padding-right: 18px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================
+   LOCKED FIELD
+   ========================================================== */
+
+.field-locked,
+#bankCurrentBalance {
+  background: #f8fafc;
+  border: 1px solid #cbd5e1;
+
+  color: #0f172a;
+  font-weight: 600;
+
+  cursor: default;
+  box-shadow: none;
+}
+
+#bankCurrentBalance:focus,
+.field-locked:focus {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  outline: none;
+  box-shadow: none;
+}
+
+.field-locked::placeholder {
+  color: #94a3b8;
+}
+
+.field-locked:focus {
+  background: #dbeafe;
+  border-color: #60a5fa;
+}
+
+/* ==========================================================
+   FOOTER
+   ========================================================== */
+
+.bank-modal-footer {
+  display: flex;
+
+  justify-content: flex-end;
+
+  gap: 10px;
+
+  padding: 14px 18px;
+
+  margin-top: 0;
+
+  background: #fff;
+
+  border-top: 1px solid var(--border);
+}
+
+.bank-modal-footer button {
+  min-width: 130px;
+}
+
+#bankHistoryModal .modal-header {
+  padding: 24px 28px 18px;
+}
+
+#cancelBankTransactionTop {
+  width: 38px;
+
+  height: 38px;
+
+  padding: 0;
+}
+
+/* ==========================================================
+   MODAL
+   ========================================================== */
+
+#bankTransactionModal .modal-content {
+  width: min(640px, 94vw);
+}
+
+#bankTransactionModal .modal-header {
+  padding: 16px 18px;
+}
+
+#bankTransactionModal .modal-header h2 {
+  font-size: var(--text-xl);
+}
+
+#bankTransactionModal input,
+#bankTransactionModal select,
+#bankTransactionModal textarea {
+  border-radius: 10px;
+}
+
+#bankTransactionModal select:disabled {
+  background: #eff6ff;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+  font-weight: 700;
+  opacity: 1;
+}
+
+.bank-modal-footer button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+  transform: none;
+}

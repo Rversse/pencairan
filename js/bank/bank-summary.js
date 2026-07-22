@@ -9,12 +9,7 @@ let currentBankExpenses = []
 function renderBankTransactionSummary(accounts, incomes, expenses) {
   const incomeMap = new Map()
   const expenseMap = new Map()
-
-  const holdingAccounts = accounts.filter(
-    (account) => account.account_category === 'holding'
-  )
-
-  const holdingAccount = holdingAccounts[0] ?? null
+  const summary = []
 
   for (const item of incomes) {
     incomeMap.set(
@@ -36,24 +31,11 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
     expenseMap.set(item.account_id, current)
   }
 
-  let holdingIncome = 0
-  let holdingExpense = 0
+  // ======================
+  // SUPPLIER
+  // ======================
 
-  for (const item of expenses) {
-    if (item.transfer_type === 'holding') {
-      holdingIncome += Number(item.transfer_amount)
-    }
-
-    if (holdingAccount && item.account_id === holdingAccount.id) {
-      holdingExpense += Number(item.transfer_amount) + Number(item.admin_fee)
-    }
-  }
-
-  const holdingOpeningBalance = Number(holdingAccount?.opening_balance) || 0
-
-  const holdingBalance = holdingOpeningBalance + holdingIncome - holdingExpense
-
-  const summary = accounts
+  accounts
     .filter((account) => {
       return (
         account.account_category === 'supplier' &&
@@ -63,10 +45,20 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         account.account_number !== '-'
       )
     })
-    .map((account) => {
+    .forEach((account) => {
       const openingBalance = Number(account.opening_balance) || 0
 
-      const income = incomeMap.get(account.id) ?? 0
+      const dashboardIncome = incomeMap.get(account.id) ?? 0
+
+      const transferIncome = currentBankExpenses
+        .filter((item) =>
+          item.recipient_account_id
+            ? item.recipient_account_id === account.id
+            : item.recipient_name === account.name
+        )
+        .reduce((total, item) => total + Number(item.transfer_amount || 0), 0)
+
+      const income = dashboardIncome + transferIncome
 
       const expenseData = expenseMap.get(account.id) ?? {
         total: 0,
@@ -74,48 +66,73 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
       }
 
       const expense = expenseData.total
-      const historyCount = expenseData.count
 
-      const balance = openingBalance + income - expense
-
-      return {
-        category: account.account_category,
+      summary.push({
+        category: 'supplier',
         accountId: account.id,
         ownerName: account.income_suppliers.owner_name,
-        rekening: `${account.bank} • ${getLastFiveDigits(account.account_number)}`,
-
+        rekening: `${account.bank} • ${getLastThreeDigits(account.account_number)}`,
         openingBalance,
-
         income,
         expense,
-        balance,
+        balance: openingBalance + income - expense,
+        historyCount: expenseData.count
+      })
+    })
 
-        historyCount
+  // ======================
+  // HOLDING
+  // ======================
+
+  accounts
+    .filter((account) => account.is_holding_destination)
+    .forEach((holdingAccount) => {
+      let holdingIncome = 0
+      let holdingExpense = 0
+
+      for (const item of expenses) {
+        if (item.recipient_account_id) {
+          if (item.recipient_account_id === holdingAccount.id) {
+            holdingIncome += Number(item.transfer_amount)
+          }
+        } else if (item.recipient_name === holdingAccount.name) {
+          holdingIncome += Number(item.transfer_amount)
+        }
+
+        if (item.account_id === holdingAccount.id) {
+          holdingExpense +=
+            Number(item.transfer_amount) + Number(item.admin_fee)
+        }
       }
+
+      const openingBalance = Number(holdingAccount.opening_balance) || 0
+
+      const dashboardIncome =
+        holdingAccount.account_category === 'supplier'
+          ? (incomeMap.get(holdingAccount.id) ?? 0)
+          : 0
+
+      summary.push({
+        category: 'holding',
+        accountId: holdingAccount.id,
+        ownerName: holdingAccount.name,
+        rekening: `${holdingAccount.bank} • ${getLastThreeDigits(holdingAccount.account_number)}`,
+        openingBalance,
+        income: dashboardIncome + holdingIncome,
+        expense: holdingExpense,
+        balance:
+          openingBalance + dashboardIncome + holdingIncome - holdingExpense,
+        historyCount: expenses.filter((item) => {
+          if (item.account_id === holdingAccount.id) return true
+
+          if (item.recipient_account_id) {
+            return item.recipient_account_id === holdingAccount.id
+          }
+
+          return item.recipient_name === holdingAccount.name
+        }).length
+      })
     })
-  if (holdingAccount) {
-    const holdingHistoryCount = expenses.filter(
-      (item) =>
-        item.transfer_type === 'holding' ||
-        (holdingAccount && item.account_id === holdingAccount.id)
-    ).length
-
-    summary.push({
-      category: 'holding',
-      accountId: holdingAccount.id,
-      ownerName: holdingAccount.name,
-      rekening: `${holdingAccount.bank} • ${getLastFiveDigits(
-        holdingAccount.account_number
-      )}`,
-
-      openingBalance: holdingOpeningBalance,
-      income: holdingIncome,
-      expense: holdingExpense,
-      balance: holdingBalance,
-
-      historyCount: holdingHistoryCount
-    })
-  }
 
   summary.sort((a, b) => a.ownerName.localeCompare(b.ownerName))
 
@@ -145,7 +162,13 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
   let totalExpense = 0
   let totalBalance = 0
 
+  const countedAccounts = new Set()
+
   for (const item of filteredSummary) {
+    if (countedAccounts.has(item.accountId)) continue
+
+    countedAccounts.add(item.accountId)
+
     totalOpeningBalance += item.openingBalance
     totalIncome += item.income
     totalExpense += item.expense
@@ -341,7 +364,7 @@ function populateBankAccountDropdown() {
   `
 
   const holdingAccounts = bankAccounts
-    .filter((account) => account.account_category === 'holding')
+    .filter((account) => account.is_holding_destination)
     .sort((a, b) => a.name.localeCompare(b.name))
 
   const supplierAccounts = bankAccounts
@@ -375,7 +398,7 @@ function populateBankAccountDropdown() {
         <option value="${account.id}">
           ${account.name}
           • ${account.bank}
-          • ${getLastFiveDigits(account.account_number)}
+          • ${getLastThreeDigits(account.account_number)}
         </option>
         `
       )
@@ -400,7 +423,7 @@ function populateBankAccountDropdown() {
         <option value="${account.id}">
           ${account.income_suppliers.owner_name}
           • ${account.bank}
-          • ${getLastFiveDigits(account.account_number)}
+          • ${getLastThreeDigits(account.account_number)}
         </option>
         `
       )
@@ -408,12 +431,12 @@ function populateBankAccountDropdown() {
   }
 }
 
-function getLastFiveDigits(accountNumber) {
+function getLastThreeDigits(accountNumber) {
   const digits = String(accountNumber ?? '').replace(/\D/g, '')
 
   if (!digits) return 'Belum diisi'
 
-  return `•••••${digits.slice(-5)}`
+  return `••${digits.slice(-3)}`
 }
 
 bankSearch?.addEventListener('input', () => {

@@ -14,7 +14,16 @@ const bankTransactionModal = document.getElementById('bankTransactionModal')
 const bankTransactionForm = document.getElementById('bankTransactionForm')
 const bankTransactionDate = document.getElementById('bankTransactionDate')
 const destinationName = document.getElementById('destinationName')
-const isHoldingTransfer = document.getElementById('isHoldingTransfer')
+
+const recipientAccountSelect = document.getElementById('recipientAccountSelect')
+
+const transferMode = document.getElementById('transferMode')
+
+const registeredTransferContainer = document.getElementById(
+  'registeredTransferContainer'
+)
+
+const freeTransferContainer = document.getElementById('freeTransferContainer')
 const transferAmount = document.getElementById('transferAmount')
 const adminFee = document.getElementById('adminFee')
 const paymentFor = document.getElementById('paymentFor')
@@ -23,14 +32,48 @@ const bankTransactionTableContainer = document.getElementById(
   'bankTransactionTableContainer'
 )
 
-function getHoldingAccount() {
-  return bankAccounts.find((account) => account.account_category === 'holding')
+function getRecipientAccounts() {
+  const senderId = bankAccountSelect.value
+
+  return bankAccounts
+    .filter((account) => {
+      return (
+        account.is_holding_destination &&
+        account.is_active &&
+        account.id !== senderId
+      )
+    })
+    .sort((a, b) => a.name.localeCompare(b.name))
+}
+
+function populateRecipientAccountDropdown() {
+  if (!recipientAccountSelect) return
+
+  recipientAccountSelect.innerHTML = `
+    <option value="">Pilih rekening penampung</option>
+  `
+
+  getRecipientAccounts()
+    .sort((a, b) => a.name.localeCompare(b.name))
+    .forEach((account) => {
+      recipientAccountSelect.insertAdjacentHTML(
+        'beforeend',
+        `
+<option value="${account.id}">
+  ${account.name}
+  • ${account.bank}
+  • ${getLastThreeDigits(account.account_number)}
+</option>
+        `
+      )
+    })
 }
 
 async function loadRecipientHistory() {
   const { data, error } = await supabaseClient
     .from('bank_transactions')
-    .select('recipient_name, transaction_date')
+    .select('recipient_name, recipient_account_id, transaction_date')
+    .is('recipient_account_id', null)
     .gte('transaction_date', BANK_MODULE_START_DATE)
     .order('transaction_date', { ascending: false })
 
@@ -87,12 +130,10 @@ async function fetchBankTransactions() {
   bank,
   account_number,
   opening_balance,
-  supplier_id,
   account_category,
-  income_suppliers (
-    id,
-    owner_name
-  )
+  is_holding_destination,
+  is_active,
+  income_suppliers(owner_name)
 `
       )
       .eq('is_active', true)
@@ -110,15 +151,15 @@ async function fetchBankTransactions() {
       .from('bank_transactions')
       .select(
         `
-    id,
-    account_id,
-    recipient_name,
-    payment_for,
-    transfer_amount,
-    admin_fee,
-    transfer_type,
-    transaction_date,
-    created_at
+id,
+account_id,
+recipient_account_id,
+recipient_name,
+payment_for,
+transfer_amount,
+admin_fee,
+transaction_date,
+created_at
 `
       )
       .gte('transaction_date', effectiveStartDate)
@@ -194,6 +235,8 @@ async function loadBankTransactions() {
 
     populateBankAccountDropdown()
 
+    populateRecipientAccountDropdown()
+
     await loadRecipientHistory()
   } finally {
     addBankTransactionButton.disabled = false
@@ -212,10 +255,20 @@ function openBankTransactionModal() {
 
   populateBankAccountDropdown()
 
+  populateRecipientAccountDropdown()
+
   bankAccountSelect.disabled = false
-  isHoldingTransfer.disabled = false
+  recipientAccountSelect.disabled = false
 
   bankAccountSelect.selectedIndex = 0
+
+  transferMode.value = ''
+
+  recipientAccountSelect.value = ''
+
+  destinationName.readOnly = false
+  destinationName.classList.remove('field-locked')
+  destinationName.value = ''
 
   updateBankCurrentBalance()
 
@@ -223,10 +276,9 @@ function openBankTransactionModal() {
 
   adminFee.value = '0'
 
-  isHoldingTransfer.checked = false
-  updateHoldingTransferState()
-
   paymentFor.value = ''
+
+  updateTransferMode()
 
   const submitButton = bankTransactionModal.querySelector(
     'button[type="submit"]'
@@ -237,7 +289,7 @@ function openBankTransactionModal() {
   bankTransactionModal.classList.add('show')
 
   requestAnimationFrame(() => {
-    destinationName.focus()
+    transferMode.focus()
   })
 }
 
@@ -245,24 +297,37 @@ function openEditBankTransaction(transaction) {
   if (currentUser?.role !== 'admin' && currentUser?.role !== 'operator') {
     return
   }
+
   editingBankTransactionId = transaction.id
 
   populateBankAccountDropdown()
+  populateRecipientAccountDropdown()
 
   bankTransactionDate.value = transaction.transaction_date
 
   bankAccountSelect.value = transaction.account_id
-
   bankAccountSelect.disabled = true
-  isHoldingTransfer.disabled = true
+  recipientAccountSelect.disabled = true
 
   updateBankCurrentBalance()
 
-  isHoldingTransfer.checked = transaction.transfer_type === 'holding'
+  const isRegistered = !!transaction.recipient_account_id
 
-  updateHoldingTransferState()
+  recipientAccountSelect.value = transaction.recipient_account_id ?? ''
 
-  if (!isHoldingTransfer.checked) {
+  // Tentukan mode
+  transferMode.value = isRegistered ? 'registered' : 'free'
+
+  updateTransferMode()
+
+  // Isi nama penerima
+  if (isRegistered) {
+    const account = bankAccounts.find(
+      (item) => item.id === transaction.recipient_account_id
+    )
+
+    destinationName.value = account?.name ?? ''
+  } else {
     destinationName.value = transaction.recipient_name ?? ''
   }
 
@@ -282,9 +347,7 @@ function openEditBankTransaction(transaction) {
   submitButton.textContent = 'Update Transaksi'
 
   bankHistoryModal.classList.remove('show')
-
   bankTransactionModal.classList.add('show')
-
   bankTransactionForm.scrollTop = 0
 
   requestAnimationFrame(() => {
@@ -297,39 +360,50 @@ function closeBankTransactionModal() {
 
   bankTransactionForm.reset()
 
-  isHoldingTransfer.checked = false
-  updateHoldingTransferState()
+  recipientAccountSelect.value = ''
+
+  destinationName.readOnly = false
+  destinationName.classList.remove('field-locked')
+
+  updateTransferMode()
 
   if (bankCurrentBalance) {
     bankCurrentBalance.value = ''
   }
 
   bankAccountSelect.disabled = false
-  isHoldingTransfer.disabled = false
+  recipientAccountSelect.disabled = false
 
   bankTransactionModal.classList.remove('show')
 }
 
 function getBankTransactionPayload() {
-  const selectedAccount = bankAccounts.find(
-    (account) => account.id === bankAccountSelect.value
+  const selectedRecipientAccount = bankAccounts.find(
+    (account) => account.id === recipientAccountSelect.value
   )
 
-  const isHoldingSender = selectedAccount?.account_category === 'holding'
+  const isRegistered = transferMode.value === 'registered'
 
   return {
     transaction_date: bankTransactionDate.value,
+
     account_id: bankAccountSelect.value,
-    recipient_name: destinationName.value.trim().replace(/\s+/g, ' '),
+
+    recipient_account_id: isRegistered
+      ? recipientAccountSelect.value || null
+      : null,
+
+    recipient_name: isRegistered
+      ? (selectedRecipientAccount?.name ?? '')
+      : destinationName.value.trim().replace(/\s+/g, ' '),
+
     transfer_amount: parseNumber(transferAmount.value),
+
     admin_fee: parseNumber(adminFee.value),
+
     payment_for: paymentFor.value.trim(),
 
-    transfer_type: isHoldingSender
-      ? 'normal'
-      : isHoldingTransfer.checked
-        ? 'holding'
-        : 'normal',
+    transfer_type: 'normal',
 
     created_by: window.currentUser.id
   }
@@ -417,59 +491,47 @@ function updateBankCurrentBalance() {
   bankCurrentBalance.value = formatRupiah(getCurrentBankBalance(accountId))
 }
 
-function updateHoldingTransferState() {
-  const selectedAccount = bankAccounts.find(
-    (account) => account.id === bankAccountSelect.value
-  )
+function updateTransferMode() {
+  const mode = transferMode.value
 
-  const holdingAccount = getHoldingAccount()
-  const isHoldingSender = selectedAccount?.account_category === 'holding'
+  registeredTransferContainer.style.display =
+    mode === 'registered' ? '' : 'none'
 
-  const card = document.getElementById('holdingTransferCard')
+  freeTransferContainer.style.display = mode === 'free' ? '' : 'none'
 
-  if (!holdingAccount) {
-    isHoldingTransfer.checked = false
-    isHoldingTransfer.disabled = true
+  if (mode === 'registered') {
+    destinationName.readOnly = true
+    destinationName.classList.add('field-locked')
 
-    destinationName.readOnly = false
-    destinationName.classList.remove('field-locked')
-    destinationName.value = ''
+    if (recipientAccountSelect.value) {
+      const account = bankAccounts.find(
+        (item) => item.id === recipientAccountSelect.value
+      )
 
-    card?.classList.remove('active')
-    card?.classList.add('disabled')
-
-    return
-  }
-
-  if (isHoldingSender) {
-    isHoldingTransfer.checked = false
-    isHoldingTransfer.disabled = true
-
-    destinationName.readOnly = false
-    destinationName.classList.remove('field-locked')
-    destinationName.value = ''
-
-    card?.classList.remove('active')
-    card?.classList.add('disabled')
+      destinationName.value = account?.name ?? ''
+    } else {
+      destinationName.value = ''
+    }
 
     return
   }
 
-  isHoldingTransfer.disabled = editingBankTransactionId !== null
+  if (mode === 'free') {
+    recipientAccountSelect.value = ''
 
-  if (isHoldingTransfer.checked) {
-    destinationName.value = holdingAccount.name
-  } else {
     destinationName.value = ''
+    destinationName.readOnly = false
+    destinationName.classList.remove('field-locked')
+
+    return
   }
 
-  destinationName.readOnly =
-    isHoldingTransfer.checked || isHoldingTransfer.disabled
+  // Belum memilih tujuan transfer
+  recipientAccountSelect.value = ''
 
-  destinationName.classList.toggle('field-locked', destinationName.readOnly)
-
-  card?.classList.toggle('active', isHoldingTransfer.checked)
-  card?.classList.toggle('disabled', isHoldingTransfer.disabled)
+  destinationName.value = ''
+  destinationName.readOnly = false
+  destinationName.classList.remove('field-locked')
 }
 
 async function persistBankTransaction(payload) {
@@ -544,23 +606,6 @@ function clearDefaultAdminFee() {
   }
 }
 
-const holdingTransferCard = document.getElementById('holdingTransferCard')
-
-holdingTransferCard?.addEventListener('click', (e) => {
-  if (isHoldingTransfer.disabled) return
-
-  if (
-    e.target.closest('.switch') ||
-    e.target.tagName === 'INPUT' ||
-    e.target.tagName === 'LABEL'
-  ) {
-    return
-  }
-
-  isHoldingTransfer.checked = !isHoldingTransfer.checked
-  updateHoldingTransferState()
-})
-
 bankCurrentBalance?.addEventListener('dblclick', () => {
   navigator.clipboard.writeText(
     parseNumber(bankCurrentBalance.value).toString()
@@ -594,17 +639,24 @@ focusNextOnEnter(adminFee, () => {
 
 bankAccountSelect?.addEventListener('change', () => {
   updateBankCurrentBalance()
-  updateHoldingTransferState()
+  populateRecipientAccountDropdown()
+  updateTransferMode()
 
-  if (isHoldingTransfer.checked) {
-    transferAmount.focus()
+  if (transferMode.value === 'registered') {
+    recipientAccountSelect.focus()
   } else {
     destinationName.focus()
   }
 })
 
-isHoldingTransfer?.addEventListener('change', () => {
-  updateHoldingTransferState()
+recipientAccountSelect?.addEventListener('change', () => {
+  const account = bankAccounts.find(
+    (item) => item.id === recipientAccountSelect.value
+  )
+
+  destinationName.value = account?.name ?? ''
+
+  paymentFor.focus()
 })
 
 bankStartDate?.addEventListener('change', async (event) => {
@@ -663,5 +715,15 @@ adminFee?.addEventListener('click', clearDefaultAdminFee)
 adminFee?.addEventListener('blur', () => {
   if (!adminFee.value.trim()) {
     adminFee.value = '0'
+  }
+})
+
+transferMode?.addEventListener('change', () => {
+  updateTransferMode()
+
+  if (transferMode.value === 'registered') {
+    recipientAccountSelect.focus()
+  } else {
+    destinationName.focus()
   }
 })

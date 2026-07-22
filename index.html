@@ -703,18 +703,36 @@
         <form id="bankTransactionForm">
           <div class="bank-form-scroll">
             <div class="bank-form-grid">
+              <!-- ROW 1 -->
               <div>
-                <label>Tanggal</label>
+                <label for="bankTransactionDate">Tanggal</label>
+
                 <input type="date" id="bankTransactionDate" />
               </div>
 
               <div>
-                <label>Nama Pengirim</label>
+                <label for="bankAccountSelect">Nama Pengirim</label>
+
                 <select id="bankAccountSelect"></select>
               </div>
 
+              <!-- ROW 2 -->
+              <div id="transferDestinationCard">
+                <label for="transferMode">Tujuan Transfer</label>
+
+                <select id="transferMode">
+                  <option value="" selected disabled>
+                    Pilih Tujuan Transfer
+                  </option>
+
+                  <option value="registered">Rekening Penampung</option>
+
+                  <option value="free">Transfer Biasa</option>
+                </select>
+              </div>
+
               <div>
-                <label>Saldo Pengirim</label>
+                <label for="bankCurrentBalance">Saldo Pengirim</label>
 
                 <input
                   id="bankCurrentBalance"
@@ -725,56 +743,56 @@
                 />
               </div>
 
-              <div>
-                <label>Nama Penerima</label>
-                <input
-                  id="destinationName"
-                  list="recipientHistoryList"
-                  autocomplete="off"
-                />
+              <!-- ROW 3 -->
+              <div id="transferDestinationWrapper">
+                <div id="registeredTransferContainer">
+                  <label for="recipientAccountSelect">
+                    Rekening Penampung
+                  </label>
 
-                <datalist id="recipientHistoryList"></datalist>
-              </div>
-
-              <div
-                id="holdingTransferCard"
-                class="holding-transfer-card bank-form-full"
-              >
-                <div class="holding-transfer-header">
-                  <div class="holding-transfer-title">
-                    🏦 Transfer ke Rekening Penampung
-                  </div>
+                  <select id="recipientAccountSelect"></select>
                 </div>
 
-                <label class="switch">
-                  <input type="checkbox" id="isHoldingTransfer" />
-
-                  <span class="slider"></span>
-                </label>
-              </div>
-
-              <div class="bank-form-full">
-                <label>Keperluan</label>
-
-                <input id="paymentFor" type="text" maxlength="100" />
-              </div>
-
-              <div class="bank-form-full bank-form-row-2">
-                <div>
-                  <label>Nominal Transfer</label>
+                <div id="freeTransferContainer" style="display: none">
+                  <label for="destinationName"> Nama Penerima </label>
 
                   <input
-                    id="transferAmount"
-                    inputmode="numeric"
+                    id="destinationName"
+                    list="recipientHistoryList"
                     autocomplete="off"
                   />
-                </div>
 
-                <div>
-                  <label>Biaya Admin</label>
-
-                  <input id="adminFee" inputmode="numeric" autocomplete="off" />
+                  <datalist id="recipientHistoryList"></datalist>
                 </div>
+              </div>
+
+              <div>
+                <label for="paymentFor">Keperluan</label>
+
+                <input
+                  id="paymentFor"
+                  type="text"
+                  maxlength="100"
+                  autocomplete="off"
+                  placeholder="Contoh: Transfer Supplier Ayam"
+                />
+              </div>
+
+              <!-- ROW 4 -->
+              <div>
+                <label for="transferAmount"> Nominal Transfer </label>
+
+                <input
+                  id="transferAmount"
+                  inputmode="numeric"
+                  autocomplete="off"
+                />
+              </div>
+
+              <div>
+                <label for="adminFee"> Biaya Admin </label>
+
+                <input id="adminFee" inputmode="numeric" autocomplete="off" />
               </div>
             </div>
           </div>
@@ -889,9 +907,9 @@
     <script src="js/report/report.js"></script>
 
     <!-- BANK -->
+    <script src="js/bank/bank.js"></script>
     <script src="js/bank/bank-summary.js"></script>
     <script src="js/bank/bank-history.js"></script>
-    <script src="js/bank/bank.js"></script>
 
     <!-- DASHBOARD -->
     <script src="js/dashboard/disbursement.js"></script>

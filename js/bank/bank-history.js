@@ -11,53 +11,40 @@ async function openBankHistory(accountId) {
 
   currentHistoryAccountId = accountId
 
+  // Tampilkan modal DULUAN, sebelum baris lain yang bisa throw
+  // (kalau ada error di bawah sebelum ini, modal gak akan pernah kebuka)
+  bankHistoryTitle.textContent = 'History Rekening'
+  bankHistoryContent.innerHTML = ''
+  renderHistorySkeleton()
+  bankHistoryModal.classList.add('show')
+
+  if (
+    !bankStartDate ||
+    !bankEndDate ||
+    typeof BANK_MODULE_START_DATE === 'undefined'
+  ) {
+    bankHistoryContent.innerHTML = `
+      <div class="history-error">
+        <i data-lucide="triangle-alert"></i>
+        <h3>Konfigurasi tanggal tidak ditemukan</h3>
+        <p>Pastikan bank.js dan constants.js sudah termuat sebelum bank-history.js.</p>
+      </div>
+    `
+    lucide.createIcons()
+    return
+  }
+
   const effectiveStartDate =
     bankStartDate.value < BANK_MODULE_START_DATE
       ? BANK_MODULE_START_DATE
       : bankStartDate.value
-
-  // Bersihkan dulu
-  bankHistoryTitle.textContent = 'History Rekening'
-  bankHistoryContent.innerHTML = ''
-
-  // Isi skeleton
-  renderHistorySkeleton()
-
-  // Baru tampilkan modal
-  bankHistoryModal.classList.add('show')
 
   const periodLabel =
     effectiveStartDate === bankEndDate.value
       ? `${formatDateShort(effectiveStartDate)}`
       : `${formatDateShort(effectiveStartDate)} - ${formatDateShort(bankEndDate.value)}`
 
-  const [transactionResult, incomeResult, accountResult] = await Promise.all([
-    supabaseClient
-      .from('bank_transactions')
-      .select(
-        `
-        *,
-accounts(
-  bank,
-  account_number,
-  opening_balance,
-  income_suppliers(owner_name)
-)
-      `
-      )
-      .eq('account_id', accountId)
-      .gte('transaction_date', effectiveStartDate)
-      .lte('transaction_date', bankEndDate.value)
-      .order('transaction_date', { ascending: true }),
-
-    supabaseClient
-      .from('transactions')
-      .select('amount')
-      .in('flow_type', ['income', 'neutral'])
-      .eq('account_id', accountId)
-      .gte('transaction_date', effectiveStartDate)
-      .lte('transaction_date', bankEndDate.value),
-
+  const [accountResult] = await Promise.all([
     supabaseClient
       .from('accounts')
       .select(
@@ -66,7 +53,6 @@ name,
 bank,
 account_number,
 opening_balance,
-account_category,
 income_suppliers(owner_name)
 `
       )
@@ -76,28 +62,20 @@ income_suppliers(owner_name)
 
   if (requestId !== bankHistoryRequestId) return
 
-  if (transactionResult.error) {
-    console.error(transactionResult.error)
+  if (accountResult.error) {
+    console.error(accountResult.error)
 
     bankHistoryTitle.textContent = 'History Rekening'
 
     bankHistoryContent.innerHTML = `
-  <div class="history-error">
-
-    <i data-lucide="triangle-alert"></i>
-
-    <h3>Gagal memuat riwayat</h3>
-
-    <p>
-      Terjadi kesalahan saat mengambil data transaksi.
-      Silakan coba lagi.
-    </p>
-
-  </div>
-`
+    <div class="history-error">
+      <i data-lucide="triangle-alert"></i>
+      <h3>Gagal memuat rekening</h3>
+      <p>Terjadi kesalahan saat mengambil data rekening.</p>
+    </div>
+  `
 
     lucide.createIcons()
-
     return
   }
 
@@ -106,100 +84,134 @@ income_suppliers(owner_name)
   const canManageBank =
     currentUser?.role === 'admin' || currentUser?.role === 'operator'
 
-  const isHoldingAccount = account?.account_category === 'holding'
+  const [incomeResult, incomingResult, outgoingResult] = await Promise.all([
+    supabaseClient
+      .from('transactions')
+      .select('account_id,amount')
+      .eq('account_id', accountId)
+      .in('flow_type', ['income', 'neutral'])
+      .gte('transaction_date', effectiveStartDate)
+      .lte('transaction_date', bankEndDate.value),
 
-  let transactions = []
+    supabaseClient
+      .from('bank_transactions')
+      .select(
+        `
+      *,
+      sender:accounts!bank_transactions_account_fkey(
+        id,
+        name,
+        bank,
+        account_number,
+        account_category,
+        is_holding_destination,
+        income_suppliers(owner_name)
+      )
+    `
+      )
+      .eq('recipient_account_id', accountId)
+      .gte('transaction_date', effectiveStartDate)
+      .lte('transaction_date', bankEndDate.value),
 
-  if (isHoldingAccount) {
-    const [incomingResult, outgoingResult] = await Promise.all([
-      supabaseClient
-        .from('bank_transactions')
-        .select(
-          `
-        *,
-        accounts(
-          bank,
-          account_number,
-          opening_balance,
-          account_category,
-          income_suppliers(owner_name)
-        )
-      `
-        )
-        .eq('transfer_type', 'holding')
-        .gte('transaction_date', effectiveStartDate)
-        .lte('transaction_date', bankEndDate.value),
+    supabaseClient
+      .from('bank_transactions')
+      .select(
+        `
+      *,
+      sender:accounts!bank_transactions_account_fkey(
+        id,
+        name,
+        bank,
+        account_number,
+        account_category,
+        is_holding_destination,
+        income_suppliers(owner_name)
+      ),
+      recipient:accounts!bank_transactions_recipient_account_fkey(
+        id,
+        name,
+        bank,
+        account_number,
+        account_category,
+        is_holding_destination,
+        income_suppliers(owner_name)
+      )
+    `
+      )
+      .eq('account_id', accountId)
+      .gte('transaction_date', effectiveStartDate)
+      .lte('transaction_date', bankEndDate.value)
+  ])
 
-      supabaseClient
-        .from('bank_transactions')
-        .select(
-          `
-        *,
-        accounts(
-          bank,
-          account_number,
-          opening_balance,
-          account_category,
-          income_suppliers(owner_name)
-        )
-      `
-        )
-        .eq('account_id', accountId)
-        .gte('transaction_date', effectiveStartDate)
-        .lte('transaction_date', bankEndDate.value)
-    ])
-
-    if (incomingResult.error) {
-      console.error(incomingResult.error)
-      return
-    }
-
-    if (outgoingResult.error) {
-      console.error(outgoingResult.error)
-      return
-    }
-
-    transactions = [
-      ...(incomingResult.data ?? []).map((item) => ({
-        ...item,
-        historyType: 'in'
-      })),
-      ...(outgoingResult.data ?? []).map((item) => ({
-        ...item,
-        historyType: 'out'
-      }))
-    ]
-
-    transactions.sort((a, b) => {
-      return new Date(a.transaction_date) - new Date(b.transaction_date)
-    })
-  } else {
-    transactions = transactionResult.data ?? []
+  if (incomingResult.error) {
+    console.error(incomingResult.error)
+    return
   }
 
-  if (isHoldingAccount) {
-    transactions = transactions.map((item) => {
-      const transferAmount = Number(item.transfer_amount) || 0
-      const adminFee = Number(item.admin_fee) || 0
-
-      return {
-        ...item,
-
-        direction: item.historyType,
-
-        amount: transferAmount,
-        admin: adminFee,
-        total: transferAmount + adminFee,
-
-        partner:
-          item.historyType === 'in'
-            ? (item.accounts?.income_suppliers?.owner_name ??
-              item.accounts?.name ??
-              '-')
-            : (item.recipient_name ?? '-')
-      }
-    })
+  if (incomeResult.error) {
+    console.error(incomeResult.error)
+    return
   }
+
+  if (outgoingResult.error) {
+    console.error(outgoingResult.error)
+    return
+  }
+
+  let transactions = [
+    ...(incomingResult.data ?? []).map((item) => ({
+      ...item,
+      historyType: 'in'
+    })),
+    ...(outgoingResult.data ?? []).map((item) => ({
+      ...item,
+      historyType: 'out'
+    }))
+  ]
+
+  transactions.sort((a, b) => {
+    return new Date(a.transaction_date) - new Date(b.transaction_date)
+  })
+
+  transactions = transactions.map((item) => {
+    const transferAmount = Number(item.transfer_amount) || 0
+    const adminFee = Number(item.admin_fee) || 0
+
+    const isIncoming = item.historyType === 'in'
+
+    const partner = isIncoming
+      ? (item.sender?.income_suppliers?.owner_name ?? item.sender?.name ?? '-')
+      : (item.recipient?.income_suppliers?.owner_name ??
+        item.recipient?.name ??
+        item.recipient_name ??
+        '-')
+
+    return {
+      ...item,
+
+      direction: item.historyType,
+
+      amount: transferAmount,
+
+      admin: adminFee,
+
+      total: transferAmount + adminFee,
+
+      partner,
+
+      isHoldingTransfer:
+        item.sender?.is_holding_destination &&
+        item.recipient?.is_holding_destination,
+
+      isSupplierToHolding:
+        item.sender?.account_category === 'supplier' &&
+        !item.sender?.is_holding_destination &&
+        item.recipient?.is_holding_destination,
+
+      isHoldingToOutside:
+        item.sender?.is_holding_destination && !item.recipient_account_id
+    }
+  })
 
   const openingBalance = Number(account.opening_balance) || 0
 
@@ -208,15 +220,11 @@ income_suppliers(owner_name)
 
     bankHistoryTitle.innerHTML = `
   <div class="history-account-title">
-    ${
-      account.account_category === 'holding'
-        ? account.name
-        : (account.income_suppliers?.owner_name ?? '-')
-    }
+    ${account.income_suppliers?.owner_name ?? account.name ?? '-'}
   </div>
 
   <div class="history-account-subtitle">
-    ${account.bank} • ${getLastFiveDigits(account.account_number)}
+    ${account.bank} • ${getLastThreeDigits(account.account_number)}
   </div>
 
 <div class="history-account-period">
@@ -260,38 +268,22 @@ income_suppliers(owner_name)
     return
   }
 
-  const totalIncome = (incomeResult.data ?? []).reduce(
-    (total, item) => total + (Number(item.amount) || 0),
+  let historyBalance
+
+  const dashboardIncome = (incomeResult.data ?? []).reduce(
+    (total, item) => total + Number(item.amount || 0),
     0
   )
 
-  let historyBalance
+  const transferIncome = transactions
+    .filter((item) => item.historyType === 'in')
+    .reduce((total, item) => total + Number(item.transfer_amount || 0), 0)
 
-  if (isHoldingAccount) {
-    const totalIn = transactions
-      .filter((item) => item.historyType === 'in')
-      .reduce((total, item) => {
-        return total + (Number(item.transfer_amount) || 0)
-      }, 0)
+  const totalReceived = dashboardIncome + transferIncome
 
-    const totalOut = transactions
-      .filter((item) => item.historyType === 'out')
-      .reduce((total, item) => {
-        return (
-          total +
-          (Number(item.transfer_amount) || 0) +
-          (Number(item.admin_fee) || 0)
-        )
-      }, 0)
-
-    historyBalance = openingBalance + totalIn - totalOut
-  } else {
-    const totalIncome = (incomeResult.data ?? []).reduce(
-      (total, item) => total + (Number(item.amount) || 0),
-      0
-    )
-
-    const totalExpense = transactions.reduce((total, item) => {
+  const totalOut = transactions
+    .filter((item) => item.historyType === 'out')
+    .reduce((total, item) => {
       return (
         total +
         (Number(item.transfer_amount) || 0) +
@@ -299,20 +291,15 @@ income_suppliers(owner_name)
       )
     }, 0)
 
-    historyBalance = openingBalance + totalIncome - totalExpense
-  }
+  historyBalance = openingBalance + totalReceived - totalOut
 
   bankHistoryTitle.innerHTML = `
     <div class="history-account-title">
-      ${
-        account.account_category === 'holding'
-          ? account.name
-          : (account.income_suppliers?.owner_name ?? '-')
-      }
+      ${account.income_suppliers?.owner_name ?? account.name ?? '-'}
     </div>
 
     <div class="history-account-subtitle">
-      ${account.bank} • ${getLastFiveDigits(account.account_number)}
+      ${account.bank} • ${getLastThreeDigits(account.account_number)}
     </div>
 
 <div class="history-account-period">
@@ -346,7 +333,7 @@ income_suppliers(owner_name)
 
     const adminFee = Number(item.admin_fee) || 0
 
-    const isIncoming = isHoldingAccount && item.direction === 'in'
+    const isIncoming = item.direction === 'in'
 
     const totalValue = isIncoming ? transferAmount : transferAmount + adminFee
 
@@ -364,10 +351,10 @@ income_suppliers(owner_name)
 
     const cardSaldo = cardBalance
 
-    if (isIncoming) {
+    if (item.direction === 'in') {
       cardBalance -= transferAmount
     } else {
-      cardBalance += totalValue
+      cardBalance += transferAmount + adminFee
     }
 
     return `
@@ -380,11 +367,7 @@ income_suppliers(owner_name)
   <div class="history-recipient-row">
 
       <div class="history-recipient">
-          ${
-            isHoldingAccount
-              ? item.partner || '-'
-              : item.recipient_name || 'Penerima tidak diketahui'
-          }
+          ${item.partner || '-'}
       </div>
 
       <div class="history-badges">
@@ -495,33 +478,17 @@ ${
 
   const html = historyCards.join('')
 
-  const totalTransfer = transactions.reduce(
-    (t, item) => t + (Number(item.transfer_amount) || 0),
-    0
-  )
+  const totalExpense = transactions
+    .filter((item) => item.direction === 'out')
+    .reduce(
+      (t, item) =>
+        t + (Number(item.transfer_amount) || 0) + (Number(item.admin_fee) || 0),
+      0
+    )
 
-  const totalAdmin = transactions.reduce(
-    (t, item) => t + (Number(item.admin_fee) || 0),
-    0
-  )
-
-  const totalExpense = isHoldingAccount
-    ? transactions
-        .filter((item) => item.direction === 'out')
-        .reduce(
-          (t, item) =>
-            t +
-            (Number(item.transfer_amount) || 0) +
-            (Number(item.admin_fee) || 0),
-          0
-        )
-    : totalTransfer + totalAdmin
-
-  const totalReceived = isHoldingAccount
-    ? transactions
-        .filter((item) => item.direction === 'in')
-        .reduce((t, item) => t + (Number(item.transfer_amount) || 0), 0)
-    : totalIncome
+  const totalTransferReceived = transactions
+    .filter((item) => item.direction === 'in')
+    .reduce((t, item) => t + (Number(item.transfer_amount) || 0), 0)
 
   bankHistoryContent.innerHTML = `
 
@@ -545,14 +512,14 @@ ${
         </div>
 
         <div class="history-stat">
-            <span>${isHoldingAccount ? 'Dana Masuk' : 'Income'}</span>
+            <span>Dana Masuk</span>
             <strong class="income">
                 ${formatRupiah(totalReceived)}
             </strong>
         </div>
 
         <div class="history-stat">
-            <span>${isHoldingAccount ? 'Dana Keluar' : 'Transfer'}</span>
+            <span>Dana Keluar</span>
             <strong class="expense">
                 ${formatRupiah(totalExpense)}
             </strong>
