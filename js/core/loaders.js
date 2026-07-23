@@ -32,16 +32,16 @@ async function preloadMappings() {
         kitchen_id,
         flow_type,
         account_id,
-accounts (
-  id,
-  name,
-  bank,
-  account_number,
-  is_active,
-  income_suppliers!accounts_supplier_id_fkey (
-    owner_name
-  )
-)
+        accounts (
+          id,
+          name,
+          bank,
+          account_number,
+          income_suppliers!accounts_supplier_id_fkey (
+            owner_name,
+            is_active
+          )
+        )
       `),
 
     supabaseClient.from('kitchen_supplier_rules').select(`
@@ -229,7 +229,6 @@ async function loadAccountsFiltered(flow) {
 
   if (!kitchenId) {
     accountSelect.innerHTML = ''
-
     return
   }
 
@@ -247,16 +246,20 @@ async function loadAccountsFiltered(flow) {
   const uniqueAccounts = [
     ...new Map(
       data
-        .filter((item) => item.accounts && item.accounts.is_active)
+        .filter(
+          (item) =>
+            item.accounts &&
+            item.accounts.income_suppliers &&
+            item.accounts.income_suppliers.is_active
+        )
         .map((item) => [item.accounts.id, item.accounts])
     ).values()
-  ]
+  ].sort((a, b) => a.name.localeCompare(b.name, 'id'))
 
   renderAccountPlaceholder()
 
   if (!uniqueAccounts.length) {
     renderEmptyAccount()
-
     return
   }
 
@@ -264,7 +267,6 @@ async function loadAccountsFiltered(flow) {
 
   if (uniqueAccounts.length === 1) {
     accountSelect.value = uniqueAccounts[0].id
-
     accountSelect.disabled = true
   } else {
     accountSelect.disabled = false

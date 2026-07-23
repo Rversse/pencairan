@@ -18,7 +18,6 @@ const closeAccountModal = document.getElementById('closeAccountModal')
 const accountBank = document.getElementById('accountBank')
 const accountNumber = document.getElementById('accountNumber')
 const accountOpeningBalance = document.getElementById('accountOpeningBalance')
-const accountStatus = document.getElementById('accountStatus')
 const saveAccountButton = document.getElementById('saveAccountButton')
 const kitchenMappingList = document.getElementById('kitchenMappingList')
 const saveKitchenMappingButton = document.getElementById(
@@ -44,12 +43,12 @@ addAccountButton?.addEventListener('click', () => {
   if (currentUser?.role !== 'admin') {
     return
   }
+
   currentAccountId = null
 
   accountBank.value = 'BNI'
   accountNumber.value = ''
   accountOpeningBalance.value = formatNumber('0')
-  accountStatus.value = 'true'
 
   accountEditor.style.display = 'block'
 
@@ -104,7 +103,7 @@ function renderSupplierAccounts(accounts) {
         .sort((a, b) => a.localeCompare(b, 'id'))
 
       return `
-<div class="supplier-account-card ${account.is_active ? '' : 'inactive'}">
+<div class="supplier-account-card">
 
   <div class="account-info">
 
@@ -116,14 +115,6 @@ function renderSupplierAccounts(accounts) {
   title="Klik untuk menyalin"
 >
   ${account.account_number ?? '-'}
-</div>
-
-<div class="account-status">
-  ${
-    account.is_active
-      ? '<span class="badge badge-income">Aktif</span>'
-      : '<span class="badge badge-expense">Nonaktif</span>'
-  }
 </div>
 
 <div class="account-kitchens">
@@ -262,7 +253,6 @@ function resetAccountEditor() {
   accountBank.value = 'BNI'
   accountNumber.value = ''
   accountOpeningBalance.value = formatNumber('0')
-  accountStatus.value = 'true'
 }
 
 function formatPhoneNumber(value) {
@@ -345,7 +335,6 @@ function openAccountModal(id) {
 
   accountBank.value = account.bank
   accountNumber.value = account.account_number ?? ''
-  accountStatus.value = String(account.is_active)
 
   accountOpeningBalance.value = formatNumber(
     String(Number(account.opening_balance) || 0)
@@ -373,7 +362,6 @@ accounts (
   bank,
   account_number,
   opening_balance,
-  is_active,
   kitchen_account_rules (
     kitchen_id,
     kitchens (
@@ -422,13 +410,9 @@ function openAccountPreview(supplierId) {
 
   if (!supplier) return
 
-  const activeAccounts = supplier.accounts.filter(
-    (account) => account.is_active
-  ).length
-
   accountPreviewTitle.textContent = supplier.business_name
 
-  accountPreviewSubtitle.textContent = `${supplier.accounts.length} Rekening • ${activeAccounts} Aktif`
+  accountPreviewSubtitle.textContent = `${supplier.accounts.length} Rekening`
 
   accountPreviewContent.innerHTML = supplier.accounts
     .slice()
@@ -462,12 +446,6 @@ function openAccountPreview(supplierId) {
     <div class="preview-account-bank">
       🏦 ${account.bank}
     </div>
-
-    ${
-      account.is_active
-        ? '<span class="badge badge-income">Aktif</span>'
-        : '<span class="badge badge-expense">Nonaktif</span>'
-    }
 
   </div>
 
@@ -605,15 +583,12 @@ function renderSupplierMaster() {
   let rows = ''
 
   filteredSuppliers.forEach((supplier) => {
-    const activeAccounts = supplier.accounts.filter(
-      (account) => account.is_active
-    )
-
     const totalAccounts = supplier.accounts.length
 
     const tooltipContent =
-      activeAccounts.length > 0
-        ? activeAccounts
+      totalAccounts > 0
+        ? supplier.accounts
+            .slice()
             .sort((a, b) => a.bank.localeCompare(b.bank, 'id'))
             .map(
               (account) => `
@@ -623,7 +598,7 @@ function renderSupplierMaster() {
 `
             )
             .join('')
-        : '<div class="supplierAccountItem">Tidak ada rekening aktif</div>'
+        : '<div class="supplierAccountItem">Belum memiliki rekening</div>'
 
     rows += `
 <tr>
@@ -650,7 +625,7 @@ function renderSupplierMaster() {
     class="supplierAccountPreview"
     data-id="${supplier.id}"
   >
-    ${activeAccounts.length}/${totalAccounts}
+    ${totalAccounts} Rek
 
     <span class="supplierAccountTooltip">
       ${tooltipContent}
@@ -1032,8 +1007,7 @@ async function saveAccount() {
       .update({
         bank: accountBank.value,
         account_number: accountNumber.value.trim(),
-        opening_balance: openingBalance,
-        is_active: accountStatus.value === 'true'
+        opening_balance: openingBalance
       })
       .eq('id', currentAccountId)
 
@@ -1044,8 +1018,7 @@ async function saveAccount() {
       name: supplier.business_name,
       bank: accountBank.value,
       account_number: accountNumber.value.trim(),
-      opening_balance: openingBalance,
-      is_active: accountStatus.value === 'true'
+      opening_balance: openingBalance
     })
 
     error = result.error

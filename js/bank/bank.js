@@ -39,7 +39,7 @@ function getRecipientAccounts() {
     .filter((account) => {
       return (
         account.is_holding_destination &&
-        account.is_active &&
+        account.income_suppliers?.is_active &&
         account.id !== senderId
       )
     })
@@ -132,11 +132,12 @@ async function fetchBankTransactions() {
   opening_balance,
   account_category,
   is_holding_destination,
-  is_active,
-  income_suppliers(owner_name)
+  income_suppliers(
+    owner_name,
+    is_active
+  )
 `
       )
-      .eq('is_active', true)
       .order('bank')
       .order('account_number'),
 
