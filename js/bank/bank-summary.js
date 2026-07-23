@@ -39,6 +39,7 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
     .filter((account) => {
       return (
         account.account_category === 'supplier' &&
+        !account.is_holding_destination &&
         account.income_suppliers?.owner_name &&
         account.bank &&
         account.account_number &&
@@ -71,8 +72,11 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         category: 'supplier',
         accountId: account.id,
         ownerName: account.income_suppliers.owner_name,
+        supplierName: account.name || null,
         rekening: `${account.bank} • ${getLastThreeDigits(account.account_number)}`,
         openingBalance,
+        disbursementIncome: dashboardIncome,
+        transferIncome,
         income,
         expense,
         balance: openingBalance + income - expense,
@@ -115,9 +119,15 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
       summary.push({
         category: 'holding',
         accountId: holdingAccount.id,
-        ownerName: holdingAccount.name,
+        ownerName:
+          holdingAccount.income_suppliers?.owner_name || holdingAccount.name,
+        supplierName: holdingAccount.income_suppliers?.owner_name
+          ? holdingAccount.name
+          : null,
         rekening: `${holdingAccount.bank} • ${getLastThreeDigits(holdingAccount.account_number)}`,
         openingBalance,
+        disbursementIncome: dashboardIncome,
+        transferIncome: holdingIncome,
         income: dashboardIncome + holdingIncome,
         expense: holdingExpense,
         balance:
@@ -153,11 +163,32 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
     (item) => item.category === 'holding'
   )
 
-  const supplierSummary = filteredSummary.filter(
+  const PINNED_OWNERS = ['DEDE JAELANI', 'AYI SUHERLAN', 'TAUFIK SUKALARANG']
+
+  const isPinned = (item) =>
+    PINNED_OWNERS.includes(item.ownerName.trim().toUpperCase())
+
+  const supplierSummaryRaw = filteredSummary.filter(
     (item) => item.category === 'supplier'
   )
 
+  const pinnedSupplierSummary = supplierSummaryRaw
+    .filter(isPinned)
+    .sort(
+      (a, b) =>
+        PINNED_OWNERS.indexOf(a.ownerName.trim().toUpperCase()) -
+        PINNED_OWNERS.indexOf(b.ownerName.trim().toUpperCase())
+    )
+
+  const restSupplierSummary = supplierSummaryRaw.filter(
+    (item) => !isPinned(item)
+  )
+
+  const supplierSummary = [...pinnedSupplierSummary, ...restSupplierSummary]
+
   let totalOpeningBalance = 0
+  let totalDisbursementIncome = 0
+  let totalTransferIncome = 0
   let totalIncome = 0
   let totalExpense = 0
   let totalBalance = 0
@@ -170,19 +201,22 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
     countedAccounts.add(item.accountId)
 
     totalOpeningBalance += item.openingBalance
+    totalDisbursementIncome += item.disbursementIncome
+    totalTransferIncome += item.transferIncome
     totalIncome += item.income
     totalExpense += item.expense
     totalBalance += item.balance
   }
 
   bankTransactionTableContainer.innerHTML = `
-<div class="dashboard bank-summary-cards">
+<div class="bank-summary-cards">
 
   <div class="dashboard-card bank-summary-card">
     <div class="dashboard-card-top">
       <div>
-        <small>Total Masuk</small>
-        <h2>${formatRupiah(totalIncome)}</h2>
+        <small>Total Pencairan Masuk</small>
+        <h2>${formatRupiah(totalDisbursementIncome)}</h2>
+        <span class="bank-card-source">dari pencairan dashboard</span>
       </div>
 <div class="dashboard-icon bank-icon income">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -195,8 +229,24 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
   <div class="dashboard-card bank-summary-card">
     <div class="dashboard-card-top">
       <div>
-        <small>Total Keluar</small>
+        <small>Total Transfer Masuk</small>
+        <h2>${formatRupiah(totalTransferIncome)}</h2>
+        <span class="bank-card-source">dari transfer antar rekening</span>
+      </div>
+<div class="dashboard-icon bank-icon income">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 19V5M5 12l7-7 7 7" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-card bank-summary-card">
+    <div class="dashboard-card-top">
+      <div>
+        <small>Total Transfer Keluar</small>
         <h2>${formatRupiah(totalExpense)}</h2>
+        <span class="bank-card-source">termasuk biaya admin</span>
       </div>
       <div class="dashboard-icon bank-icon expense">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -209,8 +259,9 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
   <div class="dashboard-card bank-summary-card">
     <div class="dashboard-card-top">
       <div>
-        <small>Total Saldo</small>
+        <small>Total Saldo Akhir</small>
         <h2>${formatRupiah(totalBalance)}</h2>
+        <span class="bank-card-source">(saldo awal + masuk) - keluar</span>
       </div>
       <div class="dashboard-icon bank-icon balance">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -229,12 +280,13 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
 
     <tr>
 
-      <th class="bank-col-account">Rekening</th>
-      <th class="text-center">Saldo Awal</th>
-      <th class="text-center">Uang Masuk</th>
-      <th class="text-center">Uang Keluar</th>
-      <th class="text-center">Saldo Akhir</th>
-      <th class="text-center bank-col-action">Aksi</th>
+      <th class="bank-col-account">REKENING</th>
+        <th class="text-center">SALDO AWAL</th>
+        <th class="text-center">PENCAIRAN MASUK</th>
+        <th class="text-center">TRANSFER MASUK</th>
+        <th class="text-center">TRANSFER KELUAR</th>
+        <th class="text-center">SALDO AKHIR</th>
+      <th class="text-center bank-col-action">AKSI</th>
 
     </tr>
 
@@ -248,16 +300,22 @@ ${[
     items: holdingSummary
   },
   {
+    title: 'Rekening Prioritas',
+    items: pinnedSupplierSummary,
+    pinned: true
+  },
+  {
     title: 'Rekening Supplier',
-    items: supplierSummary
+    items: restSupplierSummary
   }
 ]
   .filter((section) => section.items.length)
   .map(
     (section) => `
-      <tr class="bank-section-row">
-        <td colspan="6">
-          <div class="bank-section-title">
+      <tr class="bank-section-row${section.pinned ? ' bank-section-row-pinned' : ''}">
+        <td colspan="7">
+          <div class="bank-section-title${section.pinned ? ' bank-section-title-pinned' : ''}">
+            ${section.pinned ? '<i data-lucide="pin"></i>' : ''}
             ${section.title}
           </div>
         </td>
@@ -270,11 +328,12 @@ ${[
           const [bankName, accountNumber] = item.rekening.split(' • ')
 
           return `
-<tr class="bank-row">
+<tr class="bank-row${section.pinned ? ' bank-row-pinned' : ''}">
 
   <td>
 
-    <div class="bank-owner">
+    <div class="bank-owner"${item.supplierName ? ` title="${item.supplierName}"` : ''}>
+      ${section.pinned ? '<i data-lucide="pin" class="bank-pin-icon"></i>' : ''}
       ${item.ownerName}
     </div>
 
@@ -300,7 +359,13 @@ ${[
 
   <td class="text-center">
     <div class="bank-money income">
-      <strong>${formatRupiah(item.income)}</strong>
+      <strong>${formatRupiah(item.disbursementIncome)}</strong>
+    </div>
+  </td>
+
+  <td class="text-center">
+    <div class="bank-money income">
+      <strong>${formatRupiah(item.transferIncome)}</strong>
     </div>
   </td>
 
@@ -321,13 +386,9 @@ ${[
     <button
       class="bank-history-button ${item.historyCount > 0 ? 'has-history' : 'no-history'}"
       data-account-id="${item.accountId}"
-      title="Lihat History">
+      title="${item.historyCount} transaksi">
 
       Riwayat
-
-      <span class="history-count ${item.historyCount > 0 ? 'has-history' : 'no-history'}">
-        ${item.historyCount}
-      </span>
 
     </button>
 
@@ -345,6 +406,7 @@ ${[
   </tbody>
 
 </table>
+
   `
 
   bankTransactionTableContainer
@@ -354,6 +416,8 @@ ${[
         openBankHistory(button.dataset.accountId)
       })
     })
+
+  lucide.createIcons()
 }
 
 function populateBankAccountDropdown() {
@@ -365,12 +429,17 @@ function populateBankAccountDropdown() {
 
   const holdingAccounts = bankAccounts
     .filter((account) => account.is_holding_destination)
-    .sort((a, b) => a.name.localeCompare(b.name))
+    .sort((a, b) =>
+      (a.income_suppliers?.owner_name || a.name).localeCompare(
+        b.income_suppliers?.owner_name || b.name
+      )
+    )
 
   const supplierAccounts = bankAccounts
     .filter((account) => {
       return (
         account.account_category === 'supplier' &&
+        !account.is_holding_destination &&
         account.income_suppliers?.owner_name &&
         account.account_number &&
         account.account_number !== '-'
@@ -396,7 +465,7 @@ function populateBankAccountDropdown() {
         'beforeend',
         `
         <option value="${account.id}">
-          ${account.name}
+          ${account.income_suppliers?.owner_name || account.name}
           • ${account.bank}
           • ${getLastThreeDigits(account.account_number)}
         </option>

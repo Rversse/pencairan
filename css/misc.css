@@ -243,3 +243,38 @@
     font-size: 22px;
   }
 }
+
+/* ==========================================================
+   PINNED BANK ACCOUNTS
+   ========================================================== */
+
+.bank-section-row-pinned .bank-section-title {
+  color: #b45309;
+}
+
+.bank-section-title-pinned {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bank-section-title-pinned i {
+  width: 14px;
+  height: 14px;
+}
+
+.bank-row-pinned {
+  background: #fffbeb;
+}
+
+.bank-row-pinned:hover {
+  background: #fef3c7;
+}
+
+.bank-pin-icon {
+  width: 13px;
+  height: 13px;
+  margin-right: 4px;
+  color: #d97706;
+  vertical-align: -2px;
+}

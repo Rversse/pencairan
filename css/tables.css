@@ -25,7 +25,7 @@
   text-transform: uppercase;
   color: var(--navy);
   background: var(--bg-soft);
-  border-bottom: 1px solid var(--border);
+  border-bottom: none;
 }
 
 .summary-table tbody td {
@@ -34,6 +34,10 @@
   vertical-align: middle;
   font-weight: var(--fw-medium);
   border-bottom: 1px solid var(--border);
+}
+
+.summary-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .summary-table td {
@@ -90,7 +94,7 @@
   font-size: var(--text-sm);
 
   font-weight: var(--fw-bold);
-  border-top: 1px solid var(--border);
+  border-top: none;
 }
 
 .supplier-summary {

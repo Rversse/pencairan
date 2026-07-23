@@ -256,7 +256,7 @@ income_suppliers(owner_name)
     <h3>Belum ada riwayat transfer</h3>
 
     <p>
-      Riwayat transaksi bank akan muncul di sini setelah Anda
+      Riwayat transaksi bank akan muncul di sini setelah anda
       melakukan transfer.
     </p>
 
@@ -270,7 +270,7 @@ income_suppliers(owner_name)
 
   let historyBalance
 
-  const dashboardIncome = (incomeResult.data ?? []).reduce(
+  const disbursementIncome = (incomeResult.data ?? []).reduce(
     (total, item) => total + Number(item.amount || 0),
     0
   )
@@ -279,7 +279,7 @@ income_suppliers(owner_name)
     .filter((item) => item.historyType === 'in')
     .reduce((total, item) => total + Number(item.transfer_amount || 0), 0)
 
-  const totalReceived = dashboardIncome + transferIncome
+  const totalReceived = disbursementIncome + transferIncome
 
   const totalOut = transactions
     .filter((item) => item.historyType === 'out')
@@ -496,7 +496,7 @@ ${
 
     <div class="history-summary-main">
 
-        <small>Saldo Saat Ini</small>
+        <small>SALDO SAAT INI</small>
 
         <h2 class="history-current-balance">
             ${formatRupiah(historyBalance)}
@@ -506,24 +506,31 @@ ${
 
     <div class="history-summary-stats">
 
-        <div class="history-stat">
-            <span>Saldo Awal</span>
-            <strong>${formatRupiah(openingBalance)}</strong>
-        </div>
+<div class="history-stat opening">
+    <span>SALDO AWAL</span>
+    <strong>${formatRupiah(openingBalance)}</strong>
+</div>
 
-        <div class="history-stat">
-            <span>Dana Masuk</span>
-            <strong class="income">
-                ${formatRupiah(totalReceived)}
-            </strong>
-        </div>
+<div class="history-stat income">
+    <span>PENCAIRAN MASUK</span>
+    <strong class="income">
+        ${formatRupiah(disbursementIncome)}
+    </strong>
+</div>
 
-        <div class="history-stat">
-            <span>Dana Keluar</span>
-            <strong class="expense">
-                ${formatRupiah(totalExpense)}
-            </strong>
-        </div>
+<div class="history-stat income">
+    <span>TRANSFER MASUK</span>
+    <strong class="income">
+        ${formatRupiah(transferIncome)}
+    </strong>
+</div>
+
+<div class="history-stat expense">
+    <span>TRANSFER KELUAR</span>
+    <strong class="expense">
+        ${formatRupiah(totalExpense)}
+    </strong>
+</div>
 
     </div>
 
