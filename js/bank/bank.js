@@ -36,13 +36,9 @@ function getRecipientAccounts() {
   const senderId = bankAccountSelect.value
 
   return bankAccounts
-    .filter((account) => {
-      return (
-        account.is_holding_destination &&
-        account.income_suppliers?.is_active &&
-        account.id !== senderId
-      )
-    })
+    .filter(
+      (account) => account.is_holding_destination && account.id !== senderId
+    )
     .sort((a, b) => a.name.localeCompare(b.name))
 }
 
