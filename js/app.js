@@ -16,19 +16,15 @@ async function initializeUserView() {
 
   if (role === 'viewer') {
     await activateSection({
-      section: kitchenMasterSection,
-      tab: kitchenMasterTab,
-      onShow: loadKitchenMaster
+      section: bankTransactionSection,
+      tab: bankTransactionTab,
+      onShow: loadBankTransactions
     })
     return
   }
 
   if (role === 'operator') {
-    await activateSection({
-      section: kitchenMasterSection,
-      tab: kitchenMasterTab,
-      onShow: loadKitchenMaster
-    })
+    await showDashboard()
     return
   }
 
@@ -110,19 +106,20 @@ function applyRoleAccess() {
     element.style.display = visible ? '' : 'none'
   })
 
-  // Dashboard
+  // Dashboard (Admin & Operator)
   document
     .querySelector('.dashboard')
-    ?.style.setProperty('display', isAdmin ? '' : 'none')
+    ?.style.setProperty('display', isAdmin || isOperator ? '' : 'none')
 
-  // Input transaksi operasional Dashboard (FAB)
+  // Input transaksi operasional Dashboard (FAB) - Admin only
   document
     .querySelector('.fab-button')
     ?.style.setProperty('display', isAdmin ? '' : 'none')
 
+  // Riwayat Transaksi Dashboard (Admin & Operator)
   document
     .getElementById('adminTransactionsSection')
-    ?.style.setProperty('display', isAdmin ? '' : 'none')
+    ?.style.setProperty('display', isAdmin || isOperator ? '' : 'none')
 
   // CRUD Master
   addSupplierButton?.style.setProperty('display', isAdmin ? '' : 'none')

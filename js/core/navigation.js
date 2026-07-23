@@ -40,7 +40,7 @@ async function showDashboard() {
   await activateSection({
     section: dashboardSection,
     tab: dashboardTab,
-    fab: true,
+    fab: currentUser?.role === 'admin',
     onShow: async () => {
       await Promise.all([
         loadTransactions(),

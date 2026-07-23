@@ -110,15 +110,31 @@ async function loadDashboard() {
 // EVENT LISTENERS
 // ============================================================
 
+async function refreshDashboardSummary() {
+  await loadDashboard()
+  await loadDailyStatus()
+}
+
 dashboardStartDate?.addEventListener(
   'change',
 
   async () => {
     dashboardEndDate.value = dashboardStartDate.value
+    dashboardEndDate.min = dashboardStartDate.value
 
-    await loadDashboard()
+    await refreshDashboardSummary()
+  }
+)
 
-    await loadDailyStatus()
+dashboardEndDate?.addEventListener(
+  'change',
+
+  async () => {
+    if (dashboardEndDate.value < dashboardStartDate.value) {
+      dashboardEndDate.value = dashboardStartDate.value
+    }
+
+    await refreshDashboardSummary()
   }
 )
 

@@ -28,6 +28,11 @@ filterDate.addEventListener(
   async () => {
     transactionLimit = 5
 
+    if (filterDate.value) {
+      dashboardStartDate.value = filterDate.value
+      dashboardEndDate.value = filterDate.value
+    }
+
     await loadTransactions()
 
     await loadDashboard()
@@ -44,7 +49,10 @@ resetFilters.addEventListener(
 
     filterFlow.value = ''
 
-    filterDate.value = getTodayLocal() // ← ganti dari '' jadi ini
+    filterDate.value = getTodayLocal()
+
+    dashboardStartDate.value = getTodayLocal()
+    dashboardEndDate.value = getTodayLocal()
 
     transactionLimit = 5
 
