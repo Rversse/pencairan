@@ -141,7 +141,7 @@ function renderTransactionCards(data) {
 </div>
 
 <small class="transaction-date">
-  ${formatDateShort(transaction.transaction_date)}
+  ${formatDateTime(transaction.created_at)}
 </small>
 
 <small class="transaction-note">

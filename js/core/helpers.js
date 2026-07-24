@@ -33,6 +33,20 @@ function formatDateLong(date) {
   })
 }
 
+function formatDateTime(date) {
+  const d = new Date(date)
+
+  return `${formatDateShort(d)} • ${d
+    .toLocaleTimeString('id-ID', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false,
+      timeZone: 'Asia/Jakarta'
+    })
+    .replace(/\./g, ':')}`
+}
+
 function formatTime(date) {
   return new Date(date)
     .toLocaleTimeString('id-ID', {
