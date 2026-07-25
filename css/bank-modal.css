@@ -267,6 +267,128 @@
   min-height: 46px;
 }
 
+.recipient-autocomplete {
+  position: relative;
+}
+
+.recipient-history-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+
+  z-index: 100;
+
+  background: #fff;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  max-height: 322px;
+
+  padding: 4px;
+}
+
+.recipient-history-dropdown[hidden] {
+  display: none;
+}
+
+.recipient-history-item {
+  display: flex;
+  align-items: center;
+
+  min-height: 42px;
+
+  padding: 0 12px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  transition: background-color 0.15s;
+}
+
+.recipient-history-item:hover,
+.recipient-history-item.active {
+  background: #eff6ff;
+}
+
+.recipient-history-empty {
+  padding: 12px;
+
+  text-align: center;
+
+  color: #64748b;
+
+  font-size: var(--text-sm);
+}
+
+.payment-autocomplete {
+  position: relative;
+}
+
+.payment-history-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+
+  z-index: 100;
+
+  background: #fff;
+
+  border: 1px solid var(--border);
+  border-radius: 10px;
+
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+
+  overflow-y: auto;
+  overflow-x: hidden;
+
+  max-height: 322px;
+
+  padding: 4px;
+}
+
+.payment-history-dropdown[hidden] {
+  display: none;
+}
+
+.payment-history-item {
+  display: flex;
+  align-items: center;
+
+  min-height: 42px;
+
+  padding: 0 12px;
+
+  border-radius: 8px;
+
+  cursor: pointer;
+
+  transition: background-color 0.15s;
+}
+
+.payment-history-item:hover,
+.payment-history-item.active {
+  background: #eff6ff;
+}
+
+.payment-history-empty {
+  padding: 12px;
+
+  text-align: center;
+
+  color: #64748b;
+
+  font-size: var(--text-sm);
+}
+
 #transferDestinationWrapper {
   display: flex;
   flex-direction: column;

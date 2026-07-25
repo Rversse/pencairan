@@ -186,7 +186,20 @@
 
           <input type="date" id="dashboardEndDate" />
 
-          <button id="applyDashboardFilter">Apply</button>
+          <select id="filterKitchen">
+            <option value="">Semua Dapur</option>
+          </select>
+
+          <select id="filterFlow">
+            <option value="">Semua Jenis</option>
+            <option value="income">BELANJA BGN</option>
+            <option value="expense">BELANJA SUPPLIER</option>
+            <option value="neutral">OPERASIONAL</option>
+          </select>
+
+          <select id="filterSupplier">
+            <option value="">Semua Supplier BGN</option>
+          </select>
         </div>
 
         <div id="adminTransactionsSection">
@@ -194,26 +207,6 @@
             <div class="transactions-header">
               <h3 class="section-title">Riwayat Transaksi</h3>
             </div>
-          </div>
-
-          <div class="filters">
-            <select id="filterKitchen">
-              <option value="">Semua Dapur</option>
-            </select>
-
-            <select id="filterFlow">
-              <option value="">Semua Jenis</option>
-
-              <option value="income">BELANJA BGN</option>
-
-              <option value="expense">BELANJA SUPPLIER</option>
-
-              <option value="neutral">OPERASIONAL</option>
-            </select>
-
-            <input type="date" id="filterDate" />
-
-            <button type="button" id="resetFilters">Reset Filter</button>
           </div>
 
           <div id="transactions" class="transactions-list"></div>
@@ -759,28 +752,42 @@
                 </div>
 
                 <div id="freeTransferContainer" style="display: none">
-                  <label for="destinationName"> Nama Penerima </label>
+                  <label for="destinationName">Nama Penerima</label>
 
-                  <input
-                    id="destinationName"
-                    list="recipientHistoryList"
-                    autocomplete="off"
-                  />
+                  <div class="recipient-autocomplete">
+                    <input
+                      id="destinationName"
+                      type="text"
+                      autocomplete="off"
+                      spellcheck="false"
+                    />
 
-                  <datalist id="recipientHistoryList"></datalist>
+                    <div
+                      id="recipientHistoryDropdown"
+                      class="recipient-history-dropdown"
+                      hidden
+                    ></div>
+                  </div>
                 </div>
               </div>
 
               <div>
                 <label for="paymentFor">Keperluan</label>
 
-                <input
-                  id="paymentFor"
-                  type="text"
-                  maxlength="100"
-                  autocomplete="off"
-                  placeholder="Contoh: Transfer Supplier Ayam"
-                />
+                <div class="payment-autocomplete">
+                  <input
+                    id="paymentFor"
+                    type="text"
+                    autocomplete="off"
+                    spellcheck="false"
+                  />
+
+                  <div
+                    id="paymentHistoryDropdown"
+                    class="payment-history-dropdown"
+                    hidden
+                  ></div>
+                </div>
               </div>
 
               <!-- ROW 4 -->
@@ -901,7 +908,6 @@
     <script src="js/transaction/transactions.js"></script>
     <script src="js/transaction/form.js"></script>
     <script src="js/transaction/delete.js"></script>
-    <script src="js/transaction/filters.js"></script>
 
     <!-- REPORT -->
     <script src="js/report/supplier-report.js"></script>

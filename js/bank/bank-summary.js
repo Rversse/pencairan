@@ -73,7 +73,8 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         accountId: account.id,
         ownerName: account.income_suppliers.owner_name,
         supplierName: account.name || null,
-        rekening: `${account.bank} • ${getLastThreeDigits(account.account_number)}`,
+        bank: account.bank,
+        accountNumber: account.account_number,
         openingBalance,
         disbursementIncome: dashboardIncome,
         transferIncome,
@@ -124,7 +125,8 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
         supplierName: holdingAccount.income_suppliers?.owner_name
           ? holdingAccount.name
           : null,
-        rekening: `${holdingAccount.bank} • ${getLastThreeDigits(holdingAccount.account_number)}`,
+        bank: holdingAccount.bank,
+        accountNumber: holdingAccount.account_number,
         openingBalance,
         disbursementIncome: dashboardIncome,
         transferIncome: holdingIncome,
@@ -154,7 +156,8 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
     ? summary.filter((item) => {
         return (
           item.ownerName.toLowerCase().includes(keyword) ||
-          item.rekening.toLowerCase().includes(keyword)
+          (item.supplierName ?? '').toLowerCase().includes(keyword) ||
+          (item.bank ?? '').toLowerCase().includes(keyword)
         )
       })
     : summary
@@ -281,7 +284,7 @@ function renderBankTransactionSummary(accounts, incomes, expenses) {
     <tr>
 
       <th class="bank-col-account">REKENING</th>
-        <th class="text-center">SALDO AWAL</th>
+        <th class="text-center bank-col-opening">SALDO AWAL</th>
         <th class="text-center">PENCAIRAN MASUK</th>
         <th class="text-center">TRANSFER MASUK</th>
         <th class="text-center">TRANSFER KELUAR</th>
@@ -325,59 +328,58 @@ ${[
         .map((item) => {
           const balanceClass = 'balance'
 
-          const [bankName, accountNumber] = item.rekening.split(' • ')
+          const bankName = item.bank
 
           return `
 <tr class="bank-row${section.pinned ? ' bank-row-pinned' : ''}">
 
   <td>
 
-    <div class="bank-owner"${item.supplierName ? ` title="${item.supplierName}"` : ''}>
-      ${section.pinned ? '<i data-lucide="pin" class="bank-pin-icon"></i>' : ''}
-      ${item.ownerName}
-    </div>
+<div class="bank-owner"${item.supplierName ? ` title="${item.supplierName}"` : ''}>
+  ${section.pinned ? '<i data-lucide="pin" class="bank-pin-icon"></i>' : ''}
+  ${item.supplierName || item.ownerName}
+</div>
 
-    <div class="bank-account">
-
-      <span class="bank-bank-badge">
-        ${bankName}
-      </span>
-
-      <span class="bank-account-number">
-        ${accountNumber}
-      </span>
-
-    </div>
+<div class="bank-account">
+  <span class="bank-account-number">
+    ${item.supplierName ? `${item.ownerName} • ${bankName}` : bankName}
+  </span>
+</div>
 
   </td>
 
-  <td class="text-center">
+  <td class="text-end">
     <div class="bank-money">
-      <strong>${formatRupiah(item.openingBalance)}</strong>
+    <span class="bank-currency">Rp.</span>
+      <strong>${formatRupiah(item.openingBalance).replace('Rp. ', '')}</strong>
     </div>
   </td>
 
-  <td class="text-center">
+  <td class="text-end">
     <div class="bank-money income">
-      <strong>${formatRupiah(item.disbursementIncome)}</strong>
+    <span class="bank-currency">Rp.</span>
+      <strong>${formatRupiah(item.disbursementIncome).replace('Rp. ', '')}</strong>
     </div>
   </td>
 
-  <td class="text-center">
+  <td class="text-end">
     <div class="bank-money income">
-      <strong>${formatRupiah(item.transferIncome)}</strong>
+    <span class="bank-currency">Rp.</span>
+      <strong>${formatRupiah(item.transferIncome).replace('Rp. ', '')}</strong>
     </div>
   </td>
 
-  <td class="text-center">
+  <td class="text-end">
     <div class="bank-money expense">
-      <strong>${formatRupiah(item.expense)}</strong>
+    <span class="bank-currency">Rp.</span>
+      <strong>${formatRupiah(item.expense).replace('Rp. ', '')}</strong>
     </div>
   </td>
 
-  <td class="text-center">
+  <td class="text-end">
     <div class="bank-money ${balanceClass}">
-      <strong>${formatRupiah(item.balance)}</strong>
+    <span class="bank-currency">Rp.</span>
+      <strong>${formatRupiah(item.balance).replace('Rp. ', '')}</strong>
     </div>
   </td>
 

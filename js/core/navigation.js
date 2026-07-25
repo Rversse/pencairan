@@ -53,6 +53,11 @@ async function showDashboard() {
 }
 
 async function activateSection({ section, tab, fab = false, onShow }) {
+  // Reset form transaksi jika keluar dari Dashboard
+  if (section !== dashboardSection) {
+    resetTransactionForm()
+  }
+
   hideAllSections()
   resetActiveTabs()
 

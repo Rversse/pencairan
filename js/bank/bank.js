@@ -1,6 +1,16 @@
 let editingBankTransactionId = null
 
+const MAX_RECIPIENT_HISTORY = 5
+
 let recipientHistory = []
+let activeRecipientIndex = -1
+let currentRecipientItems = []
+
+const MAX_PAYMENT_HISTORY = 5
+
+let paymentHistory = []
+let activePaymentIndex = -1
+let currentPaymentItems = []
 
 const bankSearch = document.getElementById('bankSearch')
 const bankAccountSelect = document.getElementById('bankAccountSelect')
@@ -14,6 +24,9 @@ const bankTransactionModal = document.getElementById('bankTransactionModal')
 const bankTransactionForm = document.getElementById('bankTransactionForm')
 const bankTransactionDate = document.getElementById('bankTransactionDate')
 const destinationName = document.getElementById('destinationName')
+const recipientHistoryDropdown = document.getElementById(
+  'recipientHistoryDropdown'
+)
 
 const recipientAccountSelect = document.getElementById('recipientAccountSelect')
 
@@ -27,6 +40,7 @@ const freeTransferContainer = document.getElementById('freeTransferContainer')
 const transferAmount = document.getElementById('transferAmount')
 const adminFee = document.getElementById('adminFee')
 const paymentFor = document.getElementById('paymentFor')
+const paymentHistoryDropdown = document.getElementById('paymentHistoryDropdown')
 const cancelBankTransaction = document.getElementById('cancelBankTransaction')
 const bankTransactionTableContainer = document.getElementById(
   'bankTransactionTableContainer'
@@ -98,14 +112,207 @@ async function loadRecipientHistory() {
   renderRecipientHistory()
 }
 
-function renderRecipientHistory() {
-  const datalist = document.getElementById('recipientHistoryList')
+async function loadPaymentHistory() {
+  const { data, error } = await supabaseClient
+    .from('bank_transactions')
+    .select('payment_for, transaction_date')
+    .gte('transaction_date', BANK_MODULE_START_DATE)
+    .order('transaction_date', { ascending: false })
 
-  if (!datalist) return
+  if (error) {
+    console.error(error)
+    return
+  }
 
-  datalist.innerHTML = recipientHistory
-    .map((name) => `<option value="${name}">`)
+  const used = new Set()
+
+  paymentHistory = []
+
+  for (const item of data ?? []) {
+    const value = item.payment_for?.trim().replace(/\s+/g, ' ')
+
+    if (!value) continue
+
+    const key = value.toLowerCase()
+
+    if (used.has(key)) continue
+
+    used.add(key)
+
+    paymentHistory.push(value)
+  }
+
+  renderPaymentHistory()
+}
+
+function renderPaymentHistory(items = paymentHistory) {
+  if (!paymentHistoryDropdown) return
+
+  currentPaymentItems = [...items]
+  activePaymentIndex = -1
+
+  paymentHistoryDropdown.hidden = true
+
+  if (!items.length) {
+    paymentHistoryDropdown.innerHTML = `
+      <div class="payment-history-empty">
+        Tidak ada hasil.
+      </div>
+    `
+    return
+  }
+
+  paymentHistoryDropdown.innerHTML = items
+    .map(
+      (value) => `
+        <div
+          class="payment-history-item"
+          data-value="${value}">
+          ${value}
+        </div>
+      `
+    )
     .join('')
+
+  paymentHistoryDropdown
+    .querySelectorAll('.payment-history-item')
+    .forEach((item, index) => {
+      item.addEventListener('mouseenter', () => {
+        activePaymentIndex = index
+        updatePaymentHighlight()
+      })
+
+      item.addEventListener('mousedown', (event) => {
+        event.preventDefault()
+
+        activePaymentIndex = index
+
+        selectActivePayment()
+      })
+    })
+}
+
+function togglePaymentHistoryDropdown(show) {
+  if (!paymentHistoryDropdown) return
+
+  paymentHistoryDropdown.hidden = !show || !currentPaymentItems.length
+}
+
+function updatePaymentHighlight() {
+  if (!paymentHistoryDropdown) return
+
+  paymentHistoryDropdown
+    .querySelectorAll('.payment-history-item')
+    .forEach((item, index) => {
+      item.classList.toggle('active', index === activePaymentIndex)
+
+      if (index === activePaymentIndex) {
+        item.scrollIntoView({
+          block: 'nearest'
+        })
+      }
+    })
+}
+
+function selectActivePayment() {
+  if (
+    activePaymentIndex < 0 ||
+    activePaymentIndex >= currentPaymentItems.length
+  ) {
+    return
+  }
+
+  paymentFor.value = currentPaymentItems[activePaymentIndex]
+
+  togglePaymentHistoryDropdown(false)
+
+  paymentFor.focus()
+}
+
+function renderRecipientHistory(items = recipientHistory) {
+  if (!recipientHistoryDropdown) return
+
+  currentRecipientItems = [...items]
+  activeRecipientIndex = -1
+
+  recipientHistoryDropdown.hidden = true
+
+  if (!items.length) {
+    recipientHistoryDropdown.innerHTML = `
+      <div class="recipient-history-empty">
+        Tidak ada hasil.
+      </div>
+    `
+    return
+  }
+
+  recipientHistoryDropdown.innerHTML = items
+    .map(
+      (name) => `
+        <div
+          class="recipient-history-item"
+          data-name="${name}"
+        >
+          ${name}
+        </div>
+      `
+    )
+    .join('')
+
+  recipientHistoryDropdown
+    .querySelectorAll('.recipient-history-item')
+    .forEach((item, index) => {
+      item.addEventListener('mouseenter', () => {
+        activeRecipientIndex = index
+        updateRecipientHighlight()
+      })
+
+      item.addEventListener('mousedown', (event) => {
+        event.preventDefault()
+
+        activeRecipientIndex = index
+        selectActiveRecipient()
+      })
+    })
+}
+
+function toggleRecipientHistoryDropdown(show) {
+  if (!recipientHistoryDropdown) return
+
+  recipientHistoryDropdown.hidden = !show || !currentRecipientItems.length
+}
+
+function updateRecipientHighlight() {
+  if (!recipientHistoryDropdown) return
+
+  recipientHistoryDropdown
+    .querySelectorAll('.recipient-history-item')
+    .forEach((item, index) => {
+      item.classList.toggle('active', index === activeRecipientIndex)
+
+      if (index === activeRecipientIndex) {
+        item.scrollIntoView({
+          block: 'nearest'
+        })
+      }
+    })
+}
+
+function selectActiveRecipient() {
+  if (
+    activeRecipientIndex < 0 ||
+    activeRecipientIndex >= currentRecipientItems.length
+  ) {
+    return
+  }
+
+  destinationName.value = currentRecipientItems[activeRecipientIndex]
+
+  updateTransferStepState()
+
+  toggleRecipientHistoryDropdown(false)
+
+  destinationName.focus()
 }
 
 async function fetchBankTransactions() {
@@ -191,21 +398,33 @@ function validateBankModuleDate(date) {
 }
 
 async function loadBankTransactions() {
+  const today = getTodayLocal()
+
   if (!bankStartDate.value) {
-    bankStartDate.value = getTodayLocal()
+    const todayDate = new Date(today)
+
+    bankStartDate.value = new Date(
+      todayDate.getFullYear(),
+      todayDate.getMonth(),
+      20
+    )
+      .toISOString()
+      .split('T')[0]
   }
 
   if (!bankEndDate.value) {
-    bankEndDate.value = bankStartDate.value
+    bankEndDate.value = today
   }
 
-  if (bankStartDate.value < BANK_MODULE_START_DATE) {
-    bankStartDate.value = BANK_MODULE_START_DATE
-  }
+  bankStartDate.value =
+    bankStartDate.value < BANK_MODULE_START_DATE
+      ? BANK_MODULE_START_DATE
+      : bankStartDate.value
 
-  if (bankEndDate.value < BANK_MODULE_START_DATE) {
-    bankEndDate.value = BANK_MODULE_START_DATE
-  }
+  bankEndDate.value =
+    bankEndDate.value < BANK_MODULE_START_DATE
+      ? BANK_MODULE_START_DATE
+      : bankEndDate.value
 
   addBankTransactionButton.disabled = true
 
@@ -231,10 +450,10 @@ async function loadBankTransactions() {
     )
 
     populateBankAccountDropdown()
-
     populateRecipientAccountDropdown()
 
     await loadRecipientHistory()
+    await loadPaymentHistory()
   } finally {
     addBankTransactionButton.disabled = false
 
@@ -277,6 +496,8 @@ function openBankTransactionModal() {
 
   updateTransferMode()
 
+  updateTransferStepState()
+
   const submitButton = bankTransactionModal.querySelector(
     'button[type="submit"]'
   )
@@ -316,6 +537,8 @@ function openEditBankTransaction(transaction) {
   transferMode.value = isRegistered ? 'registered' : 'free'
 
   updateTransferMode()
+
+  updateTransferStepState()
 
   // Isi nama penerima
   if (isRegistered) {
@@ -509,26 +732,51 @@ function updateTransferMode() {
     } else {
       destinationName.value = ''
     }
-
-    return
-  }
-
-  if (mode === 'free') {
+  } else if (mode === 'free') {
     recipientAccountSelect.value = ''
 
     destinationName.value = ''
     destinationName.readOnly = false
     destinationName.classList.remove('field-locked')
+  } else {
+    recipientAccountSelect.value = ''
 
-    return
+    destinationName.value = ''
+    destinationName.readOnly = false
+    destinationName.classList.remove('field-locked')
   }
 
-  // Belum memilih tujuan transfer
-  recipientAccountSelect.value = ''
+  updateTransferStepState()
+}
 
-  destinationName.value = ''
-  destinationName.readOnly = false
-  destinationName.classList.remove('field-locked')
+function updateTransferStepState() {
+  const hasSender = !!bankAccountSelect.value
+
+  transferMode.disabled = !hasSender
+  transferMode.classList.toggle('field-locked', !hasSender)
+
+  const isRegistered = transferMode.value === 'registered'
+  const isFree = transferMode.value === 'free'
+
+  const hasDestination = isRegistered
+    ? !!recipientAccountSelect.value
+    : isFree
+      ? destinationName.value.trim() !== ''
+      : false
+
+  recipientAccountSelect.disabled = !hasSender
+
+  if (!hasSender) {
+    destinationName.readOnly = true
+    destinationName.classList.add('field-locked')
+  }
+
+  paymentFor.disabled = !hasDestination
+  transferAmount.disabled = !hasDestination
+  adminFee.disabled = !hasDestination
+  ;[paymentFor, transferAmount, adminFee].forEach((field) => {
+    field.classList.toggle('field-locked', field.disabled)
+  })
 }
 
 async function persistBankTransaction(payload) {
@@ -653,6 +901,8 @@ recipientAccountSelect?.addEventListener('change', () => {
 
   destinationName.value = account?.name ?? ''
 
+  updateTransferStepState()
+
   paymentFor.focus()
 })
 
@@ -722,5 +972,145 @@ transferMode?.addEventListener('change', () => {
     recipientAccountSelect.focus()
   } else {
     destinationName.focus()
+  }
+})
+
+destinationName?.addEventListener('focus', () => {
+  renderRecipientHistory(recipientHistory.slice(0, MAX_RECIPIENT_HISTORY))
+
+  toggleRecipientHistoryDropdown(true)
+})
+
+destinationName?.addEventListener('input', () => {
+  const keyword = destinationName.value.trim().toLowerCase()
+
+  const filtered = recipientHistory
+    .filter((name) => name.toLowerCase().includes(keyword))
+    .slice(0, MAX_RECIPIENT_HISTORY)
+
+  renderRecipientHistory(filtered)
+
+  toggleRecipientHistoryDropdown(true)
+
+  updateTransferStepState()
+})
+
+destinationName?.addEventListener('keydown', (event) => {
+  if (recipientHistoryDropdown.hidden) return
+
+  if (!currentRecipientItems.length) return
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault()
+
+      activeRecipientIndex = Math.min(
+        activeRecipientIndex + 1,
+        currentRecipientItems.length - 1
+      )
+
+      updateRecipientHighlight()
+      break
+
+    case 'ArrowUp':
+      event.preventDefault()
+
+      activeRecipientIndex = Math.max(activeRecipientIndex - 1, 0)
+
+      updateRecipientHighlight()
+      break
+
+    case 'Enter':
+      if (activeRecipientIndex >= 0) {
+        event.preventDefault()
+        selectActiveRecipient()
+      }
+      break
+
+    case 'Tab':
+      if (activeRecipientIndex >= 0) {
+        event.preventDefault()
+        selectActiveRecipient()
+      }
+      break
+
+    case 'Escape':
+      toggleRecipientHistoryDropdown(false)
+      break
+  }
+})
+
+paymentFor?.addEventListener('focus', () => {
+  renderPaymentHistory(paymentHistory.slice(0, MAX_PAYMENT_HISTORY))
+
+  togglePaymentHistoryDropdown(true)
+})
+
+paymentFor?.addEventListener('input', () => {
+  const keyword = paymentFor.value.trim().toLowerCase()
+
+  const filtered = paymentHistory
+    .filter((item) => item.toLowerCase().includes(keyword))
+    .slice(0, MAX_PAYMENT_HISTORY)
+
+  renderPaymentHistory(filtered)
+
+  togglePaymentHistoryDropdown(true)
+})
+
+paymentFor?.addEventListener('keydown', (event) => {
+  if (paymentHistoryDropdown.hidden) return
+
+  if (!currentPaymentItems.length) return
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault()
+
+      activePaymentIndex = Math.min(
+        activePaymentIndex + 1,
+        currentPaymentItems.length - 1
+      )
+
+      updatePaymentHighlight()
+      break
+
+    case 'ArrowUp':
+      event.preventDefault()
+
+      activePaymentIndex = Math.max(activePaymentIndex - 1, 0)
+
+      updatePaymentHighlight()
+      break
+
+    case 'Enter':
+    case 'Tab':
+      if (activePaymentIndex >= 0) {
+        event.preventDefault()
+        selectActivePayment()
+      }
+      break
+
+    case 'Escape':
+      togglePaymentHistoryDropdown(false)
+      break
+  }
+})
+
+document.addEventListener('click', (event) => {
+  if (
+    !paymentHistoryDropdown ||
+    !event.target.closest('.payment-autocomplete')
+  ) {
+    togglePaymentHistoryDropdown(false)
+  }
+})
+
+document.addEventListener('click', (event) => {
+  if (
+    !recipientHistoryDropdown ||
+    !event.target.closest('.recipient-autocomplete')
+  ) {
+    toggleRecipientHistoryDropdown(false)
   }
 })

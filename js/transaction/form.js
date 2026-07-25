@@ -43,6 +43,19 @@ function updateFormFlow() {
 
   kitchenSelect.disabled = !transactionDate.value
 
+  // ======================
+  // MODE EDIT
+  // ======================
+  if (editingTransactionId) {
+    flowType.disabled = true
+
+    amountInput.disabled = false
+    transactionNote.disabled = false
+    submitButton.disabled = false
+
+    return
+  }
+
   flowType.disabled = !kitchenSelect.value
 
   const flowSelected = !!flowType.value
@@ -77,83 +90,54 @@ async function toggleFields() {
   const flow = flowType.value
 
   accountSelect.style.display = 'none'
-
   supplierSelect.style.display = 'none'
 
   accountSelect.disabled = false
-
   supplierSelect.disabled = false
 
   if (!kitchenSelect.value) {
     updateFormFlow()
-
     return
   }
-
-  // ======================
-  // PEMASUKAN
-  // ======================
 
   if (flow === 'pemasukan') {
     accountSelect.style.display = 'block'
 
     await loadAccountsFiltered(flow)
 
-    const accounts = Array.from(accountSelect.options).filter(
-      (option) => option.value
-    )
+    const accounts = [...accountSelect.options].filter((option) => option.value)
 
     if (accounts.length === 1) {
       accountSelect.value = accounts[0].value
     }
-
-    updateFormFlow()
-
-    return
   }
-
-  // ======================
-  // OPERASIONAL
-  // ======================
 
   if (flow === 'operational') {
     accountSelect.style.display = 'block'
 
     await loadAccountsFiltered(flow)
 
-    const operationalAccount = Array.from(accountSelect.options).find(
+    const operationalAccount = [...accountSelect.options].find(
       (option) => option.value && option.text.includes('BNI')
     )
 
     if (operationalAccount) {
       accountSelect.value = operationalAccount.value
     }
-
-    updateFormFlow()
-
-    return
   }
-
-  // ======================
-  // PENGELUARAN
-  // ======================
 
   if (flow === 'pengeluaran') {
     supplierSelect.style.display = 'block'
 
     await loadSuppliersFiltered()
 
-    const suppliers = Array.from(supplierSelect.options).filter(
+    const suppliers = [...supplierSelect.options].filter(
       (option) => option.value
     )
 
     if (suppliers.length === 1) {
       supplierSelect.value = suppliers[0].value
     }
-
-    updateFormFlow()
-
-    return
   }
 
   updateFormFlow()
@@ -215,6 +199,26 @@ function resetFormState() {
   updateFormFlow()
 
   lockTransactionFields(false)
+}
+
+function resetTransactionForm() {
+  editingTransactionId = null
+
+  transactionForm.reset()
+
+  updateFlowOptions()
+  updateFormFlow()
+
+  submitButton.textContent = 'Simpan'
+  submitButton.disabled = false
+
+  lockTransactionFields(false)
+
+  amountInput.value = ''
+  transactionNote.value = ''
+
+  accountSelect.innerHTML = ''
+  supplierSelect.innerHTML = ''
 }
 
 function lockTransactionFields(isEditing) {
@@ -294,9 +298,16 @@ async function editTransaction(transaction) {
 
   transactionNote.value = transaction.note || ''
 
+  amountInput.disabled = false
+  transactionNote.disabled = false
+  submitButton.disabled = false
+
   submitButton.textContent = 'Update'
 
   lockTransactionFields(true)
+
+  amountInput.disabled = false
+  transactionNote.disabled = false
 
   openModal()
 

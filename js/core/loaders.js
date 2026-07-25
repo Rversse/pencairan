@@ -232,25 +232,19 @@ async function loadAccountsFiltered(flow) {
     return
   }
 
-  const flowMap = {
+  const dbFlow = {
     pemasukan: 'income',
     operational: 'neutral'
-  }
+  }[flow]
 
-  const dbFlow = flowMap[flow]
-
-  const data = accountRulesCache.filter((item) => {
-    return item.kitchen_id === kitchenId && item.flow_type === dbFlow
-  })
-
-  const uniqueAccounts = [
+  const accounts = [
     ...new Map(
-      data
+      accountRulesCache
         .filter(
           (item) =>
-            item.accounts &&
-            item.accounts.income_suppliers &&
-            item.accounts.income_suppliers.is_active
+            item.kitchen_id === kitchenId &&
+            item.flow_type === dbFlow &&
+            item.accounts?.income_suppliers?.is_active
         )
         .map((item) => [item.accounts.id, item.accounts])
     ).values()
@@ -258,18 +252,19 @@ async function loadAccountsFiltered(flow) {
 
   renderAccountPlaceholder()
 
-  if (!uniqueAccounts.length) {
+  if (!accounts.length) {
     renderEmptyAccount()
     return
   }
 
-  accountSelect.innerHTML += buildAccountOptions(uniqueAccounts)
+  accountSelect.innerHTML += buildAccountOptions(accounts)
 
-  if (uniqueAccounts.length === 1) {
-    accountSelect.value = uniqueAccounts[0].id
-    accountSelect.disabled = true
-  } else {
-    accountSelect.disabled = false
+  const singleAccount = accounts.length === 1
+
+  accountSelect.disabled = singleAccount
+
+  if (singleAccount) {
+    accountSelect.value = accounts[0].id
   }
 }
 
@@ -319,6 +314,15 @@ async function loadSuppliersFiltered() {
     return
   }
 
+  const selectedKitchen =
+    kitchenSelect.options[kitchenSelect.selectedIndex]?.text || ''
+
+  const isSukaraja = selectedKitchen.includes('Sukaraja')
+
+  const expenseSuppliers = isSukaraja
+    ? ['Koperasi Arutala', 'Sukalarang', 'Aris', 'Babinsa']
+    : ['Koperasi Arutala']
+
   const data = supplierRulesCache.filter((item) => {
     return item.kitchen_id === kitchenId
   })
@@ -326,10 +330,15 @@ async function loadSuppliersFiltered() {
   const uniqueSuppliers = [
     ...new Map(
       data
-        .filter((item) => item.suppliers && item.suppliers.is_active)
+        .filter(
+          (item) =>
+            item.suppliers &&
+            item.suppliers.is_active &&
+            expenseSuppliers.includes(item.suppliers.name)
+        )
         .map((item) => [item.suppliers.id, item.suppliers])
     ).values()
-  ]
+  ].sort((a, b) => a.name.localeCompare(b.name, 'id'))
 
   renderSupplierPlaceholder()
 
@@ -343,7 +352,6 @@ async function loadSuppliersFiltered() {
 
   if (uniqueSuppliers.length === 1) {
     supplierSelect.value = uniqueSuppliers[0].id
-
     supplierSelect.disabled = true
   } else {
     supplierSelect.disabled = false

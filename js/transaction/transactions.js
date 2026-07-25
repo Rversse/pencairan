@@ -14,18 +14,19 @@ function showTransactionLoading(showLoading) {
 
 async function fetchTransactions() {
   let query = supabaseClient.from('transactions').select(`
-      *,
-      kitchens(name),
-      accounts(
-        name,
-        bank,
-        account_number,
-        income_suppliers!accounts_supplier_id_fkey(
-          owner_name
-        )
-      ),
-      suppliers(name)
-    `)
+    *,
+    kitchens(name),
+    accounts(
+      id,
+      name,
+      bank,
+      account_number,
+      income_suppliers!accounts_supplier_id_fkey(
+        business_name
+      )
+    ),
+    suppliers(name)
+  `)
 
   if (currentUser?.role === 'viewer') {
     query = query.eq('flow_type', 'expense')
@@ -39,11 +40,11 @@ async function fetchTransactions() {
     query = query.eq('flow_type', filterFlow.value)
   }
 
-  if (filterDate.value) {
-    query = query.eq('transaction_date', filterDate.value)
-  }
+  query = query
+    .gte('transaction_date', dashboardStartDate.value)
+    .lte('transaction_date', dashboardEndDate.value)
 
-  return query.order('created_at', { ascending: false }).limit(transactionLimit)
+  return query.order('created_at', { ascending: false })
 }
 
 function escapeHtml(text) {
@@ -54,59 +55,78 @@ function escapeHtml(text) {
 
 function renderTransactionCards(data) {
   let html = ''
-  data.forEach((transaction) => {
-    let badgeClass = 'badge-income'
 
+  for (const transaction of data) {
+    let badgeClass = 'badge-income'
     let label = 'BGN'
 
-    if (transaction.flow_type === 'expense') {
-      badgeClass = 'badge-expense'
+    switch (transaction.flow_type) {
+      case 'expense':
+        badgeClass = 'badge-expense'
+        label = 'SUPPLIER'
+        break
 
-      label = 'SUPPLIER'
+      case 'neutral':
+        badgeClass = 'badge-operational'
+        label = 'OPS'
+        break
     }
 
-    if (transaction.flow_type === 'neutral') {
-      badgeClass = 'badge-operational'
+    const targetClass =
+      transaction.flow_type === 'income'
+        ? 'target-income'
+        : transaction.flow_type === 'neutral'
+          ? 'target-operational'
+          : 'target-expense'
 
-      label = 'OPS'
-    }
-
-    const target = transaction.accounts
-      ? `
+    const target =
+      transaction.flow_type === 'neutral' &&
+      !['Sukaraja', 'Cihaur'].includes(transaction.kitchens?.name)
+        ? `
       <span class="supplier-name">
-        ${transaction.accounts.name}
+        Arutala
       </span>
-
-      ${
-        transaction.accounts.income_suppliers?.owner_name
-          ? `
-            <span class="target-separator">•</span>
-
-<span class="transaction-owner">
-    ${transaction.accounts.income_suppliers.owner_name}
-</span>
-          `
-          : ''
-      }
 
       <span class="target-separator">•</span>
 
-<span class="transaction-bank">
-    ${transaction.accounts.bank} - ${transaction.accounts.account_number}
-</span>
-    `
-      : `
-      <span class="supplier-name">
-        ${transaction.suppliers?.name || '-'}
+      <span class="transaction-bank">
+        BNI
       </span>
     `
+        : transaction.accounts
+          ? `
+        <span class="supplier-name">
+          ${transaction.accounts.name}
+        </span>
+
+        ${
+          transaction.accounts.income_suppliers?.business_name
+            ? `
+              <span class="target-separator">•</span>
+
+              <span class="transaction-owner">
+                ${transaction.accounts.income_suppliers.business_name}
+              </span>
+            `
+            : ''
+        }
+
+        <span class="target-separator">•</span>
+
+        <span class="transaction-bank">
+          ${transaction.accounts.bank} - ${transaction.accounts.account_number}
+        </span>
+      `
+          : `
+        <span class="supplier-name">
+          ${transaction.suppliers?.name || '-'}
+        </span>
+      `
 
     const isLocked = isTransactionLocked(transaction.transaction_date)
-
     const canManage = currentUser?.role === 'admin' && !isLocked
 
     html += `
-
   <div class="transaction-card">
 
     <div class="transaction-layout">
@@ -125,18 +145,7 @@ function renderTransactionCards(data) {
 
         </div>
 
-<div
-  class="
-    transaction-target
-    ${
-      transaction.flow_type === 'income'
-        ? 'target-income'
-        : transaction.flow_type === 'neutral'
-          ? 'target-operational'
-          : 'target-expense'
-    }
-  "
->
+<div class="transaction-target ${targetClass}">
   ${target}
 </div>
 
@@ -185,7 +194,8 @@ function renderTransactionCards(data) {
 
   </div>
 `
-  })
+  }
+
   return html
 }
 
@@ -210,38 +220,53 @@ async function loadTransactions(showLoading = true) {
 
   if (error) {
     console.error(error)
-    transactionsContainer.innerHTML = `<div class="transaction-card">Gagal memuat transaksi</div>`
+    transactionsContainer.innerHTML =
+      '<div class="transaction-card">Gagal memuat transaksi</div>'
     return
   }
+
+  const selectedSupplier = filterSupplier.value
+
+  const filteredData = selectedSupplier
+    ? data.filter((row) => {
+        if (row.flow_type === 'income') {
+          return row.account_id === selectedSupplier
+        }
+
+        if (row.flow_type === 'expense') {
+          return row.suppliers?.name === selectedSupplier
+        }
+
+        return false
+      })
+    : data
 
   transactionsContainer.innerHTML = ''
 
-  if (!data.length) {
+  if (!filteredData.length) {
     transactionsContainer.innerHTML = `
-<div class="empty-state">
-  Tidak ada transaksi
-  untuk tanggal ini
-</div>
-      `
+      <div class="empty-state">
+        Tidak ada transaksi
+        untuk tanggal ini
+      </div>
+    `
 
     loadMoreButton.style.display = 'none'
-
     return
   }
 
-  if (data.length < transactionLimit) {
-    loadMoreButton.style.display = 'none'
-  } else {
-    loadMoreButton.style.display = 'block'
-  }
+  loadMoreButton.style.display =
+    filteredData.length >= transactionLimit ? 'block' : 'none'
 
-  transactionsContainer.innerHTML = renderTransactionCards(data)
+  const visibleTransactions = filteredData.slice(0, transactionLimit)
+
+  transactionsContainer.innerHTML = renderTransactionCards(visibleTransactions)
 
   if (window.lucide) {
     lucide.createIcons()
   }
 
-  bindEditButtons(data)
+  bindEditButtons(visibleTransactions)
 }
 
 loadMoreButton.addEventListener(

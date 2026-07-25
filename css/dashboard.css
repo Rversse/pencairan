@@ -122,15 +122,14 @@
 
 .dashboard-filters {
   display: flex;
-
   gap: 12px;
 
   margin: 18px auto 20px;
-
   max-width: var(--content-width);
 }
 
 .dashboard-filters input,
+.dashboard-filters select,
 .dashboard-filters button {
   height: 42px;
 
@@ -143,17 +142,17 @@
   font-weight: var(--fw-medium);
 }
 
-.dashboard-filters button {
-  width: auto;
-
-  min-width: 110px;
-
-  font-weight: var(--fw-semibold);
+.dashboard-filters input[type='date'],
+.dashboard-filters select {
+  flex: 1;
+  min-width: 0;
 }
 
-.dashboard-filters button,
-.filters button {
+.dashboard-filters button {
+  flex: 0 0 auto;
   min-width: 120px;
+
+  font-weight: var(--fw-semibold);
 }
 
 /* ==========================================================
