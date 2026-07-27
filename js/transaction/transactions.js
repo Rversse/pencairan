@@ -16,18 +16,19 @@ async function fetchTransactions() {
   let query = supabaseClient.from('transactions').select(`
     *,
     kitchens(name),
+    suppliers!transactions_supplier_id_fkey(
+      name
+    ),
     accounts(
       id,
       name,
       bank,
       account_number,
-income_suppliers!accounts_supplier_id_fkey(
-  business_name,
-  owner_name
-)
+      income_suppliers!accounts_supplier_id_fkey(
+        business_name,
+        owner_name
       )
-    ),
-    suppliers(name)
+    )
   `)
 
   if (currentUser?.role === 'viewer') {
