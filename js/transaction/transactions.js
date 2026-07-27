@@ -21,8 +21,10 @@ async function fetchTransactions() {
       name,
       bank,
       account_number,
-      income_suppliers!accounts_supplier_id_fkey(
-        business_name
+income_suppliers!accounts_supplier_id_fkey(
+  business_name,
+  owner_name
+)
       )
     ),
     suppliers(name)
@@ -79,121 +81,139 @@ function renderTransactionCards(data) {
           ? 'target-operational'
           : 'target-expense'
 
+    const supplierName =
+      transaction.accounts?.income_suppliers?.business_name?.trim() || ''
+
+    const ownerName =
+      transaction.accounts?.income_suppliers?.owner_name?.trim() || ''
+
     const target =
       transaction.flow_type === 'neutral' &&
       !['Sukaraja', 'Cihaur'].includes(transaction.kitchens?.name)
         ? `
-      <span class="supplier-name">
-        Arutala
-      </span>
+          <span class="supplier-name">
+            ${supplierName || 'Arutala'}
+          </span>
 
-      <span class="target-separator">•</span>
+          <span class="target-separator">•</span>
 
-      <span class="transaction-bank">
-        BNI
-      </span>
-    `
+          <span class="transaction-owner">
+            ${ownerName || '-'}
+          </span>
+
+          <span class="target-separator">•</span>
+
+          <span class="transaction-bank">
+            ${transaction.accounts?.bank} - ${transaction.accounts?.account_number}
+          </span>
+        `
         : transaction.accounts
           ? `
-        <span class="supplier-name">
-          ${transaction.accounts.name}
-        </span>
+            ${
+              supplierName
+                ? `
+                  <span class="supplier-name">
+                    ${supplierName}
+                  </span>
+                `
+                : ''
+            }
 
-        ${
-          transaction.accounts.income_suppliers?.business_name
-            ? `
-              <span class="target-separator">•</span>
+            ${
+              ownerName
+                ? `
+                  <span class="target-separator">•</span>
 
-              <span class="transaction-owner">
-                ${transaction.accounts.income_suppliers.business_name}
-              </span>
-            `
-            : ''
-        }
+                  <span class="transaction-owner">
+                    ${ownerName}
+                  </span>
+                `
+                : ''
+            }
 
-        <span class="target-separator">•</span>
+            <span class="target-separator">•</span>
 
-        <span class="transaction-bank">
-          ${transaction.accounts.bank} - ${transaction.accounts.account_number}
-        </span>
-      `
+            <span class="transaction-bank">
+              ${transaction.accounts.bank} - ${transaction.accounts.account_number}
+            </span>
+          `
           : `
-        <span class="supplier-name">
-          ${transaction.suppliers?.name || '-'}
-        </span>
-      `
+            <span class="supplier-name">
+              ${transaction.suppliers?.name || '-'}
+            </span>
+          `
 
     const isLocked = isTransactionLocked(transaction.transaction_date)
     const canManage = currentUser?.role === 'admin' && !isLocked
 
     html += `
-  <div class="transaction-card">
+    <div class="transaction-card">
 
-    <div class="transaction-layout">
+      <div class="transaction-layout">
 
-      <div class="transaction-left">
+        <div class="transaction-left">
 
-        <div class="transaction-header">
+          <div class="transaction-header">
 
-          <strong>
-            ${transaction.kitchens.name}
-          </strong>
+            <strong>
+              ${transaction.kitchens.name}
+            </strong>
 
-          <span class="badge ${badgeClass}">
-            ${label}
-          </span>
+            <span class="badge ${badgeClass}">
+              ${label}
+            </span>
+
+          </div>
+
+          <div class="transaction-target ${targetClass}">
+            ${target}
+          </div>
+
+          <small class="transaction-date">
+            ${formatDateTime(transaction.created_at)}
+          </small>
+
+          <small class="transaction-note">
+            Catatan: ${escapeHtml(transaction.note) || '-'}
+          </small>
 
         </div>
 
-<div class="transaction-target ${targetClass}">
-  ${target}
-</div>
+        <div class="transaction-right">
 
-<small class="transaction-date">
-  ${formatDateTime(transaction.created_at)}
-</small>
+          <div class="amount">
+            ${formatRupiah(transaction.amount)}
+          </div>
 
-<small class="transaction-note">
-  Catatan: ${escapeHtml(transaction.note) || '-'}
-</small>
+          ${
+            canManage
+              ? `
+              <div class="transaction-actions">
 
-      </div>
+                <button
+                  class="editTransactionButton"
+                  data-id="${transaction.id}"
+                >
+                  <i data-lucide="pencil"></i>
+                </button>
 
-      <div class="transaction-right">
+                <button
+                  onclick="openDeleteModal('${transaction.id}')"
+                >
+                  <i data-lucide="trash-2"></i>
+                </button>
 
-        <div class="amount">
-          ${formatRupiah(transaction.amount)}
+              </div>
+              `
+              : ''
+          }
+
         </div>
-
-        ${
-          canManage
-            ? `
-            <div class="transaction-actions">
-
-<button
-  class="editTransactionButton"
-  data-id="${transaction.id}"
->
-  <i data-lucide="pencil"></i>
-</button>
-
-<button
-  onclick="openDeleteModal('${transaction.id}')"
->
-  <i data-lucide="trash-2"></i>
-</button>
-
-            </div>
-            `
-            : ''
-        }
 
       </div>
 
     </div>
-
-  </div>
-`
+  `
   }
 
   return html
