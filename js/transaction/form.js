@@ -64,6 +64,20 @@ function updateFormFlow() {
 
   supplierSelect.disabled = !flowSelected || flowType.value !== 'pengeluaran'
 
+  // ======================
+  // BUSINESS RULE
+  // ======================
+
+  // BELANJA SUPPLIER selain Sukaraja dikunci
+  if (flowType.value === 'pengeluaran' && !isSukaraja) {
+    supplierSelect.disabled = true
+  }
+
+  // OPERASIONAL selalu dikunci (karena otomatis Arutala)
+  if (flowType.value === 'operational') {
+    accountSelect.disabled = true
+  }
+
   amountInput.disabled = true
   transactionNote.disabled = true
   submitButton.disabled = true
@@ -81,13 +95,17 @@ function updateFormFlow() {
 
   if (flowType.value === 'pengeluaran') {
     amountInput.disabled = !supplierSelect.value
-
     submitButton.disabled = !supplierSelect.value
   }
 }
 
 async function toggleFields() {
   const flow = flowType.value
+
+  const selectedKitchen =
+    kitchenSelect.options[kitchenSelect.selectedIndex]?.text || ''
+
+  const isSukaraja = selectedKitchen.includes(SUKARAJA_NAME)
 
   accountSelect.style.display = 'none'
   supplierSelect.style.display = 'none'
@@ -100,6 +118,9 @@ async function toggleFields() {
     return
   }
 
+  // ======================
+  // BELANJA BGN
+  // ======================
   if (flow === 'pemasukan') {
     accountSelect.style.display = 'block'
 
@@ -112,6 +133,9 @@ async function toggleFields() {
     }
   }
 
+  // ======================
+  // OPERASIONAL
+  // ======================
   if (flow === 'operational') {
     accountSelect.style.display = 'block'
 
@@ -126,6 +150,9 @@ async function toggleFields() {
     }
   }
 
+  // ======================
+  // BELANJA SUPPLIER
+  // ======================
   if (flow === 'pengeluaran') {
     supplierSelect.style.display = 'block'
 
@@ -135,8 +162,18 @@ async function toggleFields() {
       (option) => option.value
     )
 
-    if (suppliers.length === 1) {
-      supplierSelect.value = suppliers[0].value
+    if (isSukaraja) {
+      if (suppliers.length === 1) {
+        supplierSelect.value = suppliers[0].value
+      }
+    } else {
+      const arutala = suppliers.find(
+        (option) => option.text.trim() === 'Koperasi Arutala'
+      )
+
+      if (arutala) {
+        supplierSelect.value = arutala.value
+      }
     }
   }
 

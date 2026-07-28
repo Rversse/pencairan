@@ -13,7 +13,7 @@ async function loadDailyStatus() {
 
   const today = getTodayLocal()
 
-  const selectedDate = filterDate?.value || today
+  const selectedDate = dashboardStartDate?.value || today
 
   if (dailyStatusDate) {
     dailyStatusDate.textContent = formatDateShort(selectedDate)
