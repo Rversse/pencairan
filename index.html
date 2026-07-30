@@ -391,6 +391,14 @@
             >
               + Tambah Transaksi
             </button>
+
+            <button
+              id="exportBankExcelButton"
+              type="button"
+              class="secondary-button"
+            >
+              Export Excel
+            </button>
           </div>
         </div>
 
@@ -427,8 +435,6 @@
           </select>
 
           <button id="generateButton">Generate</button>
-
-          <button id="exportExcelButton">Export Excel</button>
         </div>
 
         <div class="summary-grid">
@@ -884,7 +890,8 @@
     <!-- LIBRARY -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="js/core/exceljs.min.js"></script>
+    <script src="js/core/excel-helper.js"></script>
 
     <!-- CONFIG -->
     <script src="supabase.js"></script>
@@ -912,7 +919,6 @@
     <!-- REPORT -->
     <script src="js/report/supplier-report.js"></script>
     <script src="js/report/income-report.js"></script>
-    <script src="js/report/report-export.js"></script>
     <script src="js/report/report-generate.js"></script>
     <script src="js/report/report-print.js"></script>
     <script src="js/report/report.js"></script>
@@ -921,6 +927,7 @@
     <script src="js/bank/bank.js"></script>
     <script src="js/bank/bank-summary.js"></script>
     <script src="js/bank/bank-history.js"></script>
+    <script src="js/bank/bank-export.js"></script>
 
     <!-- DASHBOARD -->
     <script src="js/dashboard/disbursement.js"></script>

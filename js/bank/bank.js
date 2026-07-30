@@ -372,7 +372,23 @@ payment_for,
 transfer_amount,
 admin_fee,
 transaction_date,
-created_at
+created_at,
+
+sender:accounts!bank_transactions_account_fkey(
+  id,
+  name,
+  bank,
+  account_number,
+  income_suppliers(owner_name)
+),
+
+recipient:accounts!bank_transactions_recipient_account_fkey(
+  id,
+  name,
+  bank,
+  account_number,
+  income_suppliers(owner_name)
+)
 `
       )
       .gte('transaction_date', effectiveStartDate)

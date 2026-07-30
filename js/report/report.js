@@ -56,12 +56,6 @@
   // ======================
 
   printButton.addEventListener('click', printReport)
-
-  // ======================
-  // GENERATE REPORT
-  // ======================
-
-  exportExcelButton?.addEventListener('click', exportPelaporanExcel)
 })()
 
 generateButton.addEventListener('click', generateReport)

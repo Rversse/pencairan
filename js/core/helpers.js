@@ -33,10 +33,10 @@ function formatDateLong(date) {
   })
 }
 
-function formatDateTime(date) {
-  const d = new Date(date)
+function formatDateTime(value) {
+  const date = value instanceof Date ? value : new Date(value)
 
-  return `${formatDateShort(d)} • ${d
+  return `${formatDateShort(date)} • ${date
     .toLocaleTimeString('id-ID', {
       hour: '2-digit',
       minute: '2-digit',
@@ -107,4 +107,37 @@ const resetInactivityTimer = (() => {
 function isTransactionLocked() {
   // TODO: implement lock period
   return false
+}
+
+async function fetchAllTransactions({ startDate, endDate, select }) {
+  const transactions = []
+
+  let from = 0
+  const pageSize = 1000
+
+  while (true) {
+    const { data, error } = await supabaseClient
+      .from('transactions')
+      .select(select)
+      .gte('transaction_date', startDate)
+      .lte('transaction_date', endDate)
+      .order('transaction_date', {
+        ascending: true
+      })
+      .range(from, from + pageSize - 1)
+
+    if (error) {
+      throw error
+    }
+
+    transactions.push(...data)
+
+    if (data.length < pageSize) {
+      break
+    }
+
+    from += pageSize
+  }
+
+  return transactions
 }
