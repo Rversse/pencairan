@@ -904,6 +904,104 @@
   box-shadow: 0 3px 8px rgba(217, 119, 6, 0.3);
 }
 
+/* ==========================================================
+   HISTORY PAGINATION
+   ========================================================== */
+
+.history-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+
+  margin-top: 18px;
+  padding-top: 16px;
+
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.history-pagination-info {
+  color: #475569;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.history-pagination-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.history-page-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 40px;
+  height: 40px;
+  padding: 0 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #d97706;
+  color: #fff;
+
+  font-size: 13px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background-color 0.18s,
+    transform 0.18s,
+    opacity 0.18s;
+}
+
+.history-page-button:hover:not(.disabled):not(.active) {
+  background: #b45309;
+  transform: translateY(-1px);
+}
+
+.history-page-button.active {
+  background: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.history-page-button.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.history-page-dots {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 24px;
+  height: 40px;
+
+  color: #64748b;
+
+  font-size: 18px;
+  font-weight: 700;
+
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .history-pagination {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .history-pagination-buttons {
+    width: 100%;
+  }
+}
+
 /* ==========================================
    HISTORY MODAL CLOSE BUTTON
    ========================================== */

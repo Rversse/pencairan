@@ -1,6 +1,12 @@
 let currentHistoryAccountId = null
 let bankHistoryRequestId = 0
 
+const HISTORY_PAGE_SIZE = 10
+
+let historyTransactions = []
+let historyCurrentPage = 1
+let historyRenderState = null
+
 const bankHistoryModal = document.getElementById('bankHistoryModal')
 const bankHistoryTitle = document.getElementById('bankHistoryTitle')
 const bankHistoryContent = document.getElementById('bankHistoryContent')
@@ -54,11 +60,8 @@ function buildEmptyHistory(openingBalance) {
   `
 }
 
-function buildHistoryCards(transactions, historyBalance, canManageBank) {
-  let cardBalance = historyBalance
-
-  return [...transactions]
-    .reverse()
+function buildHistoryCards(transactions, canManageBank, latestTransactionId) {
+  return transactions
     .map((item, index) => {
       const order = item.order
 
@@ -81,13 +84,7 @@ function buildHistoryCards(transactions, historyBalance, canManageBank) {
 
       const amountClass = isIncoming ? 'history-in' : 'history-out'
 
-      const cardSaldo = cardBalance
-
-      if (isIncoming) {
-        cardBalance -= transferAmount
-      } else {
-        cardBalance += transferAmount + adminFee
-      }
+      const cardSaldo = item.runningBalance
 
       return `
 <div class="${cardClass}">
@@ -105,7 +102,9 @@ function buildHistoryCards(transactions, historyBalance, canManageBank) {
       <div class="history-badges">
 
         ${
-          index === 0 ? `<span class="history-latest-badge">TERBARU</span>` : ''
+          item.id === latestTransactionId
+            ? `<span class="history-latest-badge">TERBARU</span>`
+            : ''
         }
 
         <span class="history-order">
@@ -268,6 +267,172 @@ function buildHistorySummary(
 
 </div>
 `
+}
+
+function renderHistoryPage(
+  openingBalance,
+  disbursementIncome,
+  transferIncome,
+  totalExpense,
+  historyBalance,
+  canManageBank
+) {
+  const start = (historyCurrentPage - 1) * HISTORY_PAGE_SIZE
+  const end = start + HISTORY_PAGE_SIZE
+
+  const pageTransactions = historyTransactions.slice(start, end)
+
+  const latestTransactionId = historyTransactions[0]?.id
+
+  const html =
+    buildHistoryCards(pageTransactions, canManageBank, latestTransactionId) +
+    buildHistoryPagination()
+
+  bankHistoryContent.innerHTML =
+    buildHistorySummary(
+      openingBalance,
+      disbursementIncome,
+      transferIncome,
+      totalExpense,
+      historyBalance
+    ) + html
+
+  lucide.createIcons()
+
+  bindHistoryActions(bankHistoryContent, pageTransactions)
+  bindHistoryPagination()
+}
+
+function buildHistoryPagination() {
+  const totalItems = historyTransactions.length
+  const totalPages = Math.ceil(totalItems / HISTORY_PAGE_SIZE)
+
+  if (totalPages <= 1) {
+    return ''
+  }
+
+  const start = (historyCurrentPage - 1) * HISTORY_PAGE_SIZE + 1
+  const end = Math.min(historyCurrentPage * HISTORY_PAGE_SIZE, totalItems)
+
+  let pages = ''
+
+  const addPage = (page) => {
+    pages += `
+    <button
+      class="history-page-button ${page === historyCurrentPage ? 'active' : ''}"
+      data-page="${page}">
+      ${page}
+    </button>
+  `
+  }
+
+  const addDots = () => {
+    pages += `<span class="history-page-dots">…</span>`
+  }
+
+  if (totalPages <= 7) {
+    for (let i = 1; i <= totalPages; i++) {
+      addPage(i)
+    }
+  } else if (historyCurrentPage <= 4) {
+    for (let i = 1; i <= 5; i++) {
+      addPage(i)
+    }
+
+    addDots()
+
+    addPage(totalPages)
+  } else if (historyCurrentPage >= totalPages - 3) {
+    addPage(1)
+
+    addDots()
+
+    for (let i = totalPages - 4; i <= totalPages; i++) {
+      addPage(i)
+    }
+  } else {
+    addPage(1)
+
+    addDots()
+
+    for (let i = historyCurrentPage - 1; i <= historyCurrentPage + 1; i++) {
+      addPage(i)
+    }
+
+    addDots()
+
+    addPage(totalPages)
+  }
+
+  return `
+    <div class="history-pagination">
+
+      <div class="history-pagination-info">
+        Menampilkan ${start}–${end} dari ${totalItems} transaksi
+      </div>
+
+      <div class="history-pagination-buttons">
+
+<button
+  class="history-page-button ${historyCurrentPage === 1 ? 'disabled' : ''}"
+  data-page="prev"
+  ${historyCurrentPage === 1 ? 'disabled' : ''}>
+  ←
+</button>
+
+        ${pages}
+
+<button
+  class="history-page-button ${
+    historyCurrentPage === totalPages ? 'disabled' : ''
+  }"
+  data-page="next"
+  ${historyCurrentPage === totalPages ? 'disabled' : ''}>
+  →
+</button>
+
+      </div>
+
+    </div>
+  `
+}
+
+function bindHistoryPagination() {
+  bankHistoryContent
+    .querySelectorAll('.history-page-button:not(.disabled)')
+    .forEach((button) => {
+      button.onclick = () => {
+        const totalPages = Math.ceil(
+          historyTransactions.length / HISTORY_PAGE_SIZE
+        )
+
+        const action = button.dataset.page
+
+        if (action === 'prev') {
+          historyCurrentPage = Math.max(1, historyCurrentPage - 1)
+        } else if (action === 'next') {
+          historyCurrentPage = Math.min(totalPages, historyCurrentPage + 1)
+        } else {
+          historyCurrentPage = Number(action)
+        }
+
+        renderHistoryPage(
+          historyRenderState.openingBalance,
+          historyRenderState.disbursementIncome,
+          historyRenderState.transferIncome,
+          historyRenderState.totalExpense,
+          historyRenderState.historyBalance,
+          historyRenderState.canManageBank
+        )
+
+        const firstCard = bankHistoryContent.querySelector('.history-card')
+
+        firstCard?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start'
+        })
+      }
+    })
 }
 
 function bindHistoryActions(container, transactions) {
@@ -494,7 +659,14 @@ income_suppliers(owner_name)
   ]
 
   transactions.sort((a, b) => {
-    return new Date(a.transaction_date) - new Date(b.transaction_date)
+    const dateCompare =
+      new Date(b.transaction_date) - new Date(a.transaction_date)
+
+    if (dateCompare !== 0) {
+      return dateCompare
+    }
+
+    return new Date(b.created_at) - new Date(a.created_at)
   })
 
   transactions = transactions.map((item) => {
@@ -537,6 +709,8 @@ income_suppliers(owner_name)
     }
   })
 
+  let runningBalance = 0
+
   const openingBalance = Number(account.opening_balance) || 0
 
   if (!transactions.length) {
@@ -558,9 +732,21 @@ income_suppliers(owner_name)
       transactions
     )
 
+  runningBalance = historyBalance
+
+  for (const item of transactions) {
+    item.runningBalance = runningBalance
+
+    if (item.direction === 'in') {
+      runningBalance -= Number(item.transfer_amount) || 0
+    } else {
+      runningBalance +=
+        (Number(item.transfer_amount) || 0) + (Number(item.admin_fee) || 0)
+    }
+  }
+
   bankHistoryTitle.innerHTML = buildHistoryTitle(account, periodLabel)
 
-  // Order transaksi per tanggal dihitung dari urutan ASC (kronologis)
   const dailyTransactionOrder = new Map()
 
   transactions.forEach((item) => {
@@ -573,20 +759,26 @@ income_suppliers(owner_name)
     item.order = order
   })
 
-  const html = buildHistoryCards(transactions, historyBalance, canManageBank)
+  historyTransactions = transactions
+  historyCurrentPage = 1
 
-  bankHistoryContent.innerHTML =
-    buildHistorySummary(
-      openingBalance,
-      disbursementIncome,
-      transferIncome,
-      totalExpense,
-      historyBalance
-    ) + html
+  historyRenderState = {
+    openingBalance,
+    disbursementIncome,
+    transferIncome,
+    totalExpense,
+    historyBalance,
+    canManageBank
+  }
 
-  lucide.createIcons()
-
-  bindHistoryActions(bankHistoryContent, transactions)
+  renderHistoryPage(
+    openingBalance,
+    disbursementIncome,
+    transferIncome,
+    totalExpense,
+    historyBalance,
+    canManageBank
+  )
 }
 
 async function deleteBankTransaction(id) {
