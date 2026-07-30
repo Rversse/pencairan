@@ -12,6 +12,15 @@ let paymentHistory = []
 let activePaymentIndex = -1
 let currentPaymentItems = []
 
+function normalizePaymentPurpose(value) {
+  if (!value) return ''
+
+  return value
+    .trim()
+    .replace(/\s+/g, ' ')
+    .replace(/\s+Tgl\s+.+$/i, ' Tgl')
+}
+
 const bankSearch = document.getElementById('bankSearch')
 const bankAccountSelect = document.getElementById('bankAccountSelect')
 const bankCurrentBalance = document.getElementById('bankCurrentBalance')
@@ -129,7 +138,7 @@ async function loadPaymentHistory() {
   paymentHistory = []
 
   for (const item of data ?? []) {
-    const value = item.payment_for?.trim().replace(/\s+/g, ' ')
+    const value = normalizePaymentPurpose(item.payment_for)
 
     if (!value) continue
 
