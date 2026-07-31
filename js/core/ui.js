@@ -50,3 +50,71 @@ function showConfirm(message) {
     confirmCancel.onclick = () => close(false)
   })
 }
+
+// ============================================================
+// EVENT LISTENERS
+// ============================================================
+
+amountInput?.addEventListener('input', (event) => {
+  const raw = event.target.value.replace(/\D/g, '')
+
+  event.target.value = formatNumber(raw)
+})
+
+applyDashboardFilter?.addEventListener(
+  'click',
+
+  async () => {
+    if (applyDashboardFilter.disabled) {
+      return
+    }
+
+    applyDashboardFilter.disabled = true
+
+    const originalText = applyDashboardFilter.textContent
+
+    applyDashboardFilter.textContent = 'Loading...'
+
+    try {
+      await loadDashboard()
+
+      await loadDailyStatus()
+    } finally {
+      applyDashboardFilter.disabled = false
+
+      applyDashboardFilter.textContent = originalText
+    }
+  }
+)
+
+const logoutButton = document.getElementById('logoutButton')
+
+logoutButton?.addEventListener('click', async () => {
+  if (logoutButton.disabled) {
+    return
+  }
+
+  logoutButton.disabled = true
+
+  const originalText = logoutButton.textContent
+
+  logoutButton.textContent = 'Logout...'
+
+  try {
+    const { error } = await supabaseClient.auth.signOut()
+
+    if (error) {
+      console.error(error)
+      return
+    }
+
+    window.location.replace('login.html')
+  } catch (error) {
+    console.error(error)
+  } finally {
+    if (window.location.pathname.endsWith('login.html')) return
+
+    logoutButton.disabled = false
+    logoutButton.textContent = originalText
+  }
+})

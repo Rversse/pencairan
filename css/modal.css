@@ -169,18 +169,6 @@
   color: var(--navy);
 }
 
-.copyAccountNumber {
-  cursor: pointer;
-
-  transition: var(--transition);
-}
-
-.copyAccountNumber:hover {
-  color: var(--primary);
-
-  text-decoration: underline;
-}
-
 .modal-content::-webkit-scrollbar {
   width: 8px;
 }
@@ -232,15 +220,15 @@
   color: var(--navy-soft);
 }
 
+.copyAccountNumber,
 .copyPreviewAccountNumber {
   cursor: pointer;
-
   transition: var(--transition);
 }
 
+.copyAccountNumber:hover,
 .copyPreviewAccountNumber:hover {
   color: var(--primary);
-
   text-decoration: underline;
 }
 
@@ -544,35 +532,17 @@
   margin-top: 10px;
 }
 
-.supplierAccountPreview {
-  cursor: pointer;
-
-  font-weight: 700;
-
-  color: var(--primary);
-
-  transition: var(--transition);
-}
-
-.supplierAccountPreview:hover {
-  text-decoration: underline;
-
-  opacity: 0.85;
-}
-
+.supplierAccountPreview,
 .supplierKitchenPreview {
   cursor: pointer;
-
   font-weight: 700;
-
   color: var(--primary);
-
   transition: var(--transition);
 }
 
+.supplierAccountPreview:hover,
 .supplierKitchenPreview:hover {
   text-decoration: underline;
-
   opacity: 0.85;
 }
 

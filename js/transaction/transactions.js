@@ -232,12 +232,20 @@ function bindEditButtons(data) {
   })
 }
 
+let transactionsRequestId = 0
+
 async function loadTransactions(showLoading = true) {
+  const requestId = ++transactionsRequestId
+
   const loadingTimer = showTransactionLoading(showLoading)
 
   const { data, error } = await fetchTransactions()
 
   clearTimeout(loadingTimer)
+
+  if (requestId !== transactionsRequestId) {
+    return
+  }
 
   if (error) {
     console.error(error)
@@ -261,6 +269,10 @@ async function loadTransactions(showLoading = true) {
         return false
       })
     : data
+
+  if (requestId !== transactionsRequestId) {
+    return
+  }
 
   transactionsContainer.innerHTML = ''
 

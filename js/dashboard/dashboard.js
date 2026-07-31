@@ -62,7 +62,10 @@ function initializeDates() {
 // LOAD / RENDER FUNCTIONS
 // ============================================================
 
+let dashboardRequestId = 0
+
 async function loadDashboard() {
+  const requestId = ++dashboardRequestId
   const today = getTodayLocal()
 
   if (!dashboardStartDate.value) {
@@ -87,6 +90,8 @@ async function loadDashboard() {
     flow_types: flowTypes,
     supplier_filter: filterSupplier.value || null
   })
+
+  if (requestId !== dashboardRequestId) return
 
   if (error) {
     console.error(error)

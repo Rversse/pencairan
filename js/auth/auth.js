@@ -10,12 +10,19 @@ function hideSplash() {
 
 async function initAuth() {
   const {
-    data: { session }
+    data: { session },
+    error: sessionError
   } = await supabaseClient.auth.getSession()
+
+  if (sessionError) {
+    console.error('Failed to get session:', sessionError)
+
+    window.location.href = 'login.html'
+    return false
+  }
 
   if (!session) {
     window.location.href = 'login.html'
-
     return false
   }
 
@@ -29,7 +36,6 @@ async function initAuth() {
     await supabaseClient.auth.signOut()
 
     window.location.href = 'login.html'
-
     return false
   }
 

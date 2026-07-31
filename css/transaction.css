@@ -111,7 +111,6 @@
 .transaction-card button:hover {
   transform: translateY(-1px);
   background: var(--border);
-  border-color: var(--border);
   color: var(--navy);
 }
 

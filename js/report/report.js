@@ -36,11 +36,11 @@
   startDate.value = today
   endDate.value = today
 
-  startDate.addEventListener('change', () => {
+  startDate?.addEventListener('change', () => {
     endDate.value = startDate.value
   })
 
-  endDate.addEventListener('change', () => {
+  endDate?.addEventListener('change', () => {
     if (endDate.value < startDate.value) {
       startDate.value = endDate.value
     }
@@ -55,7 +55,7 @@
   // PRINT
   // ======================
 
-  printButton.addEventListener('click', printReport)
+  printButton?.addEventListener('click', printReport)
 })()
 
-generateButton.addEventListener('click', generateReport)
+generateButton?.addEventListener('click', generateReport)

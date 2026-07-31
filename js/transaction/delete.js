@@ -51,6 +51,17 @@ confirmDeleteButton.addEventListener(
         .eq('id', deleteTransactionId)
         .single()
 
+      if (transaction.error) {
+        console.error(transaction.error)
+        showToast('Gagal mengambil data transaksi')
+        return
+      }
+
+      if (!transaction.data) {
+        showToast('Transaksi tidak ditemukan')
+        return
+      }
+
       const transactionDate = new Date(transaction.data.transaction_date)
 
       if (isTransactionLocked(transaction.data.transaction_date)) {

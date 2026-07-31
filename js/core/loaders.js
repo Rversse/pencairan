@@ -229,6 +229,7 @@ async function loadAccountsFiltered(flow) {
 
   if (!kitchenId) {
     accountSelect.innerHTML = ''
+    accountSelect.disabled = true
     return
   }
 
@@ -310,6 +311,7 @@ async function loadSuppliersFiltered() {
 
   if (!kitchenId) {
     supplierSelect.innerHTML = ''
+    supplierSelect.disabled = true
 
     return
   }

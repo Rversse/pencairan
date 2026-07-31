@@ -1,3 +1,5 @@
+let incomeReportRequestId = 0
+
 function buildIncomeData(data) {
   const latestTransaction = getLatestTransaction(data)
 
@@ -289,22 +291,24 @@ function renderIncomeDailySummary(reportData) {
 }
 
 async function loadIncomeReport() {
+  const requestId = ++incomeReportRequestId
+
   let query = supabaseClient
     .from('transactions')
     .select(
       `
-  amount,
-  created_at,
-  transaction_date,
-  accounts (
-    name,
-    bank,
-    account_number,
-    income_suppliers (
-      owner_name
-    )
-  )
-`
+      amount,
+      created_at,
+      transaction_date,
+      accounts (
+        name,
+        bank,
+        account_number,
+        income_suppliers (
+          owner_name
+        )
+      )
+    `
     )
     .eq('flow_type', 'income')
 
@@ -323,6 +327,8 @@ async function loadIncomeReport() {
     .lte('transaction_date', incomeEndDate.value)
 
   const { data, error } = await query
+
+  if (requestId !== incomeReportRequestId) return
 
   if (error) {
     console.error(error)

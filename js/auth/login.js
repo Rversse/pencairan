@@ -1,7 +1,11 @@
 const PIN_LENGTH = 8
 
 async function initLogin() {
-  const { data } = await supabaseClient.auth.getSession()
+  const { data, error } = await supabaseClient.auth.getSession()
+
+  if (error) {
+    console.error('Failed to get session:', error)
+  }
 
   if (data.session) {
     window.location.href = 'index.html'

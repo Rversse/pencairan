@@ -34,6 +34,7 @@ const accountPreviewTitle = document.getElementById('accountPreviewTitle')
 let currentAccountId = null
 
 let supplierMaster = []
+let supplierMasterRequestId = 0
 
 let supplierMode = 'edit'
 
@@ -201,45 +202,61 @@ async function saveKitchenMapping() {
   if (currentUser?.role !== 'admin') {
     return
   }
-  const checked = [
-    ...document.querySelectorAll('#kitchenMappingList input:checked')
-  ].map((item) => item.value)
 
-  const { error: deleteError } = await supabaseClient
-    .from('kitchen_account_rules')
-    .delete()
-    .eq('account_id', currentAccountId)
-    .eq('flow_type', 'income')
-
-  if (deleteError) {
-    console.error(deleteError)
-    alert('Gagal menghapus mapping lama.')
+  if (saveKitchenMappingButton.disabled) {
     return
   }
 
-  if (checked.length) {
-    const payload = checked.map((kitchenId) => ({
-      account_id: currentAccountId,
-      kitchen_id: kitchenId,
-      flow_type: 'income'
-    }))
+  saveKitchenMappingButton.disabled = true
 
-    const { error: insertError } = await supabaseClient
+  const originalText = saveKitchenMappingButton.textContent
+
+  saveKitchenMappingButton.textContent = 'Menyimpan...'
+
+  try {
+    const checked = [
+      ...document.querySelectorAll('#kitchenMappingList input:checked')
+    ].map((item) => item.value)
+
+    const { error: deleteError } = await supabaseClient
       .from('kitchen_account_rules')
-      .insert(payload)
+      .delete()
+      .eq('account_id', currentAccountId)
+      .eq('flow_type', 'income')
 
-    if (insertError) {
-      console.error(insertError)
-      alert('Gagal menyimpan mapping.')
+    if (deleteError) {
+      console.error(deleteError)
+      alert('Gagal menghapus mapping lama.')
       return
     }
+
+    if (checked.length) {
+      const payload = checked.map((kitchenId) => ({
+        account_id: currentAccountId,
+        kitchen_id: kitchenId,
+        flow_type: 'income'
+      }))
+
+      const { error: insertError } = await supabaseClient
+        .from('kitchen_account_rules')
+        .insert(payload)
+
+      if (insertError) {
+        console.error(insertError)
+        alert('Gagal menyimpan mapping.')
+        return
+      }
+    }
+
+    showToast('Mapping berhasil disimpan.')
+
+    await loadSupplierMaster(true)
+
+    openAccountManager(currentSupplierId)
+  } finally {
+    saveKitchenMappingButton.disabled = false
+    saveKitchenMappingButton.textContent = originalText
   }
-
-  showToast('Mapping berhasil disimpan.')
-
-  await loadSupplierMaster(true)
-
-  openAccountManager(currentSupplierId)
 }
 
 function resetAccountEditor() {
@@ -272,23 +289,29 @@ async function openKitchenMapping(accountId) {
   if (currentUser?.role !== 'admin') {
     return
   }
+
   currentAccountId = accountId
 
-  const { data: kitchens, error: kitchenError } = await supabaseClient
-    .from('kitchens')
-    .select('id,name')
-    .eq('is_active', true)
-    .order('name')
+  const [
+    { data: kitchens, error: kitchenError },
+    { data: rules, error: ruleError }
+  ] = await Promise.all([
+    supabaseClient
+      .from('kitchens')
+      .select('id,name')
+      .eq('is_active', true)
+      .order('name'),
+
+    supabaseClient
+      .from('kitchen_account_rules')
+      .select('kitchen_id')
+      .eq('account_id', accountId)
+  ])
 
   if (kitchenError) {
     console.error(kitchenError)
     return
   }
-
-  const { data: rules, error: ruleError } = await supabaseClient
-    .from('kitchen_account_rules')
-    .select('kitchen_id')
-    .eq('account_id', accountId)
 
   if (ruleError) {
     console.error(ruleError)
@@ -352,6 +375,8 @@ async function loadSupplierMaster(forceReload = false) {
     return
   }
 
+  const requestId = ++supplierMasterRequestId
+
   const { data, error } = await supabaseClient
     .from('income_suppliers')
     .select(
@@ -377,6 +402,8 @@ accounts (
     console.error(error)
     return
   }
+
+  if (requestId !== supplierMasterRequestId) return
 
   supplierMaster = data
 
@@ -734,7 +761,7 @@ function openSupplierModal(id) {
   resetModalScroll(supplierModal)
 }
 
-accountOpeningBalance.addEventListener('input', () => {
+accountOpeningBalance?.addEventListener('input', () => {
   accountOpeningBalance.value = formatNumber(
     String(parseNumber(accountOpeningBalance.value))
   )
@@ -785,16 +812,16 @@ function hideSupplierModal() {
   closeAccountManager()
 }
 
-closeSupplierModal.addEventListener('click', hideSupplierModal)
+closeSupplierModal?.addEventListener('click', hideSupplierModal)
 
 function closeAccountManager() {
   resetAccountEditor()
   accountModal.style.display = 'none'
 }
 
-closeAccountModal.addEventListener('click', closeAccountManager)
+closeAccountModal?.addEventListener('click', closeAccountManager)
 
-closeAccountPreview.addEventListener('click', () => {
+closeAccountPreview?.addEventListener('click', () => {
   accountPreviewModal.style.display = 'none'
 })
 
@@ -817,10 +844,25 @@ async function saveSupplier() {
     return
   }
 
-  if (supplierMode === 'add') {
-    await insertSupplier()
-  } else {
-    await updateSupplier()
+  if (saveSupplierButton.disabled) {
+    return
+  }
+
+  saveSupplierButton.disabled = true
+
+  const originalText = saveSupplierButton.textContent
+
+  saveSupplierButton.textContent = 'Menyimpan...'
+
+  try {
+    if (supplierMode === 'add') {
+      await insertSupplier()
+    } else {
+      await updateSupplier()
+    }
+  } finally {
+    saveSupplierButton.disabled = false
+    saveSupplierButton.textContent = originalText
   }
 }
 
@@ -962,81 +1004,100 @@ async function saveAccount() {
     return
   }
 
-  if (!accountBank.value) {
-    alert('Bank wajib dipilih.')
-    accountBank.focus()
+  if (saveAccountButton.disabled) {
     return
   }
 
-  if (!accountNumber.value.trim()) {
-    alert('Nomor rekening wajib diisi.')
-    accountNumber.focus()
-    return
-  }
+  saveAccountButton.disabled = true
 
-  const supplier = supplierMaster.find((item) => item.id === currentSupplierId)
+  const originalText = saveAccountButton.textContent
 
-  if (!supplier) {
-    alert('Supplier tidak ditemukan.')
-    return
-  }
+  saveAccountButton.textContent = 'Menyimpan...'
 
-  const duplicate = supplier.accounts.find((account) => {
-    if (account.id === currentAccountId) return false
+  try {
+    if (!accountBank.value) {
+      alert('Bank wajib dipilih.')
+      accountBank.focus()
+      return
+    }
 
-    return (
-      account.bank === accountBank.value &&
-      (account.account_number ?? '') === accountNumber.value.trim()
+    if (!accountNumber.value.trim()) {
+      alert('Nomor rekening wajib diisi.')
+      accountNumber.focus()
+      return
+    }
+
+    const supplier = supplierMaster.find(
+      (item) => item.id === currentSupplierId
     )
-  })
 
-  if (duplicate) {
-    alert('Rekening dengan bank dan nomor tersebut sudah ada.')
-    return
-  }
+    if (!supplier) {
+      alert('Supplier tidak ditemukan.')
+      return
+    }
 
-  const openingBalance = parseNumber(accountOpeningBalance.value)
+    const duplicate = supplier.accounts.find((account) => {
+      if (account.id === currentAccountId) return false
 
-  const isEdit = !!currentAccountId
+      return (
+        account.bank === accountBank.value &&
+        (account.account_number ?? '') === accountNumber.value.trim()
+      )
+    })
 
-  let error
+    if (duplicate) {
+      alert('Rekening dengan bank dan nomor tersebut sudah ada.')
+      return
+    }
 
-  if (currentAccountId) {
-    const result = await supabaseClient
-      .from('accounts')
-      .update({
+    const openingBalance = parseNumber(accountOpeningBalance.value)
+
+    const isEdit = !!currentAccountId
+
+    let error
+
+    if (currentAccountId) {
+      const result = await supabaseClient
+        .from('accounts')
+        .update({
+          bank: accountBank.value,
+          account_number: accountNumber.value.trim(),
+          opening_balance: openingBalance
+        })
+        .eq('id', currentAccountId)
+
+      error = result.error
+    } else {
+      const result = await supabaseClient.from('accounts').insert({
+        supplier_id: currentSupplierId,
+        name: supplier.business_name,
         bank: accountBank.value,
         account_number: accountNumber.value.trim(),
         opening_balance: openingBalance
       })
-      .eq('id', currentAccountId)
 
-    error = result.error
-  } else {
-    const result = await supabaseClient.from('accounts').insert({
-      supplier_id: currentSupplierId,
-      name: supplier.business_name,
-      bank: accountBank.value,
-      account_number: accountNumber.value.trim(),
-      opening_balance: openingBalance
-    })
+      error = result.error
+    }
 
-    error = result.error
+    if (error) {
+      console.error(error)
+      alert('Gagal menyimpan rekening.')
+      return
+    }
+
+    await loadSupplierMaster(true)
+
+    openAccountManager(currentSupplierId)
+
+    showToast(
+      isEdit
+        ? 'Rekening berhasil diperbarui.'
+        : 'Rekening berhasil ditambahkan.'
+    )
+  } finally {
+    saveAccountButton.disabled = false
+    saveAccountButton.textContent = originalText
   }
-
-  if (error) {
-    console.error(error)
-    alert('Gagal menyimpan rekening.')
-    return
-  }
-
-  await loadSupplierMaster(true)
-
-  openAccountManager(currentSupplierId)
-
-  showToast(
-    isEdit ? 'Rekening berhasil diperbarui.' : 'Rekening berhasil ditambahkan.'
-  )
 }
 
 async function deleteAccount(accountId) {
@@ -1127,10 +1188,10 @@ async function deleteAccount(accountId) {
   showToast('Rekening berhasil dihapus.')
 }
 
-saveKitchenMappingButton.addEventListener('click', saveKitchenMapping)
+saveKitchenMappingButton?.addEventListener('click', saveKitchenMapping)
 
-saveSupplierButton.addEventListener('click', saveSupplier)
+saveSupplierButton?.addEventListener('click', saveSupplier)
 
-deleteSupplierButton.addEventListener('click', deleteSupplier)
+deleteSupplierButton?.addEventListener('click', deleteSupplier)
 
-saveAccountButton.addEventListener('click', saveAccount)
+saveAccountButton?.addEventListener('click', saveAccount)

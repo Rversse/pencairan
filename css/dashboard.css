@@ -62,8 +62,6 @@
 .dashboard-card:hover {
   transform: translateY(-2px);
 
-  border-color: var(--border);
-
   box-shadow: var(--shadow-hover);
 }
 
@@ -310,8 +308,7 @@
    BANK TABLE OVERRIDES
    ========================================================== */
 
-/* Override gradient variants above for bank summary cards specifically
-   — flat white bg, square radius nempel ke table di bawahnya */
+/* Bank summary table overrides */
 
 #bankTransactionTableContainer table {
   width: 100%;

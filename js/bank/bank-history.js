@@ -632,18 +632,22 @@ income_suppliers(owner_name)
       .lte('transaction_date', bankEndDate.value)
   ])
 
-  if (incomingResult.error) {
-    console.error(incomingResult.error)
-    return
-  }
+  if (requestId !== bankHistoryRequestId) return
 
-  if (incomeResult.error) {
-    console.error(incomeResult.error)
-    return
-  }
+  const queryError =
+    incomeResult.error || incomingResult.error || outgoingResult.error
 
-  if (outgoingResult.error) {
-    console.error(outgoingResult.error)
+  if (queryError) {
+    console.error(queryError)
+
+    bankHistoryTitle.textContent = 'History Rekening'
+
+    bankHistoryContent.innerHTML = buildHistoryError(
+      'Gagal memuat riwayat transaksi',
+      'Terjadi kesalahan saat mengambil data riwayat rekening.'
+    )
+
+    lucide.createIcons()
     return
   }
 

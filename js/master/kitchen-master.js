@@ -202,10 +202,6 @@ kitchenMasterSearch?.addEventListener('input', () => {
   renderKitchenMaster()
 })
 
-function openKitchenAccountMapping(id) {
-  console.log(id)
-}
-
 addKitchenButton?.addEventListener('click', () => {
   if (currentUser?.role !== 'admin') {
     return

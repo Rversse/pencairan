@@ -299,14 +299,12 @@
 
 .progress-high {
   color: #22c55e;
-  background: #dcfce7;
 
   font-weight: var(--fw-semibold);
 }
 
 .progress-complete {
   color: #10b981;
-  background: #dcfce7;
 
   font-weight: var(--fw-bold);
 }

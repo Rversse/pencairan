@@ -54,14 +54,10 @@
 .summary-table td:nth-child(3),
 .summary-table td:nth-child(5) {
   max-width: 180px;
-  white-space: normal;
 }
 
 .summary-table th,
-.summary-table td {
-  border-right: 1px solid var(--border);
-}
-
+.summary-table td,
 .disbursement-table th,
 .disbursement-table td {
   border-right: 1px solid var(--border);

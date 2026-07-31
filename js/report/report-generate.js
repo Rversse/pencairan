@@ -238,13 +238,27 @@ function renderReportDetails(grouped, dailyGrouped) {
   reportDetails.innerHTML = detailsHtml
 }
 
+let reportRequestId = 0
+
 async function generateReport() {
   if (!startDate.value || !endDate.value) {
     alert('Pilih tanggal')
     return
   }
 
-  const data = await loadReportTransactions(startDate.value, endDate.value)
+  const requestId = ++reportRequestId
+
+  const [data, { data: kitchens, error }] = await Promise.all([
+    loadReportTransactions(startDate.value, endDate.value),
+
+    supabaseClient
+      .from('kitchens')
+      .select('*')
+      .eq('is_active', true)
+      .order('name')
+  ])
+
+  if (requestId !== reportRequestId) return
 
   if (!data) return
 
@@ -254,16 +268,12 @@ async function generateReport() {
     ? formatDateLong(startDate.value)
     : `${formatDateLong(startDate.value)} — ${formatDateLong(endDate.value)}`
 
-  const { data: kitchens, error } = await supabaseClient
-    .from('kitchens')
-    .select('*')
-    .eq('is_active', true)
-    .order('name')
-
   if (error) {
     console.error(error)
     return
   }
+
+  if (requestId !== reportRequestId) return
 
   const { grouped, dailyGrouped } = buildGroupedData(kitchens, data)
 

@@ -141,3 +141,13 @@ async function fetchAllTransactions({ startDate, endDate, select }) {
 
   return transactions
 }
+
+// ======================
+// UI
+// ======================
+
+document.querySelectorAll('input[type="date"]').forEach((input) => {
+  input.addEventListener('click', () => {
+    input.showPicker?.()
+  })
+})

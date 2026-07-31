@@ -12,24 +12,23 @@
   line-height: 1;
   letter-spacing: var(--tracking-normal);
 
+  color: #111827;
+
   border-radius: 999px;
 }
 
 .badge-income {
   background: #dcfce7;
-  color: #111827;
   border-color: rgba(22, 163, 74, 0.15);
 }
 
 .badge-expense {
   background: #fee2e2;
-  color: #111827;
   border-color: rgba(220, 38, 38, 0.15);
 }
 
 .badge-operational {
   background: #fef3c7;
-  color: #111827;
   border-color: rgba(245, 158, 11, 0.15);
 }
 

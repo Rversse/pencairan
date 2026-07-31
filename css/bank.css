@@ -1127,8 +1127,4 @@
   .bank-form-full {
     grid-column: auto;
   }
-
-  .bank-modal-footer button {
-    width: 100%;
-  }
 }

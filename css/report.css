@@ -95,7 +95,7 @@
 
   letter-spacing: var(--tracking-tight);
 
-  color: var(--navy);
+  color: #111827;
 }
 
 #reportDetails {
@@ -107,17 +107,9 @@
   border-color: rgba(22, 163, 74, 0.18);
 }
 
-.summary-card:nth-child(1) h2 {
-  color: #111827;
-}
-
 .summary-card:nth-child(2) {
   background: linear-gradient(135deg, #fef2f2, #fee2e2);
   border-color: rgba(220, 38, 38, 0.18);
-}
-
-.summary-card:nth-child(2) h2 {
-  color: #111827;
 }
 
 .summary-card:nth-child(3) {
@@ -125,17 +117,9 @@
   border-color: rgba(245, 158, 11, 0.18);
 }
 
-.summary-card:nth-child(3) h2 {
-  color: #111827;
-}
-
 .summary-card:nth-child(4) {
   background: linear-gradient(135deg, #eff6ff, #dbeafe);
   border-color: rgba(37, 99, 235, 0.18);
-}
-
-.summary-card:nth-child(4) h2 {
-  color: #111827;
 }
 
 /* dipakai JS buat override warna card ke-4 kalau minus */

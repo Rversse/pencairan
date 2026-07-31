@@ -1,13 +1,15 @@
+let supplierReportRequestId = 0
+
 function getLatestTransaction(data) {
   return data.reduce((latest, item) => {
-    if (
-      !latest ||
-      Date.parse(item.created_at) > Date.parse(latest.created_at)
-    ) {
+    if (!latest) {
       return item
     }
 
-    return latest
+    const currentTime = Date.parse(item.created_at)
+    const latestTime = Date.parse(latest.created_at)
+
+    return currentTime > latestTime ? item : latest
   }, null)
 }
 
@@ -478,15 +480,17 @@ ${formatDateShort(date)}
 }
 
 async function loadSupplierReport() {
+  const requestId = ++supplierReportRequestId
+
   let query = supabaseClient.from('transactions').select(`
-      *,
-      kitchens (
-        name
-      ),
-      suppliers (
-        name
-      )
-    `)
+    *,
+    kitchens (
+      name
+    ),
+    suppliers (
+      name
+    )
+  `)
 
   const today = getTodayLocal()
 
@@ -508,9 +512,10 @@ async function loadSupplierReport() {
 
   const { data, error } = await query
 
+  if (requestId !== supplierReportRequestId) return
+
   if (error) {
     console.error(error)
-
     return
   }
 

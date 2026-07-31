@@ -2,7 +2,10 @@ const dailyStatusSummary = document.getElementById('dailyStatusSummary')
 const dailyStatusPanel = document.getElementById('dailyStatusPanel')
 const dailyStatusDate = document.getElementById('dailyStatusDate')
 
+let dailyStatusRequestId = 0
+
 async function loadDailyStatus() {
+  const requestId = ++dailyStatusRequestId
   const dailyStatusList = document.getElementById('dailyStatusList')
 
   const dailyStatusSummaryEl = document.getElementById('dailyStatusSummary')
@@ -19,7 +22,10 @@ async function loadDailyStatus() {
     dailyStatusDate.textContent = formatDateShort(selectedDate)
   }
 
-  const [{ data: kitchens }, { data: transactions }] = await Promise.all([
+  const [
+    { data: kitchens, error: kitchensError },
+    { data: transactions, error: transactionsError }
+  ] = await Promise.all([
     supabaseClient
       .from('kitchens')
       .select('id,name')
@@ -31,6 +37,13 @@ async function loadDailyStatus() {
       .select('kitchen_id,flow_type')
       .eq('transaction_date', selectedDate)
   ])
+
+  if (requestId !== dailyStatusRequestId) return
+
+  if (kitchensError || transactionsError) {
+    console.error(kitchensError || transactionsError)
+    return
+  }
 
   const transactionMap = new Map()
 
@@ -139,6 +152,8 @@ async function loadDailyStatus() {
   statusRows.sort((a, b) => a.priority - b.priority)
 
   html = statusRows.map((item) => item.html).join('')
+
+  if (requestId !== dailyStatusRequestId) return
 
   dailyStatusSummaryEl.innerHTML = `
   <div class="status-trigger">
