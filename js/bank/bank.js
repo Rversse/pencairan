@@ -18,6 +18,7 @@ function normalizePaymentPurpose(value) {
   return value
     .trim()
     .replace(/\s+/g, ' ')
+    .replace(/Tgl(?=\d)/gi, 'Tgl ')
     .replace(/\s+Tgl\s+.+$/i, ' Tgl')
 }
 
