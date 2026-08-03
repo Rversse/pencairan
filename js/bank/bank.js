@@ -427,15 +427,7 @@ async function loadBankTransactions() {
   const today = getTodayLocal()
 
   if (!bankStartDate.value) {
-    const todayDate = new Date(today)
-
-    bankStartDate.value = new Date(
-      todayDate.getFullYear(),
-      todayDate.getMonth(),
-      20
-    )
-      .toISOString()
-      .split('T')[0]
+    bankStartDate.value = BANK_MODULE_START_DATE
   }
 
   if (!bankEndDate.value) {
